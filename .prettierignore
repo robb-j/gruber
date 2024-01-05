@@ -1,0 +1,5 @@
+#
+# Files to not format with prettier
+#
+
+.nova
