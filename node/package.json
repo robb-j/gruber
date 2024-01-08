@@ -1,0 +1,11 @@
+{
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"urlpattern-polyfill": "^9.0.0"
+	},
+	"optionalDependencies": {
+		"koa": "^2.15.0",
+		"koa-helmet": "^7.0.2"
+	}
+}
