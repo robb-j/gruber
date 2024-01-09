@@ -135,3 +135,82 @@ export class FetchRouter {
 		}
 	}
 }
+
+/**
+ * @typedef {object} ConfigurationOptions
+ * @property {(url: URL) => Promise<unknown>} readJsonFile
+ * @property {(key: string) => (string | undefined)} getEnvironmentVariable
+ * @property {import("superstruct")} superstruct
+ */
+
+export class Configuration {
+	options /** @type {ConfigurationOptions} */;
+
+	/** @param {ConfigurationOptions} options */
+	constructor(options) {
+		this.options = options;
+	}
+
+	/** @template T @param {T} spec */
+	object(spec) {
+		return this.options.superstruct.defaulted(
+			this.options.superstruct.object(spec),
+			{},
+		);
+	}
+
+	/** @template T @param {T} spec */
+	array(spec) {
+		return this.options.superstruct.defaulted(
+			this.options.superstruct.array(spec),
+			[],
+		);
+	}
+
+	/**
+	 * @param {string} key
+	 * @param {string} fallback
+	 */
+	string(key, fallback) {
+		return this.options.superstruct.defaulted(
+			this.options.superstruct.string(),
+			this.options.getEnvironmentVariable(key) ?? fallback,
+		);
+	}
+
+	/**
+	 * @param {string} key
+	 * @param {string} fallback
+	 */
+	url(key, fallback) {
+		return this.options.superstruct.defaulted(
+			this.options.superstruct.coerce(
+				this.options.superstruct.instance(URL),
+				this.options.superstruct.string(),
+				(value) => new URL(value),
+			),
+			this.options.getEnvironmentVariable(key) ?? fallback,
+		);
+	}
+
+	/**
+	 * @template T
+	 * @param {URL} url
+	 * @param {import("superstruct").Struct<T>} spec
+	 */
+	async loadJson(url, spec) {
+		const file = await this.options.readJsonFile(url);
+
+		// catch missing files and create a default configuration
+		if (!file) {
+			return this.options.superstruct.create({}, spec);
+		}
+
+		// Fail outside the try-catch to surface structure errors
+		return this.options.superstruct.create(
+			file,
+			spec,
+			"failed to parse Configuration",
+		);
+	}
+}

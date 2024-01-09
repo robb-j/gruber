@@ -1,13 +1,16 @@
-// Conditional ESM module loading (Node.js and browser)
-if (!globalThis.URLPattern) await import("urlpattern-polyfill");
-
 import Koa from "koa";
 import koaHelmet from "koa-helmet";
+import * as superstruct from "superstruct";
+import fs from "node:fs";
+import process from "node:process";
 
 import { Readable } from "node:stream";
 
-import { FetchRouter } from "../core/mod.js";
-export { defineRoute, HttpError } from "../core/mod.js";
+import { Configuration, FetchRouter } from "../core/mod.js";
+export { defineRoute, HttpError, Configuration } from "../core/mod.js";
+
+// Conditional ESM module loading (Node.js and browser)
+if (!globalThis.URLPattern) await import("urlpattern-polyfill");
 
 /** @typedef {import('../core/mod.js').RouteDefinition} RouteDefinition */
 
@@ -18,8 +21,6 @@ export { defineRoute, HttpError } from "../core/mod.js";
 
 /** A HTTP router for Node.js, powered by Koa */
 export class HTTPRouter {
-	router /** @type {FetchRouter} */;
-
 	/** @param {NodeRouterOptions} options */
 	constructor(options = {}) {
 		this.router = new FetchRouter(options.routes ?? []);
@@ -41,9 +42,6 @@ export class HTTPRouter {
 
 /** A HTTP router for Node.js, powered by Koa */
 export class KoaRouter {
-	app /** @type {Koa} */;
-	router /** @type {FetchRouter} */;
-
 	/** @param {NodeRouterOptions} options */
 	constructor(options = {}) {
 		this.router = new FetchRouter(options.routes ?? []);
@@ -133,6 +131,27 @@ function getHeaders(input) {
 function getIncomingBody(req) {
 	if (req.method === "HEAD" || req.method === "GET") return undefined;
 	return Readable.toWeb(req);
+}
+
+export class NodeConfiguration extends Configuration {
+	/** @returns {import("../core/mod.js").ConfigurationOptions} */
+	static getOptions() {
+		return {
+			superstruct,
+			async readJsonFile(url) {
+				const file = await fs.promises.readFile(url).catch(() => null);
+				if (!file) return null;
+				return JSON.parse(file);
+			},
+			getEnvironmentVariable(key) {
+				return process.env[key];
+			},
+		};
+	}
+
+	constructor() {
+		super(NodeConfiguration.getOptions());
+	}
 }
 
 //

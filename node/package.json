@@ -2,10 +2,14 @@
 	"private": true,
 	"type": "module",
 	"dependencies": {
+		"superstruct": "^1.0.3",
 		"urlpattern-polyfill": "^9.0.0"
 	},
 	"optionalDependencies": {
 		"koa": "^2.15.0",
 		"koa-helmet": "^7.0.2"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10.8"
 	}
 }

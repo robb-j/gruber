@@ -228,7 +228,7 @@ const config = new NodeConfig(fs, process);
 // > common-api constructor idea?
 // > does NodeConfig.fromEnvironment create a new Config(commonApi) ??
 
-export function getConfiguration() {
+export function defineConfiguration() {
 	return config.object({
 		env: config.env("NODE_ENV", "development"),
 
@@ -252,10 +252,40 @@ export function getConfiguration() {
 	});
 }
 
+export function defineConfigurationV2() {
+	return config.object({
+		env: config.string({
+			variable: "NODE_ENV",
+			flag: "--env",
+			fallback: "development",
+		}),
+
+		selfUrl: config.url({
+			variable: "SELF_URL",
+			flag: "--self-url",
+			fallback: "http://localhost:3000",
+		}),
+
+		// Short hands?
+		meta: config.object({
+			name: config.string(pkg.name, "APP_NAME", "--app-name"),
+			version: config.string(pkg.version, "APP_VERSION", "--app-version"),
+		}),
+
+		database: config.object({
+			url: config.url({
+				variable: "DATABASE_URL",
+				flag: "--database-url",
+				fallback: "postgres://user:secret@localhost:5432/user",
+			}),
+		}),
+	});
+}
+
 // Synchronously load configuration,
 // it should be loaded as fast as possible when the app starts up
 export function loadConfiguration(path) {
-	return config.loadJsonSync(path, getConfiguration());
+	return config.loadJsonSync(path, defineConfiguration());
 }
 
 // TypeScript note:
