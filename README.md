@@ -328,18 +328,18 @@ import { defineMigration } from "@gruber/core";
 export default defineMigration({
 	async up(sql) {
 		await sql`
-      CREATE TABLE "people" (
-        "id" SERIAL PRIMARY KEY,
-        "created" TIMESTAMP NOT NULL DEFAULT NOW(),
-        "name" VARCHAR(255) NOT NULL,
-        "avatar" VARCHAR(255) DEFAULT NULL
-      )
-    `;
+			CREATE TABLE "people" (
+				"id" SERIAL PRIMARY KEY,
+				"created" TIMESTAMP NOT NULL DEFAULT NOW(),
+				"name" VARCHAR(255) NOT NULL,
+				"avatar" VARCHAR(255) DEFAULT NULL
+			)
+		`;
 	},
 	async down(sql) {
 		await sql`
-      DROP TABLE "people"
-    `;
+			DROP TABLE "people"
+		`;
 	},
 });
 ```
