@@ -219,10 +219,10 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 import fs from "node:fs";
 import process from "node:process";
 
-import { NodeConfig } from "@gruber/node";
+import { getNodeConfiguration, Configuration } from "@gruber/node";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const config = new NodeConfig(fs, process);
+const config = getNodeConfiguration(fs, process);
 
 // const config = NodeConfig.fromEnvironment(fs, process);
 // > common-api constructor idea?
@@ -230,33 +230,8 @@ const config = new NodeConfig(fs, process);
 
 export function getSpecification() {
 	return config.object({
-		env: config.env("NODE_ENV", "development"),
-
-		selfUrl: config.url("SELF_URL", "http://localhost:3000"),
-
-		meta: config.object({
-			name: config.string("APP_NAME", pkg.name),
-			version: config.string("APP_VERSION", pkg.version),
-		}),
-
-		database: config.object({
-			url: config.url(
-				"DATABASE_URL",
-				"postgres://user:secret@localhost:5432/database",
-			),
-		}),
-
-		// IDEAS:
-		// something: [config.string(), config.env("SOMETHING"), "fallback"],
-		// another: config(config.env("SOMETHING"), config.string(), "fallback"),
-	});
-}
-
-export function getSpecificationV2() {
-	return config.object({
 		env: config.string({
 			variable: "NODE_ENV",
-			flag: "--env",
 			fallback: "development",
 		}),
 
@@ -267,8 +242,8 @@ export function getSpecificationV2() {
 
 		// Short hands?
 		meta: config.object({
-			name: config.string(pkg.name, "APP_NAME", "--app-name"),
-			version: config.string(pkg.version, "APP_VERSION", "--app-version"),
+			name: config.string({ flag: "--app-name", fallback: pkg.name }),
+			version: config.string({ fallback: pkg.version }),
 		}),
 
 		database: config.object({
@@ -297,15 +272,42 @@ export const appConfig = loadConfiguration(
 
 // Export a method to generate usage documentation
 export function getConfigurationUsage() {
-	return NodeConfig.getUsage(getSpecification());
+	return Configuration.getUsage(getSpecification());
 }
 ```
 
-> You might want to consider the security for your default values,
-> e.g. if you app runs differently under NODE_ENV=production
-> and you forget to set it, what is the implication?
+#### usage info
 
-you could provide a configuration file like **config.json** to load through it:
+The usage output will be:
+
+```
+Usage:
+
+| key          | type   | argument       | variable     | default value |
+| ============ | ====== | ============== | ============ | ============= |
+| env          | string | ~              | NODE_ENV     | "development" |
+| selfUrl      | url    | ~              | SELF_URL     | "http://localhost:3000" |
+| meta.name    | string | --app-name     | ~            | gruber-app |
+| meta.version | string | ~              | ~            | 1.2.3 |
+| database.url | url    | --database-url | DATABASE_URL | postgres://user:top_secret@database.io:5432/database_name |
+
+Defaults:
+{
+	"env": "development",
+	"selfUrl": "http://localhost:3000",
+	"meta": {
+		"name": "gruber-app",
+		"version": "1.2.3"
+	},
+	"database": {
+		"url": "postgres://user:top_secret@database.io:5432/database_name"
+	}
+}
+```
+
+#### fallbacks
+
+You can provide a configuration file like **config.json** to load through the config specification:
 
 ```jsonc
 {
@@ -330,38 +332,42 @@ When loaded in, it would:
 
 If run with a `NODE_ENV=staging` environment variable, it would set `env` to "staging"
 
-The usage output will be:
+#### considerations
 
-```
-Usage:
+You should to consider the security for your default values,
+e.g. if you app runs differently under NODE_ENV=production
+and you forget to set it, what is the implication?
 
-| key | type | argument | environment variable | default value |
-| === | ==== | ======== | ==================== | ============= |
-| env          | string | ~              | NODE_ENV     | "development" |
-| selfUrl      | url    | --self-url     | SELF_URL     | "http://localhost:3000" |
-| meta.name    | string | --app-name     | APP_NAME     | gruber-app |
-| meta.version | string | --app-version  | APP_VERSION  | 1.2.3 |
-| database.url | url    | --database-url | DATABASE_URL | postgres://user:top_secret@database.io:5432/database_name |
+If you use something like `dotenv`, ensure it has already loaded before creating the `Configuration`
 
-Defaults:
-{
-	"env": "development",
-	"selfUrl": "http://localhost:3000",
-	"meta": {
-		"name": "gruber-app",
-		"version": "1.2.3"
-	},
-	"database": {
-		"url": "postgres://user:top_secret@database.io:5432/database_name"
+You could add extra checks to `loadConfiguration` to ensure things are correct in production,
+this can be done like so:
+
+```js
+export function loadConfiguration() {
+	const appConfig = config.loadJsonSync(path, getSpecification());
+
+	// Only run these checks when running in production
+	if (appConfig.env === "production") {
+		if (appConfig.database.url.includes("top_secret")) {
+			throw new Error("database.url has not been configured");
+		}
+		// more checks ...
 	}
+
+	return appConfig;
 }
 ```
+
+This checks the default value for `database.url` is not used when in production mode.
+
+#### configuration commands
 
 We can add a CLI command to demonstrate using this configuration.
 Add this command to **cli.js**, below the "serve" command":
 
 ```ts
-import { appConfig } from "./config.js";
+import { appConfig, getConfigurationUsage } from "./config.js";
 
 // cli.command(
 //   "serve",
@@ -374,6 +380,15 @@ cli.command(
 	(yargs) => yargs,
 	(args) => {
 		console.log(appConfig);
+	},
+);
+
+cli.command(
+	"usage",
+	"outputs computed configuration",
+	(yargs) => yargs,
+	(args) => {
+		console.log(getConfigurationUsage());
 	},
 );
 ```
@@ -707,13 +722,8 @@ retryWithBackoff({
 
 ## Rob's notes
 
-- https://stackoverflow.com/questions/67049890/how-can-i-turn-a-node-js-http-incomingmessage-into-a-fetch-request-object
-- it's weird that config definitions read: `(2) config > (1) env > (3) fallback`
-- `getConfiguration` that thing should have it's own name
 - should exposing `appConfig` be a best practice?
 - what other types of `Migrator` could there be, is it worth the abstraction?
 - ways of passing extra migrations to the Migrator ie from a module
-- `node` & `deno` could export all of `core`?
-- is there too much magic in [Configuration](#configuration)
 - what if you wanted configuration in a different language?
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
