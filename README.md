@@ -228,7 +228,7 @@ const config = new NodeConfig(fs, process);
 // > common-api constructor idea?
 // > does NodeConfig.fromEnvironment create a new Config(commonApi) ??
 
-export function defineConfiguration() {
+export function getSpecification() {
 	return config.object({
 		env: config.env("NODE_ENV", "development"),
 
@@ -242,7 +242,7 @@ export function defineConfiguration() {
 		database: config.object({
 			url: config.url(
 				"DATABASE_URL",
-				"postgres://user:secret@localhost:5432/user",
+				"postgres://user:secret@localhost:5432/database",
 			),
 		}),
 
@@ -252,7 +252,7 @@ export function defineConfiguration() {
 	});
 }
 
-export function defineConfigurationV2() {
+export function getSpecificationV2() {
 	return config.object({
 		env: config.string({
 			variable: "NODE_ENV",
@@ -262,7 +262,6 @@ export function defineConfigurationV2() {
 
 		selfUrl: config.url({
 			variable: "SELF_URL",
-			flag: "--self-url",
 			fallback: "http://localhost:3000",
 		}),
 
@@ -276,7 +275,7 @@ export function defineConfigurationV2() {
 			url: config.url({
 				variable: "DATABASE_URL",
 				flag: "--database-url",
-				fallback: "postgres://user:secret@localhost:5432/user",
+				fallback: "postgres://user:secret@localhost:5432/database",
 			}),
 		}),
 	});
@@ -285,7 +284,7 @@ export function defineConfigurationV2() {
 // Synchronously load configuration,
 // it should be loaded as fast as possible when the app starts up
 export function loadConfiguration(path) {
-	return config.loadJsonSync(path, defineConfiguration());
+	return config.loadJsonSync(path, getSpecification());
 }
 
 // TypeScript note:
@@ -295,6 +294,11 @@ export function loadConfiguration(path) {
 export const appConfig = loadConfiguration(
 	new URL("./config.json", import.meta.url),
 );
+
+// Export a method to generate usage documentation
+export function getConfigurationUsage() {
+	return NodeConfig.getUsage(getSpecification());
+}
 ```
 
 > You might want to consider the security for your default values,
@@ -306,12 +310,13 @@ you could provide a configuration file like **config.json** to load through it:
 ```jsonc
 {
 	"env": "production",
-	"selfUrl": "https://example.com",
+	"selfUrl": "http://localhost:3000",
 	"meta": {
-		"version": "1.0.0-beta-5"
+		"name": "gruber-app",
+		"version": "1.2.3"
 	},
 	"database": {
-		"url": "postgres://user:top_secret@database.io:5432/database_name"
+		"url": "postgres://user:secret@localhost:5432/database"
 	}
 }
 ```
@@ -324,6 +329,33 @@ When loaded in, it would:
 - override `database.url` to be the production value
 
 If run with a `NODE_ENV=staging` environment variable, it would set `env` to "staging"
+
+The usage output will be:
+
+```
+Usage:
+
+| key | type | argument | environment variable | default value |
+| === | ==== | ======== | ==================== | ============= |
+| env          | string | ~              | NODE_ENV     | "development" |
+| selfUrl      | url    | --self-url     | SELF_URL     | "http://localhost:3000" |
+| meta.name    | string | --app-name     | APP_NAME     | gruber-app |
+| meta.version | string | --app-version  | APP_VERSION  | 1.2.3 |
+| database.url | url    | --database-url | DATABASE_URL | postgres://user:top_secret@database.io:5432/database_name |
+
+Defaults:
+{
+	"env": "development",
+	"selfUrl": "http://localhost:3000",
+	"meta": {
+		"name": "gruber-app",
+		"version": "1.2.3"
+	},
+	"database": {
+		"url": "postgres://user:top_secret@database.io:5432/database_name"
+	}
+}
+```
 
 We can add a CLI command to demonstrate using this configuration.
 Add this command to **cli.js**, below the "serve" command":
@@ -604,17 +636,6 @@ TODO: I'm not happy with this, will need to come back to it.
 <!-- -->
 <!-- -->
 
-## Rob's notes
-
-- https://stackoverflow.com/questions/67049890/how-can-i-turn-a-node-js-http-incomingmessage-into-a-fetch-request-object
-- it's weird that config definitions read: `(2) config > (1) env > (3) fallback`
-- `getConfiguration` that thing should have it's own name
-- should exposing `appConfig` be a best practice?
-- what other types of `Migrator` could there be, is it worth the abstraction?
-- ways of passing extra migrations to the Migrator ie from a module
-- `node` & `deno` could export all of `core`?
-- is there too much magic in [Configuration](#configuration)
-
 ## nice snippets
 
 **simpler loader**
@@ -683,3 +704,16 @@ retryWithBackoff({
 	},
 });
 ```
+
+## Rob's notes
+
+- https://stackoverflow.com/questions/67049890/how-can-i-turn-a-node-js-http-incomingmessage-into-a-fetch-request-object
+- it's weird that config definitions read: `(2) config > (1) env > (3) fallback`
+- `getConfiguration` that thing should have it's own name
+- should exposing `appConfig` be a best practice?
+- what other types of `Migrator` could there be, is it worth the abstraction?
+- ways of passing extra migrations to the Migrator ie from a module
+- `node` & `deno` could export all of `core`?
+- is there too much magic in [Configuration](#configuration)
+- what if you wanted configuration in a different language?
+- `core` tests are deno because it's hard to do both and Deno is more web-standards based
