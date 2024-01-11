@@ -8,6 +8,7 @@ import util from "node:util";
 import { Readable } from "node:stream";
 
 import { Configuration, FetchRouter } from "../core/mod.js";
+import { log } from "node:console";
 export * from "../core/mod.js";
 
 // Conditional ESM module loading (Node.js and browser)
@@ -134,10 +135,14 @@ function getIncomingBody(req) {
 	return Readable.toWeb(req);
 }
 
+// TODO: this implementation could be better
 export class NodeConfiguration extends Configuration {
 	/** @returns {import("../core/mod.js").ConfigurationOptions} */
 	static getOptions() {
-		const args = util.parseArgs(process.args);
+		const args = util.parseArgs({
+			args: process.args,
+			strict: false,
+		});
 		return {
 			superstruct,
 			async readTextFile(url) {

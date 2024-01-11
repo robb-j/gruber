@@ -1,24 +1,23 @@
 // Adapted from the README.md
 
 // Usage:
-// NODE_ENV=staging node examples/node/config.js --database-url=mysql://database
+// DENO_ENV=staging deno run -A examples/deno/config.js --database-url=mysql://database
 
-import fs from "node:fs";
-import { NodeConfiguration } from "../../node/index.js";
+import { DenoConfiguration } from "../../deno/mod.ts";
 
 function getConfigSpec() {
 	return config.object({
-		env: config.string({ variable: "NODE_ENV", fallback: "development" }),
+		env: config.string({ variable: "DENO_ENV", fallback: "development" }),
 
 		selfUrl: config.url({
 			variable: "SELF_URL",
-			fallback: "http://localhost:3000",
+			fallback: "http://localhost:8000",
 		}),
 
 		// Short hands?
 		meta: config.object({
-			name: config.string({ fallback: pkg.name, flag: "--app-name" }),
-			version: config.string({ fallback: pkg.version }),
+			name: config.string({ fallback: meta.name, flag: "--app-name" }),
+			version: config.string({ fallback: meta.version }),
 		}),
 
 		database: config.object({
@@ -31,9 +30,9 @@ function getConfigSpec() {
 	});
 }
 
-const pkg = { name: "gruber-app", version: "1.2.3" };
+const meta = { name: "gruber-app", version: "1.2.3" };
 
-const config = new NodeConfiguration(fs, process);
+const config = new DenoConfiguration();
 const appConfig = await config.load(
 	new URL("./config.json", import.meta.url),
 	getConfigSpec(),

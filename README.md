@@ -726,3 +726,5 @@ retryWithBackoff({
 - ways of passing extra migrations to the Migrator ie from a module
 - what if you wanted configuration in a different language?
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
+- json schema for configuration specs;
+- load different configuration files?

@@ -35,6 +35,7 @@ export class DenoRouter {
 	}
 }
 
+// TODO: this implementation could be better
 export class DenoConfiguration extends Configuration {
 	static getOptions(): ConfigurationOptions {
 		const args = parseArgs(Deno.args);
@@ -52,7 +53,7 @@ export class DenoConfiguration extends Configuration {
 				return Deno.env.get(key);
 			},
 			getCommandArgument(key) {
-				return args[key];
+				return args[key.replace(/^-+/, "")];
 			},
 			stringify(config) {
 				return JSON.stringify(config, null, 2);

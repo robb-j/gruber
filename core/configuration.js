@@ -133,7 +133,7 @@ export class Configuration {
 
 	/** @template T @param {T} config */
 	getUsage(spec) {
-		const { config, fields } = this.describeSpecification(spec);
+		const { fallback, fields } = this.describeSpecification(spec);
 
 		const lines = [
 			"Usage:",
@@ -146,7 +146,7 @@ export class Configuration {
 			"",
 			"",
 			"Default:",
-			this.options.stringify(config),
+			this.options.stringify(fallback),
 		];
 
 		return lines.join("\n");
