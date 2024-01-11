@@ -33,3 +33,15 @@ export function formatMarkdownTable(fields, columns, fallback) {
 	];
 	return lines.join("\n");
 }
+
+/**
+ * @template T @param {() => T} handler
+ */
+export function loader(handler) {
+	/** @type {T | null} */
+	let result = null;
+	return () => {
+		if (result === null) result = handler();
+		return result;
+	};
+}
