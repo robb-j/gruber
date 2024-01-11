@@ -179,13 +179,13 @@ export class Configuration {
 		if (type === "string") {
 			return {
 				fallback: value.fallback,
-				fields: [{ name: prefix, ...value }],
+				fields: [{ name: prefix, type, ...value }],
 			};
 		}
 		if (type === "url") {
 			return {
 				fallback: new URL(value.fallback),
-				fields: [{ name: prefix, ...value }],
+				fields: [{ name: prefix, type, ...value }],
 			};
 		}
 		throw new TypeError("Invalid [Configuration.spec].type '" + type + "'");

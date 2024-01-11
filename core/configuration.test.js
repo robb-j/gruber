@@ -180,6 +180,7 @@ Deno.test("Configuration", async ({ step }) => {
 			assertEquals(result.fields, [
 				{
 					name: "appName",
+					type: "string",
 					fallback: "test-app",
 					variable: "APP_NAME",
 					flag: "--app-name",
@@ -201,6 +202,7 @@ Deno.test("Configuration", async ({ step }) => {
 			assertEquals(result.fields, [
 				{
 					name: "selfUrl",
+					type: "url",
 					fallback: "https://example.com",
 					variable: "SELF_URL",
 					flag: "--self-url",
@@ -224,6 +226,7 @@ Deno.test("Configuration", async ({ step }) => {
 			assertEquals(result.fields, [
 				{
 					name: "meta.name",
+					type: "string",
 					fallback: "testing-app",
 					variable: "APP_NAME",
 					flag: "--app-name",

@@ -14,12 +14,13 @@ function getConfigSpec() {
 
 		// Short hands?
 		meta: config.object({
-			name: config.string({ fallback: pkg.name }),
+			name: config.string({ fallback: pkg.name, flag: "--app-name" }),
 			version: config.string({ fallback: pkg.version }),
 		}),
 
 		database: config.object({
 			url: config.url({
+				flag: "--database-url",
 				variable: "DATABASE_URL",
 				fallback: "postgres://user:secret@localhost:5432/database",
 			}),
