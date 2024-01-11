@@ -9,13 +9,22 @@ import { formatMarkdownTable } from "./utilities.js";
 
 /**
  * @typedef {object} ConfigurationOptions
+ * @property {import("superstruct")} superstruct
  * @property {(url: URL) => Promise<string | null>} readTextFile
  * @property {(key: string) => (string | undefined)} getEnvironmentVariable
  * @property {(key: string) => (string | undefined)} getCommandArgument
- * @property {(config: any) => (string | Promise<string>)} stringify
- * @property {(contents: string) => (any)} parse
- * @property {import("superstruct")} superstruct
+ * @property {(value: any) => (string | Promise<string>)} stringify
+ * @property {(value: string) => (any)} parse
  */
+
+const requiredOptions = [
+	"superstruct",
+	"readTextFile",
+	"getEnvironmentVariable",
+	"getCommandArgument",
+	"stringify",
+	"parse",
+];
 
 export class Configuration {
 	static spec = Symbol("Configuration.spec");
@@ -24,6 +33,9 @@ export class Configuration {
 
 	/** @param {ConfigurationOptions} options */
 	constructor(options) {
+		for (const key of requiredOptions) {
+			if (!options[key]) throw new TypeError(`options.${key} is required`);
+		}
 		this.options = options;
 	}
 
@@ -34,7 +46,7 @@ export class Configuration {
 				this.options.superstruct.object(spec),
 				{},
 			),
-			{ [Configuration.spec]: { type: "object", item: spec } },
+			{ [Configuration.spec]: { type: "object", value: spec } },
 		);
 	}
 
@@ -45,23 +57,23 @@ export class Configuration {
 	// 			this.options.superstruct.array(spec),
 	// 			[],
 	// 		),
-	// 		{ [Configuration.spec]: { type: "array", item: spec } },
+	// 		{ [Configuration.spec]: { type: "array", value: spec } },
 	// 	);
 	// }
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
 	 */
-	string(spec) {
+	string(spec = {}) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
 		return Object.assign(
 			this.options.superstruct.defaulted(
 				this.options.superstruct.string(),
-				this.options.getEnvironmentVariable(spec.variable) ?? spec.fallback,
+				this._getValue(spec),
 			),
-			{ [Configuration.spec]: { type: "string", ...spec } },
+			{ [Configuration.spec]: { type: "string", value: spec } },
 		);
 	}
 
@@ -81,7 +93,7 @@ export class Configuration {
 				),
 				this._getValue(spec),
 			),
-			{ [Configuration.spec]: { type: "string", ...spec } },
+			{ [Configuration.spec]: { type: "url", value: spec } },
 		);
 	}
 
@@ -90,8 +102,9 @@ export class Configuration {
 		const argument = spec.flag
 			? this.options.getCommandArgument(spec.flag)
 			: null;
+
 		const variable = spec.variable
-			? this.options.getEnvironmentVariable(spec.flag)
+			? this.options.getEnvironmentVariable(spec.variable)
 			: null;
 
 		return argument ?? variable ?? spec.fallback;
@@ -105,7 +118,7 @@ export class Configuration {
 	async load(url, spec) {
 		const file = await this.options.readTextFile(url);
 
-		// catch missing files and create a default configuration
+		// Catch missing files and create a default configuration
 		if (!file) {
 			return this.options.superstruct.create({}, spec);
 		}
@@ -120,7 +133,7 @@ export class Configuration {
 
 	/** @template T @param {T} config */
 	getUsage(spec) {
-		const { config, fields } = this.getSpecification(spec);
+		const { config, fields } = this.describeSpecification(spec);
 
 		const lines = [
 			"Usage:",
@@ -144,31 +157,37 @@ export class Configuration {
 	 * @param {string} [prefix]
 	 * @returns {{ config: any, fields: [string, string] }}
 	 */
-	getSpecification(config, prefix = "") {
-		const spec = config[Configuration.spec];
-		if (spec.type === "object" && typeof spec.item === "object") {
-			const config = {};
+	describeSpecification(spec, prefix = "") {
+		if (!spec[Configuration.spec]) {
+			throw new TypeError("Invalid [Configuration.spec]");
+		}
+		const { type, value } = spec[Configuration.spec];
+
+		if (type === "object") {
+			const fallback = {};
 			const fields = [];
-			for (const [key, value] of Object.entries(spec.item)) {
-				const record = this.getSpecification(
-					value,
+			for (const [key, value2] of Object.entries(value)) {
+				const child = this.describeSpecification(
+					value2,
 					(prefix ? prefix + "." : "") + key,
 				);
-				Object.assign(config, record.config);
-				fields.push(...record.fields);
+				fallback[key] = child.fallback;
+				fields.push(...child.fields);
 			}
-			return { config, fields };
+			return { fallback, fields };
 		}
-		if (spec.type === "array" && typeof spec.item === "object") {
-			// TODO: ...
-		}
-		if (spec.type === "string" || spec.type === "url") {
-			if (prefix === "") throw new TypeError("string cannot be top-level");
+		if (type === "string") {
 			return {
-				config: { [prefix]: spec.fallback },
-				fields: [{ name: prefix, ...spec }],
+				fallback: value.fallback,
+				fields: [{ name: prefix, ...value }],
 			};
 		}
-		throw new TypeError("Invalid spec.type '" + spec.type + "'");
+		if (type === "url") {
+			return {
+				fallback: new URL(value.fallback),
+				fields: [{ name: prefix, ...value }],
+			};
+		}
+		throw new TypeError("Invalid [Configuration.spec].type '" + type + "'");
 	}
 }
