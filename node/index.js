@@ -3,11 +3,12 @@ import koaHelmet from "koa-helmet";
 import * as superstruct from "superstruct";
 import fs from "node:fs";
 import process from "node:process";
+import util from "node:util";
 
 import { Readable } from "node:stream";
 
 import { Configuration, FetchRouter } from "../core/mod.js";
-export { defineRoute, HttpError, Configuration } from "../core/mod.js";
+export * from "../core/mod.js";
 
 // Conditional ESM module loading (Node.js and browser)
 if (!globalThis.URLPattern) await import("urlpattern-polyfill");
@@ -136,15 +137,27 @@ function getIncomingBody(req) {
 export class NodeConfiguration extends Configuration {
 	/** @returns {import("../core/mod.js").ConfigurationOptions} */
 	static getOptions() {
+		const args = util.parseArgs(process.args);
 		return {
 			superstruct,
-			async readJsonFile(url) {
-				const file = await fs.promises.readFile(url).catch(() => null);
-				if (!file) return null;
-				return JSON.parse(file);
+			async readTextFile(url) {
+				try {
+					return await fs.promises.readFile(url);
+				} catch (error) {
+					return null;
+				}
 			},
 			getEnvironmentVariable(key) {
 				return process.env[key];
+			},
+			getCommandArgument(key) {
+				return args[key];
+			},
+			stringify(config) {
+				return JSON.stringify(config, null, 2);
+			},
+			parse(data) {
+				return JSON.parse(data);
 			},
 		};
 	}

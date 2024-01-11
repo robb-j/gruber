@@ -1,18 +1,18 @@
-import * as superstruct from "npm:superstruct@^1.0.3";
+import { parseArgs, superstruct } from "./deps.ts";
 
 import {
 	Configuration,
-	type ConfigurationOptions,
 	FetchRouter,
 	RouteDefinition,
+	type ConfigurationOptions,
 } from "../core/mod.js";
 export {
+	HTTPError,
 	defineRoute,
-	HttpError,
 	type RouteContext,
+	type RouteDefinition,
 	type RouteHandler,
 	type RouteOptions,
-	type RouteDefinition,
 } from "../core/mod.js";
 
 export interface DenoRouterOptions {
@@ -37,23 +37,29 @@ export class DenoRouter {
 
 export class DenoConfiguration extends Configuration {
 	static getOptions(): ConfigurationOptions {
+		const args = parseArgs(Deno.args);
 		return {
-			async readJsonFile(url: URL) {
-				let file;
+			superstruct,
+			async readTextFile(url: URL) {
 				try {
-					file = await Deno.readTextFile(url);
+					return await Deno.readTextFile(url);
 				} catch (error) {
-					if (error instanceof Deno.errors.NotFound) {
-						return null;
-					}
-					throw error;
+					if (error instanceof Deno.errors.NotFound) return null;
+					else throw error;
 				}
-				return JSON.parse(file);
 			},
 			getEnvironmentVariable(key) {
 				return Deno.env.get(key);
 			},
-			superstruct,
+			getCommandArgument(key) {
+				return args[key];
+			},
+			stringify(config) {
+				return JSON.stringify(config, null, 2);
+			},
+			parse(data) {
+				return JSON.parse(data);
+			},
 		};
 	}
 

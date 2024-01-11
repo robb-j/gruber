@@ -256,23 +256,22 @@ export function getSpecification() {
 	});
 }
 
-// Synchronously load configuration,
-// it should be loaded as fast as possible when the app starts up
+// Load the configuration and parse it
 export function loadConfiguration(path) {
-	return config.loadJsonSync(path, getSpecification());
+	return config.load(path, getSpecification());
 }
 
-// TypeScript note:
-// export type Configuration = Infer<ReturnType<typeof getConfiguration>>
+// TypeScript thought:
+// export type Configuration = Infer<ReturnType<typeof getSpecification>>
 
 // Expose the configutation for use in the application
-export const appConfig = loadConfiguration(
+export const appConfig = await loadConfiguration(
 	new URL("./config.json", import.meta.url),
 );
 
 // Export a method to generate usage documentation
 export function getConfigurationUsage() {
-	return Configuration.getUsage(getSpecification());
+	return config.getUsage(getSpecification());
 }
 ```
 

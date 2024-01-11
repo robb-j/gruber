@@ -1,3 +1,5 @@
+import { formatMarkdownTable } from "./utilities.js";
+
 /**
  * @typedef {object} SpecOptions
  * @property {string} [variable]
@@ -7,9 +9,11 @@
 
 /**
  * @typedef {object} ConfigurationOptions
- * @property {(url: URL) => Promise<unknown>} readJsonFile
+ * @property {(url: URL) => Promise<string | null>} readTextFile
  * @property {(key: string) => (string | undefined)} getEnvironmentVariable
  * @property {(key: string) => (string | undefined)} getCommandArgument
+ * @property {(config: any) => (string | Promise<string>)} stringify
+ * @property {(contents: string) => (any)} parse
  * @property {import("superstruct")} superstruct
  */
 
@@ -49,13 +53,13 @@ export class Configuration {
 	 * @template {SpecOptions} Spec @param {Spec} spec
 	 */
 	string(spec) {
-		if (spec.fallback !== "string") {
-			throw new TypeError("spec.fallback must be a string");
+		if (typeof spec.fallback !== "string") {
+			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
 		return Object.assign(
 			this.options.superstruct.defaulted(
 				this.options.superstruct.string(),
-				this.options.getEnvironmentVariable(key) ?? fallback,
+				this.options.getEnvironmentVariable(spec.variable) ?? spec.fallback,
 			),
 			{ [Configuration.spec]: { type: "string", ...spec } },
 		);
@@ -65,7 +69,7 @@ export class Configuration {
 	 * @template {SpecOptions} Spec @param {Spec} spec
 	 */
 	url(spec) {
-		if (spec.fallback !== "string") {
+		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string");
 		}
 		return Object.assign(
@@ -90,7 +94,7 @@ export class Configuration {
 			? this.options.getEnvironmentVariable(spec.flag)
 			: null;
 
-		return argument ?? variable ?? fallback;
+		return argument ?? variable ?? spec.fallback;
 	}
 
 	/**
@@ -98,8 +102,8 @@ export class Configuration {
 	 * @param {URL} url
 	 * @param {import("superstruct").Struct<T>} spec
 	 */
-	async loadJson(url, spec) {
-		const file = await this.options.readJsonFile(url);
+	async load(url, spec) {
+		const file = await this.options.readTextFile(url);
 
 		// catch missing files and create a default configuration
 		if (!file) {
@@ -108,27 +112,28 @@ export class Configuration {
 
 		// Fail outside the try-catch to surface structure errors
 		return this.options.superstruct.create(
-			file,
+			await this.options.parse(file),
 			spec,
-			"failed to parse Configuration",
+			"Configuration failed to parse",
 		);
 	}
 
 	/** @template T @param {T} config */
-	static getUsage(spec) {
+	getUsage(spec) {
 		const { config, fields } = this.getSpecification(spec);
 
 		const lines = [
 			"Usage:",
 			"",
-			_markdownTable(
+			formatMarkdownTable(
 				fields.sort((a, b) => a.name.localeCompare(b.name)),
 				["name", "type", "flag", "variable", "fallback"],
 				"~",
 			),
 			"",
+			"",
 			"Default:",
-			JSON.stringify(config, null, 2),
+			this.options.stringify(config),
 		];
 
 		return lines.join("\n");
@@ -139,14 +144,17 @@ export class Configuration {
 	 * @param {string} [prefix]
 	 * @returns {{ config: any, fields: [string, string] }}
 	 */
-	static getSpecification(config, prefix = "") {
+	getSpecification(config, prefix = "") {
 		const spec = config[Configuration.spec];
 		if (spec.type === "object" && typeof spec.item === "object") {
 			const config = {};
 			const fields = [];
-			for (const [key, value] of Object.fields(spec.record)) {
-				const record = this.getUsage(value, prefix + "." + key);
-				config[key] = record.config;
+			for (const [key, value] of Object.entries(spec.item)) {
+				const record = this.getSpecification(
+					value,
+					(prefix ? prefix + "." : "") + key,
+				);
+				Object.assign(config, record.config);
 				fields.push(...record.fields);
 			}
 			return { config, fields };
