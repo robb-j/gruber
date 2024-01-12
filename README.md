@@ -728,3 +728,8 @@ retryWithBackoff({
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
 - json schema for configuration specs;
 - load different configuration files?
+- note or info about loading dot-env files
+- explain functional approach more and use of it instead of middleware
+- document `HTTPError`
+- `defineRouteGroup` type primative for grouping routes together
+- Something like the `res/` directory of files loaded into memory for use
