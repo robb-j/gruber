@@ -435,6 +435,7 @@ export const useDatabase = loader(async () => {
 
 export const migrationsDir = new URL("./migrations", import.meta.url);
 
+// TODO: this isn't the current API
 export function getMigrator() {
 	return Migrator.postgres(migrationsDir, () => useDatabase());
 }
@@ -442,6 +443,8 @@ export function getMigrator() {
 
 > `loader` is a utility to run a function once and cache the result for subsequent calls.
 > It returns a method that either calls the factory function or returns the cached result.
+
+#### migrate command
 
 Then we can add to our CLI again, **cli.js**:
 
@@ -641,6 +644,112 @@ describe("queryPeople", () => {
 ```
 
 TODO: I'm not happy with this, will need to come back to it.
+
+## Meta APIs
+
+There are APIs within Gruber for using it at a meta level.
+That means internal interfaces for using Gruber in different ways than described above.
+
+### Configuration API
+
+The Configuration class is the base for how configuration works and can be used by itself to make you configuration work in different ways.
+
+To see how it works, look at the [Node](./node/source/configuration.js) and [Deno](./deno/configuration.ts) implementations.
+
+You can use the static `getOptions` method both subclasses provide and override the parts you want.
+These are the options:
+
+- `superstruct` — Configuration is based on [superstruct](https://docs.superstructjs.org/), you can pass your own instance if you like.
+- `readTextFile(url)` — How to load a text file from the file system
+- `getEnvironmentVariable(key)` — Return a matching environment "variable" for a key
+- `getCommandArgument(key)` — Get the corresponding "flag" from a CLI argument
+- `stringify(value)` — How to write the whole configuration back to a string
+- `parse(string)` — Convert a plain string into a raw config object
+
+For example, to override in Node:
+
+```js
+import { Configuration, NodeConfiguration } from "@gruber/node";
+import Yaml from "yaml";
+
+const config = new Configuration({
+	...NodeConfiguration.getOptions(),
+	getEnvionmentVariable: () => undefined,
+	stringify: (v) => Yaml.stringify(v),
+	parse: (v) => Yaml.parse(v),
+	readTextFile: (url) => fetch(url).then((r) => r.text()),
+});
+```
+
+This example:
+
+- Disables loading environment variables
+- Uses YAML instead of JSON encoding
+- Fetches text files over HTTP (just because)
+
+### Migrator API
+
+The migrator is similarly abstracted to [Configuration](#configuration-api).
+Where the postgres migrator is an subclass of `Migrator`.
+This class has the base methods to run migrations up or down and knows which migrations to run.
+
+```js
+import fs from "node:fs/promises";
+import { defineMigration } from "@gruber/node";
+
+async function getRecords() {
+	try {
+		return JSON.parse(await fs.readFile("./migrations.json"));
+	} catch {
+		return {};
+	}
+}
+
+async function writeRecords(records) {
+	await fs.writeFile("./migrations.json", JSON.stringify(records));
+}
+
+async function getDefinitions() {
+	return [
+		defineMigration({
+			up: (fs) => fs.writeFile("hello.txt", "Hello, World!"),
+			down: (fs) => fs.unlink("hello.txt"),
+		}),
+		defineMigration({
+			up: (fs) => fs.writeFile("version.json", '{ "version": "0.1" }'),
+			down: (fs) => fs.unlink("version.json"),
+		}),
+	];
+}
+
+async function executeUp(name, fn) {
+	console.log("migrate up", name);
+	await fn(fs);
+	const records = await getRecords();
+	records[name] = true;
+	await writeRecords(records);
+}
+async function executeDown(name, fn) {
+	console.log("migrate down", name);
+	await fn(fs);
+	const records = await getRecords();
+	delete records[name];
+	await writeRecords(records);
+}
+
+export function getMigrator() {
+	return new Migrator({
+		getDefinitions,
+		getRecords,
+		executeUp,
+		executeDown,
+	});
+}
+```
+
+This is an example migrator that does things with the filesystem.
+It has a store of records at `migrations.json` to keep track of which have been run.
+When it runs the migrations it'll update the json file to reflect that.
 
 ---
 
