@@ -34,7 +34,8 @@ export function defineMigration(options) {
  * @typedef {object} MigratorOptions
  * @property {() => Promise<MigrationDefinition<T>[]>} getDefinitions
  * @property {() => Promise<MigrationRecord[]>} getRecords
- * @property {(fn: (value: T) => Promise<void>) => Promise<void>} execute
+ * @property {(name: string, fn: (value: T) => Promise<void>) => Promise<void>} executeUp
+ * @property {(name: string, fn: (value: T) => Promise<void>) => Promise<void>} executeDown
  */
 
 /** @template T */
@@ -46,13 +47,13 @@ export class Migrator {
 
 	async up() {
 		for (const def of await this._getTodo("up", -1)) {
-			await this.options.execute(def.up);
+			await this.options.executeUp(def.name, def.up);
 		}
 	}
 
 	async down() {
 		for (const def of await this._getTodo("down", -1)) {
-			await this.options.execute(def.down);
+			await this.options.executeDown(def.name, def.down);
 		}
 	}
 
@@ -61,7 +62,7 @@ export class Migrator {
 		const records = await this.options.getRecords();
 		const ran = new Set(records.map((r) => r.name));
 
-		return (direction === "up" ? defs : defs.toReversed())
+		return (direction === "up" ? defs : Array.from(defs).reverse())
 			.filter((def) => ran.has(def.name) === (direction === "down"))
 			.slice(0, count === -1 ? Infinity : count);
 	}

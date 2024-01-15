@@ -1,41 +1,47 @@
-import { Migrator, defineMigration } from "./migrator.js";
+import { defineMigration } from "./migrator.js";
 
 /** @typedef {import("postgres").Sql} Sql */
 /** @typedef {import("./migrator.js").MigratorOptions} MigratorOptions */
+/** @typedef {import("./migrator.js").MigrationRecord} MigrationRecord */
 
-/** @param {URL} directory */
-export async function _getDefinitions(directory) {
-	// TODO: this can't be cross-platform
-	return [_bootstrapMigration];
-}
-
-/** @param {Sql} sql */
-export async function _getRecords(sql) {
+/**
+	@param {Sql} sql
+	@returns {Promise<MigrationRecord[]>}
+	*/
+export async function _getMigrationRecords(sql) {
 	try {
 		const rows = await sql`
       SELECT name, created
       FROM migrations
     `;
-		return rows.map((r) => r.name);
+		return rows.map(({ name }) => ({ name }));
 	} catch {
 		return [];
 	}
 }
 
-/**
- * @param {Sql} sql
- * @param {string} name
- */
-export async function _storeMigration(sql, name) {
-	await sql`
-    INSERT INTO migrations (name) VALUES (${name})
-  `;
+/** @param {Sql} sql */
+export function _executeUp(name, fn, sql) {
+	return sql.begin(async (sql) => {
+		console.log("migrate", name);
+		await fn(sql);
+		await sql`INSERT INTO migrations (name) VALUES (${name})`;
+	});
 }
 
 /** @param {Sql} sql */
-export function _execute(fn, sql) {}
+export function _executeDown(name, fn, sql) {
+	return sql.begin(async (sql) => {
+		console.log("migrate", name);
+		await fn(sql);
 
-export const _bootstrapMigration = defineMigration({
+		if (fn !== bootstrapMigration.down) {
+			await sql`DELETE FROM migrations WHERE name = ${name}`.catch(() => {});
+		}
+	});
+}
+
+export const bootstrapMigration = defineMigration({
 	async up(sql) {
 		await sql`
 			CREATE TABLE "migrations" (
@@ -51,29 +57,15 @@ export const _bootstrapMigration = defineMigration({
 	},
 });
 
-export class PostgresMigrator extends Migrator {
-	/**
-	 * @param {Sql} sql
-	 * @param {URL} directory
-	 * @returns {MigratorOptions<Sql>}
-	 */
-	static getOptions(sql, directory) {
-		return {
-			getDefinitions: () => _getDefinitions(directory),
-			getRecords: () => _getRecords(sql),
-			execute: (fn) => _execute(fn, sql),
-		};
-	}
-
-	/**
-	 * @param {Sql} sql
-	 * @param {URL} directory
-	 */
-	constructor(sql, directory) {
-		super(PostgresMigrator.getOptions(sql, directory));
-		this.postgres = sql;
-		this.directory = directory;
-	}
-
-	// ...
+/**
+	@param {Sql} sql 
+	@returns {MigratorOptions<Sql>}
+	*/
+export function postgresOptions(sql) {
+	return {
+		getRecords: () => _getMigrationRecords(sql),
+		executeUp: (name, fn) => _executeUp(name, fn, sql),
+		executeDown: (name, fn) => _executeDown(name, fn, sql),
+		getDefinitions: () => [bootstrapMigration],
+	};
 }

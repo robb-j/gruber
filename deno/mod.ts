@@ -6,14 +6,9 @@ import {
 	RouteDefinition,
 	type ConfigurationOptions,
 } from "../core/mod.js";
-export {
-	HTTPError,
-	defineRoute,
-	type RouteContext,
-	type RouteDefinition,
-	type RouteHandler,
-	type RouteOptions,
-} from "../core/mod.js";
+
+export * from "../core/mod.js";
+export * from "./postgres.ts";
 
 export interface DenoRouterOptions {
 	routes?: RouteDefinition[];

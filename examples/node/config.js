@@ -4,7 +4,7 @@
 // NODE_ENV=staging node examples/node/config.js --database-url=mysql://database
 
 import fs from "node:fs";
-import { NodeConfiguration } from "../../node/index.js";
+import { NodeConfiguration } from "gruber/configuration.js";
 
 function getConfigSpec() {
 	return config.object({

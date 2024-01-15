@@ -1,4 +1,4 @@
-import { DenoRouter, HttpError, defineRoute } from "../../deno/mod.ts";
+import { DenoRouter, HTTPError, defineRoute } from "../../deno/mod.ts";
 
 // A route is a first-class thing, it can easily be passed around and used
 const helloRoute = defineRoute({
@@ -8,7 +8,7 @@ const helloRoute = defineRoute({
 		console.debug("%s: %s", request.method, url.pathname, params);
 
 		if (params.name === "McClane") {
-			throw HttpError.unauthorized();
+			throw HTTPError.unauthorized();
 		}
 
 		return new Response(`Hello, ${params.name}!`);

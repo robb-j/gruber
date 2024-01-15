@@ -4,7 +4,8 @@ import { assertEquals } from "./test-deps.js";
 const bareOptions = {
 	getDefinitions: () => [],
 	getRecords: () => [],
-	execute() {},
+	executeUp() {},
+	executeDown() {},
 };
 
 Deno.test("defineMigration", async ({ step }) => {
@@ -83,7 +84,7 @@ Deno.test("Migrator", async ({ step }) => {
 					{ name: "b", up: () => result.push(2) },
 					{ name: "c", up: () => result.push(3) },
 				],
-				execute: (fn) => fn(),
+				executeUp: (_, fn) => fn(),
 			});
 
 			await migrator.up();
@@ -104,7 +105,7 @@ Deno.test("Migrator", async ({ step }) => {
 					{ name: "c", down: () => result.push(3) },
 				],
 				getRecords: () => [{ name: "a" }, { name: "b" }, { name: "c" }],
-				execute: (fn) => fn(),
+				executeDown: (_, fn) => fn(),
 			});
 
 			await migrator.down();

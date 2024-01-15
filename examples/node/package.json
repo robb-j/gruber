@@ -1,0 +1,8 @@
+{
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"gruber": "file:../../node",
+		"postgres": "^3.4.3"
+	}
+}

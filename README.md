@@ -733,3 +733,4 @@ retryWithBackoff({
 - document `HTTPError`
 - `defineRouteGroup` type primative for grouping routes together
 - Something like the `res/` directory of files loaded into memory for use
+- Migration logging to stdout
