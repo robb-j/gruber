@@ -84,7 +84,7 @@ First a HTTP route to do something:
 **hello-route.js**
 
 ```js
-import { defineRoute, HttpError } from "@gruber/core";
+import { defineRoute, HttpError } from "gruber";
 
 // A route is a first-class thing, it can easily be passed around and used
 export default defineRoute({
@@ -115,7 +115,7 @@ Let's add the route to a Node.js server:
 
 ```js
 import { createServer } from "node:http";
-import { NodeRouter } from "@gruber/node";
+import { NodeRouter } from "gruber";
 
 import helloRoute from "./hello-route.js";
 
@@ -215,7 +215,7 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 
 ```js
 import superstruct from "superstruct";
-import { getNodeConfiguration } from "@gruber/node";
+import { getNodeConfiguration } from "gruber";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const config = getNodeConfiguration({ superstruct });
@@ -391,7 +391,7 @@ Building on [Configuration](#configuration), we'll add database migrations to ou
 First, lets create a migration, **migrations/001-add-people.js**:
 
 ```js
-import { defineMigration } from "@gruber/core";
+import { defineMigration } from "gruber";
 
 export default defineMigration({
 	async up(sql) {
@@ -417,7 +417,7 @@ and we need to set up our database with **database.js**
 ```js
 import process from "node:process";
 import postgres from "postgres";
-import { loader, getNodePostgresMigrator } from "@gruber/node";
+import { loader, getNodePostgresMigrator } from "gruber";
 import { appConfig } from "./config.js";
 
 export const useDatabase = loader(async () => {
@@ -453,7 +453,7 @@ cli.command(
 	"migrates the database to match code",
 	(yargs) => yargs,
 	async (args) => {
-		const migrator = getMigrator();
+		const migrator = await getMigrator();
 		await migrator.up();
 	},
 );
@@ -463,7 +463,7 @@ cli.command(
 	"nukes the database",
 	(yargs) => yargs,
 	async (args) => {
-		const migrator = getMigrator();
+		const migrator = await getMigrator();
 		await migrator.down();
 	},
 );
@@ -486,7 +486,7 @@ Let's write a test for our route.
 import assert from "node:assert";
 import { describe, it } from "node:test";
 
-import { NodeRouter } from "@gruber/node";
+import { NodeRouter } from "gruber";
 import helloRoute from "./hello-route.js";
 
 describe("hello route", () => {
@@ -496,12 +496,12 @@ describe("hello route", () => {
 		assert.equal(helloRoute.method, "GET");
 	});
 	it("says hello", async () => {
-		const response = await router.handle(new Request("/hello/Geoff"));
+		const response = await router.getResponse(new Request("/hello/Geoff"));
 		assert.equal(response.status, 200);
 		assert.equal(await response.text(), "Hello, Geoff!");
 	});
 	it("blocks McClane", async () => {
-		const response = await router.handle(new Request("/hello/McClane"));
+		const response = await router.getResponse(new Request("/hello/McClane"));
 		assert.equal(response.status, 401);
 	});
 });
@@ -515,7 +515,7 @@ Next testing routes when there is a dependency (e.g. a database)
 **search-route.js**
 
 ```js
-import { defineRoute } from "@gruber/core";
+import { defineRoute } from "gruber";
 import { useDatabase } from "./database.js";
 
 export const searchRoute = defineRoute({
@@ -540,7 +540,7 @@ and to test the route, **search-route.test.js**
 ```js
 import assert from "node:assert";
 import { describe, it, beforeEach } from "node:test";
-import { NodeServer, magicLoad } from "@gruber/node";
+import { NodeServer, magicLoad } from "gruber";
 
 import searchRoute from "./search-route.js";
 import { useDatabase } from "./database.js";
@@ -573,7 +573,7 @@ describe("search route", () => {
 			body: JSON.stringify({ name: "Geoff" }),
 		});
 
-		const response = await router.handle(request);
+		const response = await router.getResponse(request);
 		assert.equal(response.status, 200);
 		assert.deepEqual(await response.json(), [
 			{
@@ -593,7 +593,7 @@ Parts which themselves can be tested individually.
 Let's try again, **search-route.js**:
 
 ```js
-import { defineRoute } from "@gruber/core";
+import { defineRoute } from "gruber";
 import { useDatabase } from "./database.js";
 
 export function queryPeople(sql, body) {
@@ -661,7 +661,7 @@ These are the options:
 For example, to override in Node:
 
 ```js
-import { Configuration, getNodeConfigOptions } from "gruber/node";
+import { Configuration, getNodeConfigOptions } from "gruber";
 import Yaml from "yaml";
 import superstruct from "superstruct";
 
@@ -688,13 +688,13 @@ This class has the base methods to run migrations up or down and knows which mig
 
 ```js
 import fs from "node:fs/promises";
-import { defineMigration } from "@gruber/node";
+import { defineMigration } from "gruber";
 
 async function getRecords() {
 	try {
 		return JSON.parse(await fs.readFile("./migrations.json"));
 	} catch {
-		// This _should_ just catch not-found errors
+		// This _should_ only catch not-found errors
 		return {};
 	}
 }
@@ -740,6 +740,8 @@ export function getMigrator() {
 This is an example migrator that does things with the filesystem.
 It has a store of records at `migrations.json` to keep track of which have been run.
 When it runs the migrations it'll update the json file to reflect that.
+
+With the code above in place, you can use the migrator to run and undo migrations with the `up` and `down` methods on it.
 
 ## Core library
 
@@ -860,7 +862,7 @@ there is a polyfil import you can use to add support for them to your runtime.
 import "gruber/polyfil";
 ```
 
-This currently polyfils:
+This currently polyfils these APIs:
 
 - [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern)
   using [urlpattern-polyfill](https://www.npmjs.com/package/urlpattern-polyfill)
