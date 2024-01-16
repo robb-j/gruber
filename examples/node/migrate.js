@@ -14,6 +14,7 @@ async function runMigration(direction) {
 		sql,
 		new URL("./migrations/", import.meta.url),
 	);
+	let exitCode = 0;
 
 	try {
 		if (direction === "up") await migrator.up();
@@ -21,10 +22,11 @@ async function runMigration(direction) {
 		else throw new Error("Unknown command, use <up|down>");
 	} catch (error) {
 		console.log("Fatal error", error);
-		process.exitCode = 1;
+		exitCode = 1;
 	} finally {
 		await sql.end();
 	}
+	process.exit(exitCode);
 }
 
 runMigration(process.argv[2]);

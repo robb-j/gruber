@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { Migrator } from "../../core/migrator.js";
-import { postgresOptions, bootstrapMigration } from "../../core/postgres.js";
+import { Migrator } from "../core/migrator.js";
+import { postgresOptions, bootstrapMigration } from "../core/postgres.js";
 
 /** @typedef {import("postgres").Sql} Sql */
 

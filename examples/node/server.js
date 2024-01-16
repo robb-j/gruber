@@ -1,5 +1,8 @@
 // Adapted from the README.md
 
+// Usage:
+// node examples/node/server.js
+
 import "gruber/polyfill.js";
 
 import { createServer } from "node:http";

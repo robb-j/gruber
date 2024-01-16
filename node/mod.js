@@ -1,4 +1,4 @@
-export * from "../../core/mod.js";
+export * from "../core/mod.js";
 
 export * from "./configuration.js";
 export * from "./express-router.js";

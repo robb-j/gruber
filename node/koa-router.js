@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 
-import { FetchRouter } from "../../core/mod.js";
+import { FetchRouter } from "../core/fetch-router.js";
 import { getFetchRequest } from "./http-router.js";
 
 /** @typedef {import("koa").Context} Context */

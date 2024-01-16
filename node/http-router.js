@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import { FetchRouter } from "../../core/mod.js";
+import { FetchRouter } from "../core/fetch-router.js";
 
 /** @typedef {import("../../core/mod.js").RouteDefinition} RouteDefinition */
 

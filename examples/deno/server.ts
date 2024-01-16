@@ -1,3 +1,8 @@
+// Adapted from the README.md
+
+// Usage:
+// deno run --allow-net examples/deno/server.js
+
 import { DenoRouter, HTTPError, defineRoute } from "../../deno/mod.ts";
 
 // A route is a first-class thing, it can easily be passed around and used
@@ -17,11 +22,7 @@ const helloRoute = defineRoute({
 
 const routes = [helloRoute];
 
-interface RunServerOptions {
-	port: number;
-}
-
-function runServer(options: RunServerOptions) {
+function runServer(options: { port: number }) {
 	const router = new DenoRouter({ routes });
 	Deno.serve({ port: options.port }, router.forServe());
 }
