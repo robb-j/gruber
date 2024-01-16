@@ -41,10 +41,10 @@ export function getNodeConfigOptions(options) {
 	};
 }
 
-/** This is a syntax sugar for `new Configuration(getDenoConfigOptions(options))` */
-export class NodeConfiguration extends Configuration {
-	/** @param {NodeConfigurationOptions} options */
-	static fromNode(options) {
-		return new this(getNodeConfigOptions(options));
-	}
+/**
+ * This is a syntax sugar for `new Configuration(getNodeConfigOptions(options))`
+ * @param {NodeConfigurationOptions} options
+ */
+export function getNodeConfiguration(options) {
+	return new Configuration(getNodeConfigOptions(options));
 }

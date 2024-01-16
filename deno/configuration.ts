@@ -1,6 +1,8 @@
 import { Configuration, ConfigurationOptions } from "../core/configuration.js";
 import { parseArgs, type superstruct } from "./deps.ts";
 
+export { Configuration };
+
 export interface DenoConfigurationOptions {
 	superstruct: typeof superstruct;
 }
@@ -39,8 +41,6 @@ export function getDenoConfigOptions(
 }
 
 /** This is a syntax sugar for `new Configuration(getDenoConfigOptions(options))` */
-export class DenoConfiguration extends Configuration {
-	static fromDeno(options: DenoConfigurationOptions): DenoConfiguration {
-		return new this(getDenoConfigOptions(options));
-	}
+export function getDenoConfiguration(options: DenoConfigurationOptions) {
+	return new Configuration(getDenoConfigOptions(options));
 }

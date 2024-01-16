@@ -77,9 +77,7 @@ A Gruber app should be run behind a reverse proxy and that can do those things f
 - Minimal — start small, carefully add features and consider removing them
 - No magic — it's confusing when you don't know whats going on
 
-## Examples
-
-### HTTP server
+## HTTP server
 
 First a HTTP route to do something:
 
@@ -184,7 +182,7 @@ That's how the same HTTP logic can be run on Deno and Node.
 Gruber doesn't expect you'll change runtime during a project,
 but now you can have more-common-looking code on different projects.
 
-### Configuration
+## Configuration
 
 In production, it is very useful to be able to configure how an app behaves without having to modify the code and redeploy the entire app.
 That is what configuration is for, it lets you change how the app runs by altering the configuration.
@@ -216,17 +214,11 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 **config.js**
 
 ```js
-import fs from "node:fs";
-import process from "node:process";
-
-import { getNodeConfiguration, Configuration } from "@gruber/node";
+import superstruct from "superstruct";
+import { getNodeConfiguration } from "@gruber/node";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const config = getNodeConfiguration(fs, process);
-
-// const config = NodeConfig.fromEnvironment(fs, process);
-// > common-api constructor idea?
-// > does NodeConfig.fromEnvironment create a new Config(commonApi) ??
+const config = getNodeConfiguration({ superstruct });
 
 export function getSpecification() {
 	return config.object({
@@ -275,7 +267,7 @@ export function getConfigurationUsage() {
 }
 ```
 
-#### usage info
+### Usage info
 
 The usage output will be:
 
@@ -304,7 +296,7 @@ Defaults:
 }
 ```
 
-#### fallbacks
+### Fallbacks
 
 You can provide a configuration file like **config.json** to load through the config specification:
 
@@ -314,11 +306,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3"
+		"version": "1.2.3",
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database"
-	}
+		"url": "postgres://user:secret@localhost:5432/database",
+	},
 }
 ```
 
@@ -331,7 +323,7 @@ When loaded in, it would:
 
 If run with a `NODE_ENV=staging` environment variable, it would set `env` to "staging"
 
-#### considerations
+### Considerations
 
 You should to consider the security for your default values,
 e.g. if you app runs differently under NODE_ENV=production
@@ -360,7 +352,7 @@ export function loadConfiguration() {
 
 This checks the default value for `database.url` is not used when in production mode.
 
-#### configuration commands
+### Configuration commands
 
 We can add a CLI command to demonstrate using this configuration.
 Add this command to **cli.js**, below the "serve" command":
@@ -392,7 +384,7 @@ cli.command(
 );
 ```
 
-### Migrations
+## Migrations
 
 Building on [Configuration](#configuration), we'll add database migrations to our Gruber app.
 
@@ -444,7 +436,7 @@ export function getMigrator() {
 > `loader` is a utility to run a function once and cache the result for subsequent calls.
 > It returns a method that either calls the factory function or returns the cached result.
 
-#### migrate command
+### Migrate command
 
 Then we can add to our CLI again, **cli.js**:
 
@@ -484,7 +476,7 @@ The `Migrator` is agnostic and provides a bespoke integration with [postgres.js]
 When used agnostically, it facilitates the preperation and running of migrations.
 With postgres, it uses that facilitation to add a `migrations` table to track which have been run and execute new ones.
 
-### Testing
+## Testing
 
 Let's write a test for our route.
 
@@ -669,11 +661,12 @@ These are the options:
 For example, to override in Node:
 
 ```js
-import { Configuration, NodeConfiguration } from "@gruber/node";
+import { Configuration, getNodeConfigOptions } from "gruber/node";
 import Yaml from "yaml";
+import superstruct from "superstruct";
 
 const config = new Configuration({
-	...NodeConfiguration.getOptions(),
+	...getNodeConfigOptions({ superstruct }),
 	getEnvionmentVariable: () => undefined,
 	stringify: (v) => Yaml.stringify(v),
 	parse: (v) => Yaml.parse(v),
@@ -832,7 +825,7 @@ const app = new Koa()
 app.listen(3000);
 ```
 
-## ExpressRouter
+### ExpressRouter
 
 `ExpressRouter` lets you use Gruber routes in an Express application, for example:
 
@@ -854,7 +847,7 @@ const app = express()
 app.listen(3000);
 ```
 
-#### Polyfil
+### Polyfil
 
 For older version of Node.js that don't support the latest web-standards,
 there is a polyfil import you can use to add support for them to your runtime.
@@ -994,15 +987,12 @@ retryWithBackoff({
 ## Rob's notes
 
 - should exposing `appConfig` be a best practice?
-- what other types of `Migrator` could there be, is it worth the abstraction?
 - ways of passing extra migrations to the Migrator ie from a module
-- what if you wanted configuration in a different language?
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
-- json schema for configuration specs;
-- load different configuration files?
+- json schema for configuration specs?
 - note or info about loading dot-env files
 - explain functional approach more and use of it instead of middleware
-- document `HTTPError`
 - `defineRouteGroup` type primative for grouping routes together
-- Something like the `res/` directory of files loaded into memory for use
+- Something like a `res/` directory of files loaded into memory for use
 - Migration logging to stdout
+- Can configuration be done without superstruct?

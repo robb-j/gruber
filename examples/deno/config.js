@@ -4,7 +4,7 @@
 // DENO_ENV=staging deno run -A examples/deno/config.js --database-url=mysql://database
 
 import * as superstruct from "npm:superstruct@^1.0.3";
-import { DenoConfiguration } from "../../deno/mod.ts";
+import { getDenoConfiguration } from "../../deno/mod.ts";
 
 function getConfigSpec() {
 	return config.object({
@@ -33,7 +33,7 @@ function getConfigSpec() {
 
 const meta = { name: "gruber-app", version: "1.2.3" };
 
-const config = DenoConfiguration.fromDeno({ superstruct });
+const config = getDenoConfiguration({ superstruct });
 const appConfig = await config.load(
 	new URL("./config.json", import.meta.url),
 	getConfigSpec(),

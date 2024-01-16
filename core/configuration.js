@@ -17,7 +17,7 @@ import { formatMarkdownTable } from "./utilities.js";
  * @property {(value: string) => (any)} parse
  */
 
-const requiredOptions = [
+const _requiredOptions = [
 	"superstruct",
 	"readTextFile",
 	"getEnvironmentVariable",
@@ -33,7 +33,7 @@ export class Configuration {
 
 	/** @param {ConfigurationOptions} options */
 	constructor(options) {
-		for (const key of requiredOptions) {
+		for (const key of _requiredOptions) {
 			if (!options[key]) throw new TypeError(`options.${key} is required`);
 		}
 		this.options = options;
@@ -49,17 +49,6 @@ export class Configuration {
 			{ [Configuration.spec]: { type: "object", value: spec } },
 		);
 	}
-
-	/** @template T @param {T} spec */
-	// array(spec) {
-	// 	return Object.assign(
-	// 		this.options.superstruct.defaulted(
-	// 			this.options.superstruct.array(spec),
-	// 			[],
-	// 		),
-	// 		{ [Configuration.spec]: { type: "array", value: spec } },
-	// 	);
-	// }
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
