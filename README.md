@@ -174,7 +174,7 @@ export const routes = [helloRoute];
 export async function runServer(options) {
 	const router = new DenoRouter({ routes });
 
-	Deno.serve({ port: options.port }, router.forServe());
+	Deno.serve({ port: options.port }, router.forDenoServe());
 
 	console.log("Listening on http://localhost:%d", options.port);
 }
@@ -750,6 +750,169 @@ export function getMigrator() {
 This is an example migrator that does things with the filesystem.
 It has a store of records at `migrations.json` to keep track of which have been run.
 When it runs the migrations it'll update the json file to reflect that.
+
+## Core library
+
+### defineRoute
+
+`defineRoute` is the way of creating route primatives to be passed to your router to handle web traffic.
+
+```js
+import { defineRoute } from "gruber";
+
+export const helloRoute = defineRoute({
+	method: "GET",
+	pathname: "/hello/:name",
+	handler({ request, url, params }) {
+		if (params.name === "McClane") {
+			throw HTTPError.unauthorized();
+		}
+		return new Response(`Hello, ${params.name}!`);
+	},
+});
+```
+
+### HTTPError
+
+`HTTPError` is an Error subclass with specific information about HTTP errors.
+Gruber catches these errors and converts them into HTTP Responses.
+
+```js
+import { HTTPError } from "gruber";
+
+throw HTTPError.badRequest();
+throw HTTPError.unauthorized();
+throw HTTPError.notFound();
+throw HTTPError.internalServerError();
+throw HTTPError.notImplemented();
+```
+
+The static methods are implemented on an "as-needed" basis,
+more can be added in the future as the need arrises.
+They directly map to HTTP error as codes documented on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
+
+```js
+const teapot = new HTTPError(418, "I'm a teapot");
+```
+
+You can also instantiate your own instance with whatever status code and text you like.
+With an instance, you can ask it to create a Response for you.
+
+```js
+teapot.toResponse();
+```
+
+Currently, you can't set the body of the generated Response objects.
+This would be nice to have in the future, but the API should be thoughtfully designed first.
+
+## Node.js library
+
+There are some specific helpers to help use Gruber in Node.js apps.
+
+### KoaRouter
+
+`KoaRouter` lets you use Gruber routes in an existing Koa application, for example:
+
+```js
+import Koa from "koa";
+import helmet from "koa-helmet";
+import cors from "@koa/cors";
+import static from "koa-static";
+import mount from "koa-mount";
+
+import { KoaRouter } from "gruber/koa-router.js";
+
+const router = new KoaRouter({ routes: "..." });
+const app = new Koa()
+	.use(helmet())
+	.use(cors({ origin: "https://example.com" }))
+	.use(mount("/public", koaStatic("public")))
+	.use(router.middleware());
+
+app.listen(3000);
+```
+
+## ExpressRouter
+
+`ExpressRouter` lets you use Gruber routes in an Express application, for example:
+
+```js
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+
+import { ExpressRouter } from "gruber/express-router.js";
+
+const router = new ExpressRouter({ routes: "..." });
+const app = express()
+	.use(helmet())
+	.use(cors())
+	.use(morgan("tiny"))
+	.use(router.middleware());
+
+app.listen(3000);
+```
+
+#### Polyfil
+
+For older version of Node.js that don't support the latest web-standards,
+there is a polyfil import you can use to add support for them to your runtime.
+
+```js
+import "gruber/polyfil";
+```
+
+This currently polyfils:
+
+- [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern)
+  using [urlpattern-polyfill](https://www.npmjs.com/package/urlpattern-polyfill)
+
+### HTTP helpers
+
+There are a bunch of methods to help deal with Node's `http` library, like converting to `Request` and `Response objects`
+
+#### getFetchRequest
+
+`getFetchRequest` converts a node [http.IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) into a [Fetch API Request](https://developer.mozilla.org/en-US/docs/Web/API/Request).
+
+```js
+import http from "node:http";
+import { getFetchRequest } from "gruber/node-router.js";
+
+const server = http.createServer(async (req, res) => {
+	const request = getFetchRequest(req);
+	res.send(await req.text());
+});
+```
+
+#### getFetchHeaders
+
+`getFetchHeaders` converts a `http.IncomingHttpHeaders` into a [Fetch API Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object.
+
+```js
+import { getFetchHeaders } from "gruber/node-router.js";
+
+const headers = getFetchHeaders({
+	accept: "text/html",
+	"set-cookie": ["bourbon=yummy", "digestive=nice"],
+	"content-type": "application/json",
+});
+```
+
+#### getIncomingMessageBody
+
+`getIncomingMessageBody` gets the body of a [http.IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) as a [Steams API ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream).
+
+```js
+import http from "node:http";
+import { getIncomingMessageBody } from "gruber/node-router.js";
+
+const server = http.createServer((req) => {
+	const stream = getIncomingMessageBody(req);
+	// ...
+});
+```
 
 ---
 

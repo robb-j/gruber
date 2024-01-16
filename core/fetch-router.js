@@ -1,4 +1,6 @@
-/** @typedef {import("./http.js").RouteDefinition} RouteDefinition */
+/**
+ * @typedef {import("./http.js").RouteDefinition} RouteDefinition
+ */
 
 /**
  * @typedef {object} MatchedRoute

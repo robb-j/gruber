@@ -16,7 +16,7 @@ export class DenoRouter {
 		return this.router.getResponse(request);
 	}
 
-	forServe() {
+	forDenoServe() {
 		return (request: Request) => this.getResponse(request);
 	}
 }

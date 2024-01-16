@@ -1,10 +1,10 @@
 import { Readable } from "node:stream";
 
 import { FetchRouter } from "../core/fetch-router.js";
-import { getFetchRequest } from "./http-router.js";
+import { getFetchRequest } from "./node-router.js";
 
 /** @typedef {import("koa").Context} Context */
-/** @typedef {import("./http-router.js").NodeRouterOptions} NodeRouterOptions */
+/** @typedef {import("./node-router.js").NodeRouterOptions} NodeRouterOptions */
 
 /** 
 	A HTTP router for Koa applications

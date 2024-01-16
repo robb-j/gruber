@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 
 import { FetchRouter } from "../core/fetch-router.js";
-import { getFetchRequest } from "./http-router.js";
+import { getFetchRequest } from "./node-router.js";
 
 /**
 	A HTTP router for Express applications

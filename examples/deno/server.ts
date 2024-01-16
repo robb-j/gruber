@@ -1,7 +1,7 @@
 // Adapted from the README.md
 
 // Usage:
-// deno run --allow-net examples/deno/server.js
+// deno run --allow-net examples/deno/server.ts
 
 import { DenoRouter, HTTPError, defineRoute } from "../../deno/mod.ts";
 
@@ -24,7 +24,7 @@ const routes = [helloRoute];
 
 function runServer(options: { port: number }) {
 	const router = new DenoRouter({ routes });
-	Deno.serve({ port: options.port }, router.forServe());
+	Deno.serve({ port: options.port }, router.forDenoServe());
 }
 
 if (import.meta.main) {
