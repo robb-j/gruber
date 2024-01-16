@@ -10,12 +10,12 @@
 		"@types/koa": "^2.14.0",
 		"@types/node": "^20.10.8"
 	},
-	"x_exports": {
+	"exports": {
 		".": {
-			"import": "./source/mod.js"
+			"import": "./mod.js"
 		},
 		"./*.js": {
-			"import": "./source/*.js"
+			"import": "./*.js"
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { defineMigration } from "gruber";
+import { defineMigration } from "gruber/postgres.js";
 
 export default defineMigration({
 	async up(sql) {

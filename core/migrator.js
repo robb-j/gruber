@@ -34,8 +34,7 @@ export function defineMigration(options) {
  * @typedef {object} MigratorOptions
  * @property {() => Promise<MigrationDefinition<T>[]>} getDefinitions
  * @property {() => Promise<MigrationRecord[]>} getRecords
- * @property {(name: string, fn: (value: T) => Promise<void>) => Promise<void>} executeUp
- * @property {(name: string, fn: (value: T) => Promise<void>) => Promise<void>} executeDown
+ * @property {(def: MigrationDefinition<T>, direction: "up"|"down") => void | Promise<void>} execute
  */
 
 /** @template T */
@@ -47,13 +46,13 @@ export class Migrator {
 
 	async up() {
 		for (const def of await this._getTodo("up", -1)) {
-			await this.options.executeUp(def.name, def.up);
+			await this.options.execute(def, "up");
 		}
 	}
 
 	async down() {
 		for (const def of await this._getTodo("down", -1)) {
-			await this.options.executeDown(def.name, def.down);
+			await this.options.execute(def, "down");
 		}
 	}
 

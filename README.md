@@ -417,7 +417,7 @@ and we need to set up our database with **database.js**
 ```js
 import process from "node:process";
 import postgres from "postgres";
-import { loader, Migrator } from "@gruber/node";
+import { loader, getNodePostgresMigrator } from "@gruber/node";
 import { appConfig } from "./config.js";
 
 export const useDatabase = loader(async () => {
@@ -425,11 +425,11 @@ export const useDatabase = loader(async () => {
 	return postgres(appConfig.database.url);
 });
 
-export const migrationsDir = new URL("./migrations", import.meta.url);
-
-// TODO: this isn't the current API
-export function getMigrator() {
-	return Migrator.postgres(migrationsDir, () => useDatabase());
+export async function getMigrator() {
+	return getNodePostgresMigrator({
+		directory: new URL("./migrations/", import.meta.url),
+		sql: await useDatabase(),
+	});
 }
 ```
 
@@ -694,6 +694,7 @@ async function getRecords() {
 	try {
 		return JSON.parse(await fs.readFile("./migrations.json"));
 	} catch {
+		// This _should_ just catch not-found errors
 		return {};
 	}
 }
@@ -715,28 +716,24 @@ async function getDefinitions() {
 	];
 }
 
-async function executeUp(name, fn) {
-	console.log("migrate up", name);
-	await fn(fs);
-	const records = await getRecords();
-	records[name] = true;
-	await writeRecords(records);
-}
-async function executeDown(name, fn) {
-	console.log("migrate down", name);
-	await fn(fs);
-	const records = await getRecords();
-	delete records[name];
-	await writeRecords(records);
-}
+async function execute(definition, direction) {
+	console.log("migrate %s", direction, definition.name);
 
+	const records = await getRecords();
+
+	if (direction === "up") {
+		await definition.up(fs);
+		records[name] = true;
+	}
+	if (direction === "down") {
+		await definition.down(fs);
+		delete records[name];
+	}
+
+	await writeRecords(records);
+}
 export function getMigrator() {
-	return new Migrator({
-		getDefinitions,
-		getRecords,
-		executeUp,
-		executeDown,
-	});
+	return new Migrator({ getDefinitions, getRecords, execute });
 }
 ```
 
@@ -797,6 +794,13 @@ teapot.toResponse();
 
 Currently, you can't set the body of the generated Response objects.
 This would be nice to have in the future, but the API should be thoughtfully designed first.
+
+### Postgres
+
+#### getPostgresMigratorOptions
+
+`getPostgresMigratorOptions` generates the default options for a `PostgresMigrator`.
+You can use it and override parts of it to customise how the postgres migrator works.
 
 ## Node.js library
 
@@ -987,7 +991,6 @@ retryWithBackoff({
 ## Rob's notes
 
 - should exposing `appConfig` be a best practice?
-- ways of passing extra migrations to the Migrator ie from a module
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
 - json schema for configuration specs?
 - note or info about loading dot-env files
@@ -996,3 +999,4 @@ retryWithBackoff({
 - Something like a `res/` directory of files loaded into memory for use
 - Migration logging to stdout
 - Can configuration be done without superstruct?
+- Improve the Migrator API, e.g. run "n" migrations or an external set

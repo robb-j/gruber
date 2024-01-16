@@ -1,57 +1,75 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { Migrator } from "../core/migrator.js";
-import { postgresOptions, bootstrapMigration } from "../core/postgres.js";
+import { Migrator, defineMigration } from "../core/migrator.js";
+import {
+	getPostgresMigratorOptions,
+	bootstrapMigration,
+} from "../core/postgres.js";
+
+export { Migrator, defineMigration };
 
 /** @typedef {import("postgres").Sql} Sql */
+/** @typedef {import("../core/migrator.js").MigratorOptions} MigratorOptions */
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
-export class NodePostgresMigrator extends Migrator {
-	/**
-		@param {Sql} sql
-		@param {URL} directory
-	*/
-	constructor(sql, directory) {
-		super({
-			...postgresOptions(sql),
-			getDefinitions: () => this.getDefinitions(),
-		});
-		this.sql = sql;
-		this.directory = directory;
-		if (!this.directory.pathname.endsWith("/")) this.directory.pathname += "/";
-	}
+/**
+ * @typedef {object} NodePostgresMigratorOptions
+ * @property {Sql} sql
+ * @property {URL} directory
+ */
 
-	async getDefinitions() {
-		const migrations = [{ name: "000-bootstrap.js", ...bootstrapMigration }];
+/**
+ * @param {NodePostgresMigratorOptions} options
+ * @returns {MigratorOptions}
+ */
+export function getNodePostgresMigratorOptions(options) {
+	return {
+		...getPostgresMigratorOptions({ sql: options.sql }),
 
-		const files = await fs.readdir(this.directory, {
-			withFileTypes: true,
-		});
+		async getDefinitions() {
+			const migrations = [{ name: "000-bootstrap.js", ...bootstrapMigration }];
 
-		for (const stat of files) {
-			const url = new URL(stat.name, this.directory);
-
-			if (!stat.isFile()) continue;
-			if (!migrationExtensions.has(path.extname(stat.name))) continue;
-
-			const def = await import(url);
-
-			if (def.default.up && typeof def.default.up !== "function") {
-				throw new Error(`migration "${stat.name}" - up is not a function`);
-			}
-			if (def.default.down && typeof def.default.down !== "function") {
-				throw new Error(`migration "${stat.name}" - down is not a function`);
-			}
-
-			migrations.push({
-				name: stat.name,
-				up: def.default.up ?? null,
-				down: def.default.down ?? null,
+			const files = await fs.readdir(options.directory, {
+				withFileTypes: true,
 			});
-		}
 
-		return migrations.sort((a, b) => a.name.localeCompare(b.name));
+			for (const stat of files) {
+				const url = new URL(stat.name, options.directory);
+
+				if (!stat.isFile()) continue;
+				if (!migrationExtensions.has(path.extname(stat.name))) continue;
+
+				const def = await import(url);
+
+				if (def.default.up && typeof def.default.up !== "function") {
+					throw new Error(`migration "${stat.name}" - up is not a function`);
+				}
+				if (def.default.down && typeof def.default.down !== "function") {
+					throw new Error(`migration "${stat.name}" - down is not a function`);
+				}
+
+				migrations.push({
+					name: stat.name,
+					up: def.default.up ?? null,
+					down: def.default.down ?? null,
+				});
+			}
+
+			return migrations.sort((a, b) => a.name.localeCompare(b.name));
+		},
+	};
+}
+
+/**
+ * This is a syntax sugar for `new Migrator(getNodePostgresMigratorOptions(...))`
+ *
+ * @param {NodePostgresMigratorOptions} options
+ */
+export function getNodePostgresMigrator(options) {
+	if (!options.directory.pathname.endsWith("/")) {
+		throw new Error("Postgres migration directory must end with a '/'");
 	}
+	return new Migrator(getNodePostgresMigratorOptions(options));
 }

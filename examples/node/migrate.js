@@ -5,16 +5,15 @@
 
 import process from "node:process";
 import postgres from "postgres";
-import { NodePostgresMigrator } from "gruber/mod.js";
+import { getNodePostgresMigrator } from "gruber/postgres.js";
 
 async function runMigration(direction) {
-	const sql = postgres("postgres://user:secret@127.0.0.1:/user");
-
-	const migrator = new NodePostgresMigrator(
-		sql,
-		new URL("./migrations/", import.meta.url),
-	);
 	let exitCode = 0;
+
+	const sql = postgres("postgres://user:secret@127.0.0.1:/user");
+	const directory = new URL("./migrations/", import.meta.url);
+
+	const migrator = getNodePostgresMigrator({ sql, directory });
 
 	try {
 		if (direction === "up") await migrator.up();
