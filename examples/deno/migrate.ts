@@ -4,7 +4,8 @@
 // deno run --allow-net --allow-read=examples/deno/migrations examples/deno/migrate.ts [up|down]
 
 import postgres from "postgres";
-import { getDenoPostgresMigrator } from "../../deno/mod.ts";
+// import { getDenoPostgresMigrator } from "../../deno/mod.ts";
+import { getDenoPostgresMigrator } from "../../bundle/deno/mod.ts";
 
 async function runMigration(direction: string) {
 	let exitCode = 0;

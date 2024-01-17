@@ -4,6 +4,7 @@
 // deno run --allow-net examples/deno/server.ts
 
 import { DenoRouter, HTTPError, defineRoute } from "../../deno/mod.ts";
+// import { DenoRouter, HTTPError, defineRoute } from "../../bundle/deno/mod.ts";
 
 // A route is a first-class thing, it can easily be passed around and used
 const helloRoute = defineRoute({

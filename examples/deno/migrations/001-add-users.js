@@ -1,4 +1,5 @@
 import { defineMigration } from "../../../deno/mod.ts";
+// import { defineMigration } from "../../../bundle/deno/mod.ts";
 
 export default defineMigration({
 	async up(sql) {

@@ -5,6 +5,7 @@
 
 import * as superstruct from "npm:superstruct@^1.0.3";
 import { getDenoConfiguration } from "../../deno/mod.ts";
+// import { getDenoConfiguration } from "../../bundle/deno/mod.ts";
 
 function getConfigSpec() {
 	return config.object({
