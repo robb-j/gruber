@@ -934,6 +934,15 @@ const server = http.createServer((req) => {
 });
 ```
 
+## Release process
+
+1. Generate a new version at the root with `npm version <version>`
+2. Run the bundle `./bundle.js`
+3. Publish the node module
+   1. `cd bundle/node`
+   2. `npm publish`
+4. Copy the deno source to the S3 bucket — `bundle/deno` → `esm.r0b.io/gruber@VERSION/`
+
 ---
 
 <!-- -->
