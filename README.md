@@ -77,6 +77,27 @@ A Gruber app should be run behind a reverse proxy and that can do those things f
 - Minimal — start small, carefully add features and consider removing them
 - No magic — it's confusing when you don't know whats going on
 
+## Install
+
+**Node.js**
+
+Gruber is available on NPM as [gruber](https://www.npmjs.com/package/gruber).
+
+```bash
+# cd to/your/project
+npm install gruber
+```
+
+**Deno**
+
+> WORK IN PROGRESS
+
+Gruber is available at [esm.r0b.io/gruber@0.1.0/mod.ts](https://esm.r0b.io/gruber@0.1.0/mod.ts).
+
+```js
+import { defineRoute } from "https://esm.r0b.io/gruber@0.1.0/mod.ts";
+```
+
 ## HTTP server
 
 First a HTTP route to do something:
@@ -306,11 +327,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3",
+		"version": "1.2.3"
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database",
-	},
+		"url": "postgres://user:secret@localhost:5432/database"
+	}
 }
 ```
 
