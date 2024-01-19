@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import childProcess from "node:child_process";
 
+const exec = childProcess.execSync;
 const mkdir = (d) => fs.mkdirSync(d, { recursive: true });
 const cp = (a, b) => fs.cpSync(a, b, { recursive: true });
 const write = (f, d) => fs.writeFileSync(f, d);
-const nuke = (d) => fs.rmSync(d, { recursive: true });
+const nuke = (d) => fs.rmSync(d, { recursive: true, force: true });
 const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
@@ -26,8 +28,14 @@ async function node() {
 	const pkg = readJson("node/package.json");
 	pkg.version = project.version;
 	pkg.exports = {
-		".": { import: "./source/mod.js" },
-		"./*.js": { import: "./source/*.js" },
+		".": {
+			types: "./types/mod.d.ts",
+			import: "./source/mod.js",
+		},
+		"./*.js": {
+			types: "./types/*.d.ts",
+			import: "./source/*.js",
+		},
 	};
 	writeJson("bundle/node/package.json", pkg);
 
@@ -36,6 +44,26 @@ async function node() {
 	lock.version = project.version;
 	lock.packages[""].version = project.version;
 	writeJson("bundle/node/package-lock.json", lock);
+
+	writeJson("bundle/node/tsconfig.json", {
+		// Change this to match your project
+		include: ["source/**/*", "core/**/*"],
+		compilerOptions: {
+			target: "ESNext",
+			module: "Node16",
+			moduleResolution: "Node16",
+			allowJs: true,
+			declaration: true,
+			emitDeclarationOnly: true,
+			declarationMap: true,
+			outDir: "types",
+			skipLibCheck: true,
+		},
+	});
+	childProcess.execSync("npx tsc", {
+		cwd: new URL("./bundle/node", import.meta.url),
+		stdio: "inherit",
+	});
 
 	// Copy static files
 	cp("README.md", "bundle/node/README.md");
