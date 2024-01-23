@@ -1,5 +1,9 @@
 import { type Sql } from "npm:postgres";
-import { Migrator, defineMigration } from "../core/migrator.js";
+import {
+	MigrationOptions,
+	Migrator,
+	defineMigration,
+} from "../core/migrator.js";
 import {
 	getPostgresMigratorOptions,
 	bootstrapMigration,
@@ -11,8 +15,13 @@ export { Migrator, defineMigration };
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface DenoPostgresMigratorOptions {
-	sql: Sql;
+	sql: unknown;
 	directory: URL;
+}
+
+// TODO: this isn't documented
+export function definePostgresMigration(options: MigrationOptions<Sql>) {
+	return defineMigration(options);
 }
 
 export function getDenoPostgresMigratorOptions(
@@ -30,7 +39,7 @@ export function getDenoPostgresMigratorOptions(
 
 				const url = new URL(stat.name, options.directory);
 
-				const def = await import(url);
+				const def = await import(url.toString());
 
 				if (def.default.up && typeof def.default.up !== "function") {
 					throw new Error(`migration "${stat.name}" - up is not a function`);

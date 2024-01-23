@@ -10,9 +10,26 @@ import {
 export { Migrator, defineMigration };
 
 /** @typedef {import("postgres").Sql} Sql */
-/** @typedef {import("../core/migrator.js").MigratorOptions} MigratorOptions */
+
+/**
+ * @template T
+ * @typedef {import("../core/migrator.js").MigratorOptions<T>} MigratorOptions
+ */
+
+/**
+ * @template T
+ * @typedef {import("../core/migrator.js").MigrationOptions<T>} MigrationOptions
+ */
 
 const migrationExtensions = new Set([".ts", ".js"]);
+
+/**
+ * TODO: this isn't documented
+ * @param {MigrationOptions<Sql>} options
+ */
+export function definePostgresMigration(options) {
+	return defineMigration(options);
+}
 
 /**
  * @typedef {object} NodePostgresMigratorOptions

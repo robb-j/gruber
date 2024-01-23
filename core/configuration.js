@@ -26,6 +26,8 @@ const _requiredOptions = [
 	"parse",
 ];
 
+/** @typedef {Record<string, import("superstruct").Struct<any, any>>} ObjectSchema */
+
 export class Configuration {
 	static spec = Symbol("Configuration.spec");
 
@@ -39,51 +41,53 @@ export class Configuration {
 		this.options = options;
 	}
 
-	/** @template T @param {T} spec */
+	/**
+	 * @template {ObjectSchema} T
+	 * @param {T} spec
+	 */
 	object(spec) {
-		return Object.assign(
-			this.options.superstruct.defaulted(
-				this.options.superstruct.object(spec),
-				{},
-			),
-			{ [Configuration.spec]: { type: "object", value: spec } },
-		);
+		const struct = this.options.superstruct.defaulted(
+			this.options.superstruct.object(spec),
+			{},
+		)
+		struct[Configuration.spec]= { type: "object", value: spec }
+		return struct
 	}
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @returns {import("superstruct").Struct<string, null>}
 	 */
 	string(spec = {}) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
-		return Object.assign(
-			this.options.superstruct.defaulted(
-				this.options.superstruct.string(),
-				this._getValue(spec),
-			),
-			{ [Configuration.spec]: { type: "string", value: spec } },
-		);
+		const struct = this.options.superstruct.defaulted(
+			this.options.superstruct.string(),
+			this._getValue(spec),
+		)
+		struct[Configuration.spec] = { type: "string", value: spec }
+		return struct
 	}
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @returns {import("superstruct").Struct<URL, null>}
 	 */
 	url(spec) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string");
 		}
-		return Object.assign(
-			this.options.superstruct.defaulted(
-				this.options.superstruct.coerce(
-					this.options.superstruct.instance(URL),
-					this.options.superstruct.string(),
-					(value) => new URL(value),
-				),
-				this._getValue(spec),
+		const struct = this.options.superstruct.defaulted(
+			this.options.superstruct.coerce(
+				this.options.superstruct.instance(URL),
+				this.options.superstruct.string(),
+				(value) => new URL(value),
 			),
-			{ [Configuration.spec]: { type: "url", value: spec } },
-		);
+			this._getValue(spec),
+		)
+		struct[Configuration.spec]= { type: "url", value: spec }
+		return struct
 	}
 
 	/** @param {SpecOptions} spec */
@@ -103,6 +107,7 @@ export class Configuration {
 	 * @template T
 	 * @param {URL} url
 	 * @param {import("superstruct").Struct<T>} spec
+	 * @returns {Promise<T>}
 	 */
 	async load(url, spec) {
 		const file = await this.options.readTextFile(url);

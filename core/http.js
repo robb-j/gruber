@@ -1,41 +1,40 @@
+/** @typedef {import("./types.ts").HTTPMethod} HTTPMethod */
+/** @typedef {import("./types.ts").RouteResult} RouteResult */
+
 /**
- * @typedef {"GET"|"HEAD"|"POST"|"PUT"|"PATCH"|"DELETE"|"CONNECT"} HTTPMethod
+ * @template {string} T
+ * @typedef {import("./types.ts").ExtractRouteParams<T>} ExtractRouteParams */
+
+/**
+ * @template T
+ * @typedef {import("./types.ts").RouteContext<T>} RouteContext
  */
 
 /**
- * @typedef {object} RouteContext
- * @property {Request} request
- * @property {URL} url
- * @property {Record<string, string>} params
+ * @template T
+ * @typedef {import("./types.ts").RouteHandler<T>} RouteHandler
  */
 
 /**
- * @typedef {(context: RouteContext) => Response | Promise<Response>} RouteHandler
+ * @template {string} T
+ * @typedef {import("./types.ts").RouteOptions<T>} RouteOptions
  */
 
 /**
- * @typedef {object} RouteOptions
- * @property {HTTPMethod} method
- * @property {pathname} pathname
- * @property {RouteHandler} handler
+ * @template T
+ * @typedef {import("./types.ts").RouteDefinition<T>} RouteDefinition
  */
 
 /**
- * @typedef {object} RouteDefinition
- * @property {HTTPMethod} method
- * @property {URLPattern} pattern
- * @property {RouteHandler} handler
+ * @template {string} T
+ * @param {RouteOptions<T>} init
+ * @returns {RouteDefinition<T>}
  */
-
-/**
- * @param {RouteOptions} options
- * @returns {RouteDefinition}
- */
-export function defineRoute(options) {
+export function defineRoute(init) {
 	return {
-		method: options.method,
-		pattern: new URLPattern({ pathname: options.pathname }),
-		handler: options.handler,
+		method: init.method,
+		pattern: new URLPattern({ pathname: init.pathname }),
+		handler: init.handler,
 	};
 }
 

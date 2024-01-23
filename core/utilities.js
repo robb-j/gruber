@@ -35,10 +35,12 @@ export function formatMarkdownTable(fields, columns, fallback) {
 }
 
 /**
- * @template T @param {() => T} handler
+ * @template {() => any} T
+ * @param {T} handler
+ * @returns {T}
  */
 export function loader(handler) {
-	/** @type {T | null} */
+	/** @type {ReturnType<T> | null} */
 	let result = null;
 	return () => {
 		if (result === null) result = handler();

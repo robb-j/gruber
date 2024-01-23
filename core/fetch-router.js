@@ -1,6 +1,6 @@
-/**
- * @typedef {import("./http.js").RouteDefinition} RouteDefinition
- */
+import { HTTPError } from "./http.js";
+
+/** @typedef {import("./types.ts").RouteDefinition<any>} RouteDefinition */
 
 /**
  * @typedef {object} MatchedRoute
@@ -8,8 +8,6 @@
  * @property {URL} url
  * @property {URLPatternResult} result
  */
-
-import { HTTPError } from "./http.js";
 
 /** A rudimentary HTTP router using fetch Request & Responses with RouteDefinions based on URLPattern */
 export class FetchRouter {
@@ -24,17 +22,19 @@ export class FetchRouter {
 	 * Finds routes that match the request method and URLPattern
 	 * and get's the matched parameters and parsed URL
 	 * @param {Request} request
-	 * @returns {MatchedRoute[]}
+	 * @returns {Iterator<MatchedRoute>}
 	 */
-	findMatchingRoutes(request) {
-		return this.routes
-			.filter((route) => route.method === request.method)
-			.map((route) => {
-				const url = new URL(request.url);
-				const result = route.pattern.exec(request.url);
-				return { result, route, url };
-			})
-			.filter((item) => item.result);
+	*findMatchingRoutes(request) {
+		const url = new URL(request.url);
+
+		for (const route of this.routes) {
+			if (request.method !== route.method) continue;
+
+			const result = route.pattern.exec(url);
+			if (!result) continue;
+
+			yield { result, route, url };
+		}
 	}
 
 	/**

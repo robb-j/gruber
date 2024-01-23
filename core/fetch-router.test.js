@@ -28,24 +28,26 @@ Deno.test("FetchRouter", async (t) => {
 		]);
 
 		await t.step("returns the match", () => {
-			const result = router.findMatchingRoutes(
-				new Request("http://localhost/"),
-			);
+			const result = [
+				...router.findMatchingRoutes(new Request("http://localhost/")),
+			];
 
 			assertEquals(result.length, 1, "should match 1 route");
 		});
 		await t.step("parses the URL", () => {
-			const result = router.findMatchingRoutes(
-				new Request("http://localhost/"),
-			);
+			const result = [
+				...router.findMatchingRoutes(new Request("http://localhost/")),
+			];
 
 			assertEquals(result.length, 1, "should match 1 route");
 			assertInstanceOf(result[0].url, URL);
 		});
 		await t.step("parse params", () => {
-			const result = router.findMatchingRoutes(
-				new Request("http://localhost/hello/Geoff", { method: "POST" }),
-			);
+			const result = [
+				...router.findMatchingRoutes(
+					new Request("http://localhost/hello/Geoff", { method: "POST" }),
+				),
+			];
 
 			assertEquals(result.length, 1, "should match 1 route");
 			assertEquals(
