@@ -1,6 +1,15 @@
 {
 	"name": "gruber",
 	"type": "module",
+	"license": "MIT",
+	"repository": "robb-j/gruber",
+	"author": {
+		"name": "Rob Anderson",
+		"url": "https://www.r0b.io"
+	},
+	"engines": {
+		"node": ">=20"
+	},
 	"dependencies": {
 		"superstruct": "^1.0.3",
 		"urlpattern-polyfill": "^9.0.0"
