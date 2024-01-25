@@ -130,9 +130,9 @@ Deno.test("FetchRouter", async (t) => {
 				new Request("http://localhost"),
 				new HTTPError(500, "Internal Server Error"),
 			);
-			assertInstanceOf(args[0], Request);
-			assertInstanceOf(args[1], HTTPError);
-			assertEquals(args[1].status, 500);
+			assertInstanceOf(args[0], HTTPError);
+			assertEquals(args[0].status, 500);
+			assertInstanceOf(args[1], Request);
 		});
 	});
 
