@@ -327,11 +327,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3"
+		"version": "1.2.3",
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database"
-	}
+		"url": "postgres://user:secret@localhost:5432/database",
+	},
 }
 ```
 
@@ -817,6 +817,46 @@ teapot.toResponse();
 
 Currently, you can't set the body of the generated Response objects.
 This would be nice to have in the future, but the API should be thoughtfully designed first.
+
+### FetchRouter
+
+`FetchRouter` is a web-native router for routes defined with `defineRoute`.
+
+```js
+import { FetchRouter, defineRoute } from "gruber";
+
+const routes = [defineRoute("..."), defineRoute("..."), defineRoute("...")];
+
+const router = new FetchRouter({
+	routes,
+	errorHandler(error, request) {
+		console.log("");
+	},
+});
+```
+
+All options to the `FetchRouter` constructor are optional and you can create a router without any options if you want.
+
+`routes` are the route definitions you want the router to processes, the router will handle a request based on the first route that matches.
+So order is important.
+
+`errorHandler` is called if a non-`HTTPError` or a 5xx `HTTPError` is thrown.
+It is called with the offending error and the request it is associated with.
+
+**getResponse**
+
+`getResponse` is the main method on a router.
+Use it to get a `Response` from the provided request, based on the router's route definitions.
+
+```js
+const response = await router.getResponse(new Request("http://localhost"));
+```
+
+There are some unstable internal methods too:
+
+- `findMatchingRoutes(request)` is a generator function to get the first route definition that matches the supplied request. It's a generator so as few routes are matched as possible and execution can be stopped if you like.
+- `processMatches(request, matches)` attempts to get a `Response` from a request and an Iterator of route definitions.
+- `handleError(error, request)` converts a error into a Response and triggers the `errorHandler`
 
 ### Postgres
 

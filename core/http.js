@@ -21,7 +21,7 @@
  */
 
 /**
- * @template T
+ * @template [T]
  * @typedef {import("./types.ts").RouteDefinition<T>} RouteDefinition
  */
 

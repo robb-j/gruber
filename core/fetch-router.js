@@ -2,6 +2,8 @@ import { HTTPError } from "./http.js";
 
 /** @typedef {import("./types.ts").RouteDefinition<any>} RouteDefinition */
 
+/** @typedef {(error: unknown, request: Request) => unknown} RouteErrorHandler */
+
 /**
  * @typedef {object} MatchedRoute
  * @property {RouteDefinition} route
@@ -9,13 +11,21 @@ import { HTTPError } from "./http.js";
  * @property {URLPatternResult} result
  */
 
-/** A rudimentary HTTP router using fetch Request & Responses with RouteDefinions based on URLPattern */
-export class FetchRouter {
-	routes /** @type {RouteDefinition} */;
+/**
+ * @typedef {object} FetchRouterOptions
+ * @property {RouteDefinition[]} [routes]
+ * @property {RouteErrorHandler} [errorHandler]
+ */
 
-	/** @param {RouteDefinition[]} routes */
-	constructor(routes) {
-		this.routes = routes;
+/** A rudimentary HTTP router using fetch Request & Responses with RouteDefinitions based on URLPattern */
+export class FetchRouter {
+	/** @type {RouteDefinition} */ routes;
+	/** @type {RouteErrorHandler | null} */ errorHandler;
+
+	/** @param {FetchRouterOptions} [options] */
+	constructor(options = {}) {
+		this.routes = options.routes ?? [];
+		this.errorHandler = options.errorHandler ?? null;
 	}
 
 	/**
@@ -57,13 +67,16 @@ export class FetchRouter {
 		throw HTTPError.notFound();
 	}
 
-	handleError(error) {
+	/**
+	 * @param {Request} request
+	 * @param {unknown} error
+	 */
+	handleError(request, error) {
 		// Get or create a HTTP error based on the one thrown
 		const httpError =
 			error instanceof HTTPError ? error : HTTPError.internalServerError();
 
-		// NOTE: could emit the error
-		// if (httpError.status >= 500) console.error("FetchRouter error:", error);
+		if (httpError.status >= 500) this.errorHandler?.(error, request);
 
 		return httpError.toResponse();
 	}
@@ -76,7 +89,7 @@ export class FetchRouter {
 				this.findMatchingRoutes(request),
 			);
 		} catch (error) {
-			return this.handleError(error);
+			return this.handleError(request, error);
 		}
 	}
 }

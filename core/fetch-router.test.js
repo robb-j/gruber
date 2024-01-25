@@ -4,17 +4,19 @@ import { assertEquals, assertInstanceOf } from "./test-deps.js";
 
 Deno.test("FetchRouter", async (t) => {
 	await t.step("constructor", () => {
-		const route = defineRoute({
-			method: "GET",
-			pathname: "/",
-			handler: () => new Response("OK"),
-		});
-		const result = new FetchRouter([route]);
-		assertEquals(result.routes, [route], "should store the routes");
+		const routes = [
+			defineRoute({
+				method: "GET",
+				pathname: "/",
+				handler: () => new Response("OK"),
+			}),
+		];
+		const result = new FetchRouter({ routes });
+		assertEquals(result.routes, routes, "should store the routes");
 	});
 
 	await t.step("findMatchingRoutes", async (t) => {
-		const router = new FetchRouter([
+		const routes = [
 			defineRoute({
 				method: "GET",
 				pathname: "/",
@@ -25,7 +27,8 @@ Deno.test("FetchRouter", async (t) => {
 				pathname: "/hello/:name",
 				handler: () => new Response("OK"),
 			}),
-		]);
+		];
+		const router = new FetchRouter({ routes });
 
 		await t.step("returns the match", () => {
 			const result = [
@@ -99,26 +102,49 @@ Deno.test("FetchRouter", async (t) => {
 		const router = new FetchRouter();
 
 		await t.step("converts to HTTPError", () => {
-			const result = router.handleError(new Error());
+			const result = router.handleError(
+				new Request("http://localhost"),
+				new Error(),
+			);
 			assertInstanceOf(result, Response);
 			assertEquals(result.status, 500);
 		});
 
 		await t.step("uses the HTTPError", () => {
-			const result = router.handleError(new HTTPError(400, "Bad Request"));
+			const result = router.handleError(
+				new Request("http://localhost"),
+				new HTTPError(400, "Bad Request"),
+			);
 			assertInstanceOf(result, Response);
 			assertEquals(result.status, 400);
+		});
+
+		await t.step("calls the callback", () => {
+			let args = [];
+			const router = new FetchRouter({
+				errorHandler(...result) {
+					args = result;
+				},
+			});
+			router.handleError(
+				new Request("http://localhost"),
+				new HTTPError(500, "Internal Server Error"),
+			);
+			assertInstanceOf(args[0], Request);
+			assertInstanceOf(args[1], HTTPError);
+			assertEquals(args[1].status, 500);
 		});
 	});
 
 	await t.step("getResponse", async () => {
-		const router = new FetchRouter([
+		const routes = [
 			defineRoute({
 				method: "PATCH",
 				pathname: "/hello/:name",
 				handler: ({ params }) => new Response(`Hello ${params.name}!`),
 			}),
-		]);
+		];
+		const router = new FetchRouter({ routes });
 
 		const result = await router.getResponse(
 			new Request("http://localhost/hello/Geoff", { method: "PATCH" }),

@@ -22,7 +22,10 @@ import { FetchRouter } from "../core/fetch-router.js";
 export class NodeRouter {
 	/** @param {NodeRouterOptions} options */
 	constructor(options = {}) {
-		this.router = new FetchRouter(options.routes ?? []);
+		this.router = new FetchRouter({
+			routes: options.routes,
+			errorHandler: (error, request) => this.onRouteError(error, request),
+		});
 	}
 
 	/** @param {Request} request */
@@ -36,6 +39,10 @@ export class NodeRouter {
 			const response = await this.getResponse(request);
 			this.respond(res, response);
 		};
+	}
+
+	onRouteError(error, request) {
+		console.error("Fatal Route Error", error);
 	}
 
 	/**
