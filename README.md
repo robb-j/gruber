@@ -830,7 +830,7 @@ const routes = [defineRoute("..."), defineRoute("..."), defineRoute("...")];
 const router = new FetchRouter({
 	routes,
 	errorHandler(error, request) {
-		console.log("");
+		console.log("Route error", error);
 	},
 });
 ```
@@ -842,6 +842,9 @@ So order is important.
 
 `errorHandler` is called if a non-`HTTPError` or a 5xx `HTTPError` is thrown.
 It is called with the offending error and the request it is associated with.
+
+> NOTE: The `errorHandler` could do more in the future, like create it's own Response or mutate the existing response.
+> This has not been design and is left open to future development if it becomes important.
 
 **getResponse**
 
