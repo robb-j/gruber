@@ -16,7 +16,9 @@ export function formatMarkdownTable(fields, columns, fallback) {
 
 	const lines = [
 		// Header
-		"| " + columns.map((n, i) => n.padEnd(widths[i]), " ").join(" | ") + " |",
+		"| " +
+			columns.map((n, i) => n.toString().padEnd(widths[i]), " ").join(" | ") +
+			" |",
 
 		// Seperator
 		"| " + columns.map((_, i) => "=".padEnd(widths[i], "=")).join(" | ") + " |",
@@ -26,7 +28,9 @@ export function formatMarkdownTable(fields, columns, fallback) {
 			(field) =>
 				"| " +
 				columns
-					.map((n, i) => (field[n] ?? fallback).padEnd(widths[i], " "))
+					.map((n, i) =>
+						(field[n] ?? fallback).toString().padEnd(widths[i], " "),
+					)
 					.join(" | ") +
 				" |",
 		),
