@@ -1,3 +1,5 @@
+/// <reference types="urlpattern-polyfill" />
+
 export type HTTPMethod =
 	| "GET"
 	| "HEAD"
