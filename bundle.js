@@ -46,7 +46,6 @@ async function node() {
 	writeJson("bundle/node/package-lock.json", lock);
 
 	writeJson("bundle/node/tsconfig.json", {
-		// Change this to match your project
 		include: ["source/**/*", "core/**/*"],
 		compilerOptions: {
 			target: "ESNext",
