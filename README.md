@@ -1111,7 +1111,6 @@ retryWithBackoff({
 
 ## Rob's notes
 
-- should exposing `appConfig` be a best practice?
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
 - json schema for configuration specs?
 - note or info about loading dot-env files
