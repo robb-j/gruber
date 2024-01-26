@@ -1,4 +1,3 @@
-import { type Sql } from "npm:postgres";
 import {
 	MigrationOptions,
 	Migrator,
@@ -8,7 +7,7 @@ import {
 	getPostgresMigratorOptions,
 	bootstrapMigration,
 } from "../core/postgres.js";
-import { extname } from "./deps.ts";
+import { extname, type Sql } from "./deps.ts";
 
 export { Migrator, defineMigration };
 
