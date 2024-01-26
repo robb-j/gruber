@@ -868,6 +868,52 @@ There are some unstable internal methods too:
 `getPostgresMigratorOptions` generates the default options for a `PostgresMigrator`.
 You can use it and override parts of it to customise how the postgres migrator works.
 
+### Utilities
+
+### loader
+
+`loader` let's you memoize the result of a function to create a singleton from it.
+It works synchronously or with promises.
+
+```js
+import { loader } from "gruber";
+
+const useRedis = loader(async () => {
+	return "connect to the database somehow...";
+});
+
+// Then elsewhere
+const redis = await useRedis();
+```
+
+#### formatMarkdownTable
+
+`formatMarkdownTable` generates a pretty markdown table based on an array of rows and the desired column names.
+
+```js
+import { formatMarkdownTable } from "gruber";
+
+const table = formatMarkdownTable(
+	[
+		{ name: "Geoff Testington", age: 42 },
+		{ name: "Jess Smith", age: 32 },
+		{ name: "Tyler Rockwell" },
+	],
+	["name", "age"],
+	"~",
+);
+```
+
+This will generate the table:
+
+```
+| name             | age |
+| ================ | === |
+| Geoff Testington | 42  |
+| Jess Smith       | 32  |
+| Tyler Rockwell   | ~   |
+```
+
 ## Node.js library
 
 There are some specific helpers to help use Gruber in Node.js apps.
