@@ -29,11 +29,24 @@ async function node() {
 	pkg.version = project.version;
 	pkg.exports = {
 		".": {
-			types: "./types/mod.d.ts",
+			types: "./types/source/mod.d.ts",
 			import: "./source/mod.js",
 		},
+		// This doesn't work...
+		// "./*.js": {
+		// 	types: "./types/*.d.ts",
+		// 	import: "./source/*.js",
+		// },
+		".": {
+			types: "./types/source/mod.d.ts",
+			import: "./source/mod.js",
+		},
+		"./core/*.js": {
+			types: "./types/core/*.d.ts",
+			import: "./core/*.js",
+		},
 		"./*.js": {
-			types: "./types/*.d.ts",
+			types: "./types/source/*.d.ts",
 			import: "./source/*.js",
 		},
 	};
