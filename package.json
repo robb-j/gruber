@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {},
 	"devDependencies": {
+		"@types/node": "^20.11.24",
 		"postgres": "^3.4.3",
 		"prettier": "^3.1.0",
 		"superstruct": "^1.0.3",

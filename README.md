@@ -235,6 +235,7 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 **config.js**
 
 ```js
+import fs from "node:fs";
 import superstruct from "superstruct";
 import { getNodeConfiguration } from "gruber";
 
@@ -327,11 +328,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3",
+		"version": "1.2.3"
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database",
-	},
+		"url": "postgres://user:secret@localhost:5432/database"
+	}
 }
 ```
 

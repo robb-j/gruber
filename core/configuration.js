@@ -1,4 +1,7 @@
 import { formatMarkdownTable } from "./utilities.js";
+import { Structure, StructError } from "./structs.js";
+
+// NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
 
 /**
  * @typedef {object} SpecOptions
@@ -9,7 +12,6 @@ import { formatMarkdownTable } from "./utilities.js";
 
 /**
  * @typedef {object} ConfigurationOptions
- * @property {import("superstruct")} superstruct
  * @property {(url: URL) => Promise<string | null>} readTextFile
  * @property {(key: string) => (string | undefined)} getEnvironmentVariable
  * @property {(key: string) => (string | undefined)} getCommandArgument
@@ -18,7 +20,6 @@ import { formatMarkdownTable } from "./utilities.js";
  */
 
 const _requiredOptions = [
-	"superstruct",
 	"readTextFile",
 	"getEnvironmentVariable",
 	"getCommandArgument",
@@ -26,12 +27,10 @@ const _requiredOptions = [
 	"parse",
 ];
 
-/** @typedef {Record<string, import("superstruct").Struct<any, any>>} ObjectSchema */
-
 export class Configuration {
 	static spec = Symbol("Configuration.spec");
 
-	options /** @type {ConfigurationOptions} */;
+	/** @type {ConfigurationOptions} */ options;
 
 	/** @param {ConfigurationOptions} options */
 	constructor(options) {
@@ -42,52 +41,40 @@ export class Configuration {
 	}
 
 	/**
-	 * @template {ObjectSchema} T
+	 * @template {Record<string, Structure<any>>} T
 	 * @param {T} spec
+	 * @returns {Structure<{ [K in keyof T]: import("./structs.js").Infer<T[K]> }>}
 	 */
 	object(spec) {
-		const struct = this.options.superstruct.defaulted(
-			this.options.superstruct.object(spec),
-			{},
-		)
-		struct[Configuration.spec]= { type: "object", value: spec }
-		return struct
+		const struct = Structure.object(spec);
+		struct[Configuration.spec] = { type: "object", value: spec };
+		return struct;
 	}
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
-	 * @returns {import("superstruct").Struct<string, null>}
+	 * @returns {Structure<string>}
 	 */
 	string(spec = {}) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
-		const struct = this.options.superstruct.defaulted(
-			this.options.superstruct.string(),
-			this._getValue(spec),
-		)
-		struct[Configuration.spec] = { type: "string", value: spec }
-		return struct
+		const struct = Structure.string(spec.fallback);
+		struct[Configuration.spec] = { type: "string", value: spec };
+		return struct;
 	}
 
 	/**
 	 * @template {SpecOptions} Spec @param {Spec} spec
-	 * @returns {import("superstruct").Struct<URL, null>}
+	 * @returns {Structure<URL>}
 	 */
 	url(spec) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string");
 		}
-		const struct = this.options.superstruct.defaulted(
-			this.options.superstruct.coerce(
-				this.options.superstruct.instance(URL),
-				this.options.superstruct.string(),
-				(value) => new URL(value),
-			),
-			this._getValue(spec),
-		)
-		struct[Configuration.spec]= { type: "url", value: spec }
-		return struct
+		const struct = Structure.url(spec.fallback);
+		struct[Configuration.spec] = { type: "url", value: spec };
+		return struct;
 	}
 
 	/** @param {SpecOptions} spec */
@@ -106,7 +93,7 @@ export class Configuration {
 	/**
 	 * @template T
 	 * @param {URL} url
-	 * @param {import("superstruct").Struct<T>} spec
+	 * @param {Structure<T>} spec
 	 * @returns {Promise<T>}
 	 */
 	async load(url, spec) {
@@ -114,15 +101,19 @@ export class Configuration {
 
 		// Catch missing files and create a default configuration
 		if (!file) {
-			return this.options.superstruct.create({}, spec);
+			return spec.process({});
 		}
 
 		// Fail outside the try-catch to surface structure errors
-		return this.options.superstruct.create(
-			await this.options.parse(file),
-			spec,
-			"Configuration failed to parse",
-		);
+		try {
+			return spec.exec(await this.options.parse(file));
+		} catch (error) {
+			console.error("Configuration failed to parse");
+			if (error instanceof StructError) {
+				error.message = error.toFriendlyString();
+			}
+			throw error;
+		}
 	}
 
 	/** @template T @param {T} config */
@@ -183,5 +174,10 @@ export class Configuration {
 			};
 		}
 		throw new TypeError("Invalid [Configuration.spec].type '" + type + "'");
+	}
+
+	/** @param {Structure<any>} spec */
+	getJSONSchema(spec) {
+		return spec.getSchema();
 	}
 }

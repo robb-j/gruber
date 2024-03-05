@@ -29,24 +29,15 @@ async function node() {
 	pkg.version = project.version;
 	pkg.exports = {
 		".": {
-			types: "./types/source/mod.d.ts",
-			import: "./source/mod.js",
-		},
-		// This doesn't work...
-		// "./*.js": {
-		// 	types: "./types/*.d.ts",
-		// 	import: "./source/*.js",
-		// },
-		".": {
-			types: "./types/source/mod.d.ts",
+			// types: "./source/mod.d.ts",
 			import: "./source/mod.js",
 		},
 		"./core/*.js": {
-			types: "./types/core/*.d.ts",
+			// types: "./types/core/*.d.ts",
 			import: "./core/*.js",
 		},
 		"./*.js": {
-			types: "./types/source/*.d.ts",
+			// types: "./types/source/*.d.ts",
 			import: "./source/*.js",
 		},
 	};
@@ -67,8 +58,7 @@ async function node() {
 			allowJs: true,
 			declaration: true,
 			emitDeclarationOnly: true,
-			declarationMap: true,
-			outDir: "types",
+			// declarationMap: true,
 			skipLibCheck: true,
 		},
 	});
