@@ -16,7 +16,7 @@ import { getFetchRequest } from "./node-router.js";
 	```
 */
 export class ExpressRouter {
-	/** @param {NodeRouterOptions} options */
+	/** @param {import("./node-router.js").NodeRouterOptions} options */
 	constructor(options = {}) {
 		this.router = new FetchRouter(options.routes ?? []);
 	}

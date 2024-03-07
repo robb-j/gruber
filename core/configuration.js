@@ -1,7 +1,9 @@
 import { formatMarkdownTable } from "./utilities.js";
-import { Structure, StructError } from "./structs.js";
+import { Structure, StructError } from "./structures.js";
 
 // NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
+
+// NOTE: the schema generation will include whatever value is passed to the structure, in the context of configuration it will be whatever is configured and may be something secret
 
 /**
  * @typedef {object} SpecOptions
@@ -43,7 +45,7 @@ export class Configuration {
 	/**
 	 * @template {Record<string, Structure<any>>} T
 	 * @param {T} spec
-	 * @returns {Structure<{ [K in keyof T]: import("./structs.js").Infer<T[K]> }>}
+	 * @returns {Structure<{ [K in keyof T]: import("./structures.js").Infer<T[K]> }>}
 	 */
 	object(spec) {
 		const struct = Structure.object(spec);
@@ -59,7 +61,7 @@ export class Configuration {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
-		const struct = Structure.string(spec.fallback);
+		const struct = Structure.string(this._getValue(spec));
 		struct[Configuration.spec] = { type: "string", value: spec };
 		return struct;
 	}
@@ -72,7 +74,7 @@ export class Configuration {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string");
 		}
-		const struct = Structure.url(spec.fallback);
+		const struct = Structure.url(this._getValue(spec));
 		struct[Configuration.spec] = { type: "url", value: spec };
 		return struct;
 	}

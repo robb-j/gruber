@@ -970,7 +970,7 @@ For older version of Node.js that don't support the latest web-standards,
 there is a polyfil import you can use to add support for them to your runtime.
 
 ```js
-import "gruber/polyfil";
+import "gruber/polyfill.js";
 ```
 
 This currently polyfils these APIs:
