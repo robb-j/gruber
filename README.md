@@ -236,11 +236,10 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 
 ```js
 import fs from "node:fs";
-import superstruct from "superstruct";
 import { getNodeConfiguration } from "gruber";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const config = getNodeConfiguration({ superstruct });
+const config = getNodeConfiguration();
 
 export function getSpecification() {
 	return config.object({
@@ -286,6 +285,11 @@ export const appConfig = await loadConfiguration(
 // Export a method to generate usage documentation
 export function getConfigurationUsage() {
 	return config.getUsage(getSpecification());
+}
+
+// Export a method to generate a JSON Schema for the configuration
+export function getConfigurationSchema() {
+	return config.getJSONSchema(getSpecification());
 }
 ```
 
@@ -673,7 +677,6 @@ To see how it works, look at the [Node](./node/source/configuration.js) and [Den
 You can use the static `getOptions` method both subclasses provide and override the parts you want.
 These are the options:
 
-- `superstruct` — Configuration is based on [superstruct](https://docs.superstructjs.org/), you can pass your own instance if you like.
 - `readTextFile(url)` — How to load a text file from the file system
 - `getEnvironmentVariable(key)` — Return a matching environment "variable" for a key
 - `getCommandArgument(key)` — Get the corresponding "flag" from a CLI argument
@@ -685,10 +688,9 @@ For example, to override in Node:
 ```js
 import { Configuration, getNodeConfigOptions } from "gruber";
 import Yaml from "yaml";
-import superstruct from "superstruct";
 
 const config = new Configuration({
-	...getNodeConfigOptions({ superstruct }),
+	...getNodeConfigOptions(),
 	getEnvionmentVariable: () => undefined,
 	stringify: (v) => Yaml.stringify(v),
 	parse: (v) => Yaml.parse(v),

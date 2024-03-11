@@ -3,7 +3,6 @@
 // Usage:
 // NODE_ENV=staging node examples/node/config.js --database-url=mysql://database
 
-import * as superstruct from "superstruct";
 import { getNodeConfiguration } from "gruber/configuration.js";
 
 function getConfigSpec() {
@@ -33,7 +32,7 @@ function getConfigSpec() {
 
 const pkg = { name: "gruber-app", version: "1.2.3" };
 
-const config = getNodeConfiguration({ superstruct });
+const config = getNodeConfiguration();
 const appConfig = await config.load(
 	new URL("./config.json", import.meta.url),
 	getConfigSpec(),

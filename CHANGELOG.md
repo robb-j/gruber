@@ -2,6 +2,18 @@
 
 This file documents notable changes to the project
 
+## 0.3.0
+
+**new**
+
+- Removed use of superstruct in favour of new `structures.js` implementation
+- Added `getJSONSchema` method to `Configuration`
+
+**fixed**
+
+- Node.js types should work now
+- Node.js types includes a url-pattern polyfil
+
 ## 0.2.0
 
 **new**

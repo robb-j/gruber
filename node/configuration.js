@@ -8,7 +8,6 @@ export { Configuration };
 
 /**
 	@typedef {object} NodeConfigurationOptions
-	@property {import("superstruct")} superstruct
 */
 
 /** @param {NodeConfigurationOptions} options */
@@ -18,7 +17,6 @@ export function getNodeConfigOptions(options) {
 		strict: false,
 	});
 	return {
-		superstruct: options.superstruct,
 		async readTextFile(url) {
 			try {
 				return await fs.promises.readFile(url);
