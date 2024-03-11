@@ -1,10 +1,8 @@
 import { Configuration } from "./configuration.js";
-import { assertEquals, assertThrows } from "./test-deps.js";
-import { superstruct } from "./test-deps.js";
+import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
 
 /** @type {import("./configuration.js").ConfigurationOptions} */
 const bareOptions = {
-	superstruct,
 	readTextFile() {},
 	getEnvironmentVariable(_key) {},
 	getCommandArgument(_key) {},
@@ -12,11 +10,10 @@ const bareOptions = {
 	parse(_value) {},
 };
 
-Deno.test("Configuration", async ({ step }) => {
-	await step("constructor", async ({ step }) => {
-		await step("validates options", () => {
+describe("Configuration", () => {
+	describe("constructor", () => {
+		it("validates options", () => {
 			new Configuration({
-				superstruct,
 				readTextFile() {},
 				getEnvironmentVariable(_key) {},
 				getCommandArgument(_key) {},
@@ -26,30 +23,28 @@ Deno.test("Configuration", async ({ step }) => {
 		});
 	});
 
-	await step("object", async ({ step }) => {
+	describe("object", () => {
 		const config = new Configuration(bareOptions);
 
-		await step("stores spec", () => {
+		it("stores the spec", () => {
 			const result = config.object({});
 			assertEquals(result[Configuration.spec].type, "object");
 			assertEquals(result[Configuration.spec].value, {});
 		});
 	});
 
-	await step("string", async ({ step }) => {
+	describe("string", () => {
 		const config = new Configuration(bareOptions);
 
-		await step("requires a fallback", () => {
+		it("requires a fallback", () => {
 			assertThrows(() => config.string({}), TypeError);
 		});
-
-		await step("uses the fallback", () => {
+		it("uses the fallback", () => {
 			const struct = config.string({ fallback: "Geoff Testington" });
-			const result = superstruct.create(undefined, struct);
+			const result = struct.process(undefined);
 			assertEquals(result, "Geoff Testington");
 		});
-
-		await step("stores spec", () => {
+		it("stores the spec", () => {
 			const result = config.string({
 				variable: "SOME_VAR",
 				fallback: "value",
@@ -62,26 +57,23 @@ Deno.test("Configuration", async ({ step }) => {
 		});
 	});
 
-	await step("url", async ({ step }) => {
+	describe("url", () => {
 		const config = new Configuration(bareOptions);
 
-		await step("requires a fallback", () => {
+		it("requires a fallback", () => {
 			assertThrows(() => config.url({}), TypeError);
 		});
-
-		await step("converts to URL", () => {
-			const struct = config.url({ fallback: "" });
-			const result = superstruct.create("https://example.com", struct);
+		it("converts to URL", () => {
+			const struct = config.url({ fallback: "https://fallback.example.com" });
+			const result = struct.process("https://example.com");
 			assertEquals(result, new URL("https://example.com"));
 		});
-
-		await step("uses the fallback", () => {
-			const struct = config.url({ fallback: "https://example.com" });
-			const result = superstruct.create(undefined, struct);
-			assertEquals(result, new URL("https://example.com"));
+		it("uses the fallback", () => {
+			const struct = config.url({ fallback: "https://fallback.example.com" });
+			const result = struct.process(undefined);
+			assertEquals(result, new URL("https://fallback.example.com"));
 		});
-
-		await step("stores spec", () => {
+		it("stores the spec", () => {
 			const result = config.url({
 				variable: "SOME_VAR",
 				fallback: "https://example.com",
@@ -94,8 +86,8 @@ Deno.test("Configuration", async ({ step }) => {
 		});
 	});
 
-	await step("_getValue", async ({ step }) => {
-		await step("uses arguments", () => {
+	describe("_getValue", () => {
+		it("uses arguments", () => {
 			const args = { "--option": "value-from-arg" };
 			const config = new Configuration({
 				...bareOptions,
@@ -106,8 +98,7 @@ Deno.test("Configuration", async ({ step }) => {
 			});
 			assertEquals(result, "value-from-arg");
 		});
-
-		await step("uses environment variables", () => {
+		it("uses environment variables", () => {
 			const env = { MY_VAR: "value-from-env" };
 			const config = new Configuration({
 				...bareOptions,
@@ -118,15 +109,14 @@ Deno.test("Configuration", async ({ step }) => {
 			});
 			assertEquals(result, "value-from-env");
 		});
-
-		await step("uses the fallback", () => {
+		it("uses the fallback", () => {
 			const config = new Configuration(bareOptions);
 			const result = config._getValue({ fallback: "value-from-fallback" });
 			assertEquals(result, "value-from-fallback");
 		});
 	});
 
-	await step("load", async ({ step }) => {
+	describe("load", () => {
 		const files = {
 			"config.json":
 				'{"env":"production","meta":{"version":"1.2.3"},"selfUrl":"https://example.com"}',
@@ -146,7 +136,7 @@ Deno.test("Configuration", async ({ step }) => {
 			selfUrl: config.url({ fallback: "http://localhost" }),
 		});
 
-		await step("loads config", async () => {
+		it("loads config", async () => {
 			const result = await config.load("config.json", spec);
 			assertEquals(result, {
 				env: "production",
@@ -155,7 +145,7 @@ Deno.test("Configuration", async ({ step }) => {
 			});
 		});
 
-		await step("uses the fallback", async () => {
+		it("uses the fallback", async () => {
 			const result = await config.load("missing-config.json", spec);
 			assertEquals(result, {
 				env: "development",
@@ -165,8 +155,8 @@ Deno.test("Configuration", async ({ step }) => {
 		});
 	});
 
-	await step("describeSpecification", async ({ step }) => {
-		await step("processes strings", () => {
+	describe("describeSpecification", () => {
+		it("processes strings", () => {
 			const config = new Configuration(bareOptions);
 			const result = config.describeSpecification(
 				config.string({
@@ -188,7 +178,7 @@ Deno.test("Configuration", async ({ step }) => {
 			]);
 		});
 
-		await step("processes urls", () => {
+		it("processes urls", () => {
 			const config = new Configuration(bareOptions);
 			const result = config.describeSpecification(
 				config.url({
@@ -210,7 +200,7 @@ Deno.test("Configuration", async ({ step }) => {
 			]);
 		});
 
-		await step("processes objects", () => {
+		it("processes objects", () => {
 			const config = new Configuration(bareOptions);
 			const result = config.describeSpecification(
 				config.object({

@@ -200,38 +200,3 @@ export class Structure {
 		});
 	}
 }
-
-// const struct = Structure.object({
-// 	env: Structure.string("develoment"),
-// 	selfUrl: Structure.url("http://localhost:3000"),
-// 	meta: Structure.object({
-// 		name: Structure.string("gruber-app"),
-// 		version: Structure.string("1.2.3"),
-// 		more: Structure.object({
-// 			field: Structure.string("plop"),
-// 		}),
-// 	}),
-// 	database: Structure.object({
-// 		url: Structure.url("postgres://user:secret@127.0.0.1/database"),
-// 	}),
-// });
-
-// try {
-// 	// const value = struct.process({
-// 	// 	env: 1234,
-// 	// 	selfUrl: "plop",
-// 	// 	meta: {
-// 	// 		name: new Date(),
-// 	// 		more: {
-// 	// 			field: false,
-// 	// 		},
-// 	// 	},
-// 	// });
-// 	const value = struct.process({});
-// 	console.log("SCHEMA:", JSON.stringify(struct.getSchema(), null, 2));
-// 	console.log();
-// 	console.log("VALUE:", JSON.stringify(value, null, 2));
-// } catch (error) {
-// 	// console.log(error);
-// 	console.error(error.toFriendlyString());
-// }
