@@ -871,7 +871,7 @@ You can use it and override parts of it to customise how the postgres migrator w
 
 ### Utilities
 
-### loader
+#### loader
 
 `loader` let's you memoize the result of a function to create a singleton from it.
 It works synchronously or with promises.
@@ -914,6 +914,89 @@ This will generate the table:
 | Jess Smith       | 32  |
 | Tyler Rockwell   | ~   |
 ```
+
+#### Structure
+
+This is an internal primative for validating objects, strings, numbers and URLs for use in [Configuration](#configuration).
+It is based on a very specific use of [superstruct](https://github.com/ianstormtaylor/superstruct) which it made sense to internalise to make the code base more portable.
+A `Structure` is a type that validates a value is correct by throwing an error if validation fails, i.e. the wrong type is passed.
+Every struct has an intrinsic `fallback` so that if no value (`undefined`) is passed, that is used instead.
+
+```js
+import { Structure } from "gruber/structures.js";
+
+// A string primative, or use "Geoff Testington" if no value is passed.
+const name = Structure.string("Geoff Testington");
+
+// A URL instance or a string that contains a valid URL, always converting to a URL
+const website = Structure.url("https://example.com");
+
+// A number primative, falling back to 42
+const age = Structure.number(42);
+
+// An object with all of the fields above and nothing else
+// defaulting to create { name: "Geoff..", age: 42, website: "https..." } with the same fallback values
+const person = Structure.object({ name, age, website });
+
+// Process the Structure and get a value out. The returned value is strongly typed!
+// This will throw if the value passed does not match the schema.
+const value = person.process(/* ... */);
+```
+
+Those static Structure methods return a `Structure` instance. You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [StructError](#structerror).
+
+```js
+import { Structure, StructError } from "gruber/structures.js";
+
+// Create a new boolean structure (this should probably be included as Structure.boolean tbh)
+const boolean = new Structure(
+	{ type: "boolean", default: false },
+	(input, context) => {
+		if (input === undefined) return false;
+		if (typeof input !== "boolean") {
+			throw new StructError("Expected a boolean", context?.path);
+		}
+		return input;
+	},
+);
+```
+
+To create a custom Structure, you give it a [JSON schema](https://json-schema.org/) and a "process" function.
+The function is called to validate a value against the structure. It should return the processed value or throw a `StructError`.
+
+The `context` object might not be set and this means the struct is at the root level. If it is nested in an `object` then the context contains the path that the struct is located at, all the way from the root object. That path is expressed as an array of strings. That path is used to generate friendlier error messages to explain which nested field failed.
+
+With a Structure, you can generate a JSON Schema:
+
+```js
+import { Structure } from "gruber/structures.js";
+
+const person = Structure.object({
+	name: Structure.string("Geoff Testington"),
+	age: Structure.number(42),
+	website: Structure.url("https://example.com"),
+});
+
+console.log(JSON.stringify(person.getSchema(), null, 2));
+```
+
+This is a bit WIP, but you could use this to generate a JSON schema to lint configurations in your IDE.
+
+#### StructError
+
+This Error subclass contains extra information about why parsing a `Structure` failed.
+
+- The `message` field is a description of what went wrong, in the context of the structure.
+- An extra `path` field exists to describe the path from the root object to get to this failed structure
+- `children` is also available to let a structure have multiple child errors, i.e. for an object to have failures for each of the fields that have failed.
+
+On the error, there are also methods to help use it:
+
+- `toFriendlyString` goes through all nested failures and outputs a single message to describe everything that went wrong.
+- `getOneLiner` converts the error to a succint one-line error message, concatentating the path and message
+- `[Symbol.iterator]` is also available if you want to loop through all children nodes, only those that do not have children themselves.
+
+There is also the static method `StructError.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a StructError).
 
 ## Node.js library
 
