@@ -77,7 +77,7 @@ export class StructError extends Error {
 
 /**
  * @template T
- * @typedef {(input?: unknown, context: StructContext) => T} StructExec
+ * @typedef {(input?: unknown, context?: StructContext) => T} StructExec
  */
 
 /**
