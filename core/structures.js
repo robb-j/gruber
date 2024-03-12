@@ -77,7 +77,7 @@ export class StructError extends Error {
 
 /**
  * @template T
- * @typedef {(input?: unknown, context: StructContext) => T} StructExec
+ * @typedef {(input?: unknown, context?: StructContext) => T} StructExec
  */
 
 /**
@@ -106,16 +106,17 @@ export class Structure {
 	}
 
 	/**
-	 * @param {string} fallback
+	 * @param {string} [fallback]
 	 * @returns {Structure<string>}
 	 */
-	static string(fallback) {
-		const schema = {
-			type: "string",
-			default: fallback,
-		};
-		return new Structure(schema, (input, context) => {
-			if (input === undefined) return fallback;
+	static string(fallback = undefined) {
+		const schema = { type: "string" };
+		if (fallback !== undefined) schema.default = fallback;
+
+		return new Structure(schema, (input = fallback, context = undefined) => {
+			if (input === undefined) {
+				throw new StructError("Missing value", context?.path);
+			}
 			if (typeof input !== "string") {
 				throw new StructError("Expected a string", context?.path);
 			}
@@ -124,40 +125,42 @@ export class Structure {
 	}
 
 	/**
-	 * @param {number} fallback
+	 * @param {number} [fallback]
 	 * @returns {Structure<number>}
 	 */
 	static number(fallback) {
-		const schema = {
-			type: "number",
-			default: fallback,
-		};
-		return new Structure(schema, (input, context) => {
-			if (input === undefined) return fallback;
+		const schema = { type: "number", default: fallback };
+		if (fallback !== undefined) schema.default = fallback;
+
+		return new Structure(schema, (input = fallback, context = undefined) => {
+			if (input === undefined) {
+				throw new StructError("Missing value", context?.path);
+			}
 			if (typeof input === "string") {
 				const parsed = Number.parseFloat(input);
 				if (!Number.isNaN(parsed)) return parsed;
 			}
 			if (typeof input !== "number") {
-				throw new StructError("Not a number", context?.path);
+				throw new StructError("Expected a number", context?.path);
 			}
 			return input;
 		});
 	}
 
 	/**
-	 * @param {string | URL} fallback
+	 * @param {string | URL} [fallback]
 	 * @returns {Structure<URL>}
 	 */
 	static url(fallback) {
-		const schema = {
-			type: "string",
-			format: "uri",
-			default: fallback,
-		};
-		const fallbackUrl = new URL(fallback); // ~ make sure the fallback is valid ~
-		return new Structure(schema, (input, context) => {
-			if (input === undefined) return fallbackUrl;
+		const schema = { type: "string", format: "uri" };
+		if (fallback !== undefined) schema.default = fallback.toString();
+
+		// ~ make sure the fallback is valid ~
+		const url = fallback ? new URL(fallback) : undefined;
+		return new Structure(schema, (input = url, context = undefined) => {
+			if (input === undefined) {
+				throw new StructError("Missing value", context?.path);
+			}
 			if (input instanceof URL) return input;
 			if (typeof input !== "string") {
 				throw new StructError("Not a string or URL", context?.path);
@@ -199,12 +202,11 @@ export class Structure {
 		for (const [key, struct] of Object.entries(fields)) {
 			schema.properties[key] = struct.schema;
 		}
-		return new Structure(schema, (input, context) => {
+		return new Structure(schema, (input = {}, context = undefined) => {
 			const path = context?.path ?? [];
 			if (input && typeof input !== "object") {
-				throw new StructError("Not an object", path);
+				throw new StructError("Expected an object", path);
 			}
-			input = input ?? {};
 			const output = {};
 			const errors = [];
 			for (const key in fields) {
@@ -217,6 +219,41 @@ export class Structure {
 			}
 			if (errors.length > 0) {
 				throw new StructError("Object does not match schema", path, errors);
+			}
+			return output;
+		});
+	}
+
+	/**
+	 * **UNSTABLE** use at your own risk
+	 *
+	 * @template {Structure<any>} U
+	 * @param {U} struct
+	 * @returns {Structure<Array<Infer<U>>>}
+	 */
+	static array(struct) {
+		const schema = {
+			type: "array",
+			items: struct.schema,
+			default: [],
+		};
+		return new Structure(schema, (input = [], context = undefined) => {
+			const path = context?.path ?? [];
+			if (!Array.isArray(input)) {
+				throw new StructError("Expected an array", path);
+			}
+			const output = [];
+			const errors = [];
+			for (let i = 0; i < input.length; i++) {
+				const ctx = { path: [...path, `${i}`] };
+				try {
+					output.push(struct.process(input[i], ctx));
+				} catch (error) {
+					errors.push(StructError.chain(error, ctx));
+				}
+			}
+			if (errors.length > 0) {
+				throw new StructError("Array item does not match schema", path, errors);
 			}
 			return output;
 		});

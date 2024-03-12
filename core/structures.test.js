@@ -174,18 +174,25 @@ describe("Structure", () => {
 				"should fall back to the default if undefined is passed",
 			);
 		});
-		it("throws for non-strings", () => {
+		it("validates strings", () => {
 			const struct = Structure.string("fallback");
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
 				StructError,
 			);
-			assertEquals(
-				error,
-				new StructError("Expected a string", ["some", "path"]),
-				"should throw a StructError and capture the context",
+			assertEquals(error.message, "Expected a string");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
+		it("validates missing values", () => {
+			const struct = Structure.string();
+
+			const error = assertThrows(
+				() => struct.process(undefined, { path: ["some", "path"] }),
+				StructError,
 			);
+			assertEquals(error.message, "Missing value");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.string("fallback");
@@ -230,11 +237,19 @@ describe("Structure", () => {
 				() => struct.process("a string", { path: ["some", "path"] }),
 				StructError,
 			);
-			assertEquals(
-				error,
-				new StructError("Expected a number", ["some", "path"]),
-				"should throw a StructError and capture the context",
+
+			assertEquals(error.message, "Expected a number");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
+		it("validates missing values", () => {
+			const struct = Structure.number();
+
+			const error = assertThrows(
+				() => struct.process(undefined, { path: ["some", "path"] }),
+				StructError,
 			);
+			assertEquals(error.message, "Missing value");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.number(42);
@@ -314,18 +329,26 @@ describe("Structure", () => {
 				"should fall back to the default if undefined is passed",
 			);
 		});
-		it("throws for non-strings", () => {
+		it("validates non-strings", () => {
 			const struct = Structure.url("https://fallback.example.com");
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
 				StructError,
 			);
-			assertEquals(
-				error,
-				new StructError("Not a string or URL", ["some", "path"]),
-				"should throw a StructError and capture the context",
+
+			assertEquals(error.message, "Not a string or URL");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
+		it("validates missing values", () => {
+			const struct = Structure.url();
+
+			const error = assertThrows(
+				() => struct.process(undefined, { path: ["some", "path"] }),
+				StructError,
 			);
+			assertEquals(error.message, "Missing value");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.url("https://fallback.example.com");
@@ -333,6 +356,14 @@ describe("Structure", () => {
 				type: "string",
 				format: "uri",
 				default: "https://fallback.example.com",
+			});
+		});
+		it("stringifies URLs for JSON schema", () => {
+			const struct = Structure.url(new URL("https://fallback.example.com"));
+			assertEquals(struct.schema, {
+				type: "string",
+				format: "uri",
+				default: "https://fallback.example.com/",
 			});
 		});
 	});
@@ -368,20 +399,18 @@ describe("Structure", () => {
 				() => struct.process("not an object", { path: ["some", "path"] }),
 				StructError,
 			);
-			assertEquals(
-				error,
-				new StructError("Not an object", ["some", "path"]),
-				"should throw a StructError and capture the context",
-			);
+
+			assertEquals(error.message, "Expected an object");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
-		it("validates nested values", () => {
+		it("allows objects", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
 			const result = struct.process({ key: "value" });
 			assertEquals(result, { key: "value" });
 		});
-		it("fails on nested values", () => {
+		it("validates nested values", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
@@ -389,15 +418,57 @@ describe("Structure", () => {
 				() => struct.process({ key: 42 }),
 				StructError,
 			);
-			assertEquals(
-				error,
-				new StructError(
-					"Object does not match schema",
-					[],
-					[new StructError("Not a string", ["key"])],
-				),
-				"should validate properties against their schema",
+
+			assertEquals(error.message, "Object does not match schema");
+			assertEquals(error.path, []);
+			assertEquals(error.children.length, 1, "should have one nested error");
+			assertEquals(error.children[0].message, "Expected a string");
+			assertEquals(error.children[0].path, ["key"], "should capture context");
+		});
+	});
+
+	describe("array", () => {
+		it("creates a structure", () => {
+			const struct = Structure.array(Structure.string());
+			assertInstanceOf(struct, Structure);
+		});
+		it("generates JSON schema", () => {
+			const struct = Structure.array(Structure.string());
+			assertEquals(struct.schema, {
+				type: "array",
+				items: {
+					type: "string",
+				},
+				default: [],
+			});
+		});
+		it("throws for non-arrays", () => {
+			const struct = Structure.array(Structure.string());
+			const error = assertThrows(
+				() => struct.process("not an object", { path: ["some", "path"] }),
+				StructError,
 			);
+
+			assertEquals(error.message, "Expected an array");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
+		it("allows arrays", () => {
+			const struct = Structure.array(Structure.string());
+			const result = struct.process(["a", "b", "c"]);
+			assertEquals(result, ["a", "b", "c"]);
+		});
+		it("validates array items", () => {
+			const struct = Structure.array(Structure.string());
+			const error = assertThrows(
+				() => struct.process(["a", 2, "c"]),
+				StructError,
+			);
+
+			assertEquals(error.message, "Array item does not match schema");
+			assertEquals(error.path, []);
+			assertEquals(error.children.length, 1, "should have one nested error");
+			assertEquals(error.children[0].message, "Expected a string");
+			assertEquals(error.children[0].path, ["1"], "should capture context");
 		});
 	});
 });

@@ -54,6 +54,18 @@ export class Configuration {
 		return struct;
 	}
 
+	// TODO: Not sure if this should be exposed
+	// /**
+	//  * @template {Structure<any>} T
+	//  * @param {T} spec
+	//  * @returns {Structure<Array<import("./structures.js").Infer<T>>>}
+	//  */
+	// array(spec) {
+	// 	const struct = Structure.array(spec);
+	// 	struct[Configuration.spec] = { type: "array", value: spec };
+	// 	return struct;
+	// }
+
 	/**
 	 * @template {SpecOptions<string>} Spec @param {Spec} spec
 	 * @returns {Structure<string>}

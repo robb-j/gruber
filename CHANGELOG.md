@@ -6,7 +6,9 @@ This file documents notable changes to the project
 
 **new**
 
-- add number and boolean configurations (and their structures)
+- Structure primatives' fallback is now optional. If a fallback isn't provided, validation will fail if with a "Missing value" if no value is provided.
+- Added an unstable/experimental `Structure.array` for validating an array of a single Structure, e.g. an array of strings.
+- Add number and boolean configurations (and their structures)
 
 ## 0.3.0
 
