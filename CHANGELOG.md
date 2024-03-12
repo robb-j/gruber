@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**new**
+
+- Set a response body when creating a `HTTPError`, either via the constructor or the static methods.
+
 ## 0.3.0
 
 **new**

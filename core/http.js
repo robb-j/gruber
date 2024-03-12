@@ -41,29 +41,44 @@ export function defineRoute(init) {
 // NOTE: add more error codes as needed
 // NOTE: design an API for setting the body on static errors
 export class HTTPError extends Error {
-	/** https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400 */
-	static badRequest() {
-		return new HTTPError(400, "Bad Request");
+	/**
+	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+	 * @param {BodyInit} [body]
+	 */
+	static badRequest(body = undefined) {
+		return new HTTPError(400, "Bad Request", body);
 	}
 
-	/** https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401 */
-	static unauthorized() {
-		return new HTTPError(401, "Unauthorized");
+	/**
+	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+	 * @param {BodyInit} [body]
+	 */
+	static unauthorized(body = undefined) {
+		return new HTTPError(401, "Unauthorized", body);
 	}
 
-	/** https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 */
-	static notFound() {
-		return new HTTPError(404, "Not Found");
+	/**
+	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+	 * @param {BodyInit} [body]
+	 */
+	static notFound(body = undefined) {
+		return new HTTPError(404, "Not Found", body);
 	}
 
-	/** https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500 */
-	static internalServerError() {
-		return new HTTPError(500, "Internal Server Error");
+	/**
+	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+	 * @param {BodyInit} [body]
+	 */
+	static internalServerError(body = undefined) {
+		return new HTTPError(500, "Internal Server Error", body);
 	}
 
-	/** https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/501 */
-	static notImplemented() {
-		return new HTTPError(501, "Not Implemented");
+	/**
+	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/501
+	 * @param {BodyInit} [body]
+	 */
+	static notImplemented(body = undefined) {
+		return new HTTPError(501, "Not Implemented", body);
 	}
 
 	/** @type {number} */ status;
@@ -72,17 +87,19 @@ export class HTTPError extends Error {
 	/**
 	 * @param {number} status
 	 * @param {string} statusText
+	 * @param {BodyInit} [body=null]
 	 */
-	constructor(status = 200, statusText = "OK") {
+	constructor(status = 200, statusText = "OK", body = undefined) {
 		super(statusText);
 		this.status = status;
 		this.statusText = statusText;
+		this.body = body;
 		this.name = "HTTPError";
 		Error.captureStackTrace(this, HTTPError);
 	}
 
 	toResponse() {
-		return new Response(null, {
+		return new Response(this.body, {
 			status: this.status,
 			statusText: this.statusText,
 		});
