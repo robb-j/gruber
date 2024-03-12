@@ -27,9 +27,11 @@ describe("Configuration", () => {
 		const config = new Configuration(bareOptions);
 
 		it("stores the spec", () => {
-			const result = config.object({});
-			assertEquals(result[Configuration.spec].type, "object");
-			assertEquals(result[Configuration.spec].value, {});
+			const result = config.object({ key: "value" });
+			assertEquals(result[Configuration.spec], {
+				type: "object",
+				value: { key: "value" },
+			});
 		});
 	});
 
@@ -47,12 +49,72 @@ describe("Configuration", () => {
 		it("stores the spec", () => {
 			const result = config.string({
 				variable: "SOME_VAR",
+				flag: "--some-flag",
 				fallback: "value",
 			});
-			assertEquals(result[Configuration.spec].type, "string");
-			assertEquals(result[Configuration.spec].value, {
+			assertEquals(result[Configuration.spec], {
+				type: "string",
+				value: {
+					variable: "SOME_VAR",
+					flag: "--some-flag",
+					fallback: "value",
+				},
+			});
+		});
+	});
+
+	describe("number", () => {
+		const config = new Configuration(bareOptions);
+
+		it("requires a fallback", () => {
+			assertThrows(() => config.number({}), TypeError);
+		});
+		it("uses the fallback", () => {
+			const struct = config.number({ fallback: 42 });
+			const result = struct.process(undefined);
+			assertEquals(result, 42);
+		});
+		it("stores the spec", () => {
+			const result = config.number({
 				variable: "SOME_VAR",
-				fallback: "value",
+				flag: "--some-flag",
+				fallback: 42,
+			});
+			assertEquals(result[Configuration.spec], {
+				type: "number",
+				value: {
+					variable: "SOME_VAR",
+					flag: "--some-flag",
+					fallback: 42,
+				},
+			});
+		});
+	});
+
+	describe("boolean", () => {
+		const config = new Configuration(bareOptions);
+
+		it("requires a fallback", () => {
+			assertThrows(() => config.boolean({}), TypeError);
+		});
+		it("uses the fallback", () => {
+			const struct = config.boolean({ fallback: false });
+			const result = struct.process(undefined);
+			assertEquals(result, false);
+		});
+		it("stores the spec", () => {
+			const result = config.boolean({
+				variable: "SOME_VAR",
+				flag: "--some-flag",
+				fallback: false,
+			});
+			assertEquals(result[Configuration.spec], {
+				type: "boolean",
+				value: {
+					variable: "SOME_VAR",
+					flag: "--some-flag",
+					fallback: false,
+				},
 			});
 		});
 	});
@@ -76,12 +138,16 @@ describe("Configuration", () => {
 		it("stores the spec", () => {
 			const result = config.url({
 				variable: "SOME_VAR",
+				flag: "--some-flag",
 				fallback: "https://example.com",
 			});
-			assertEquals(result[Configuration.spec].type, "url");
-			assertEquals(result[Configuration.spec].value, {
-				variable: "SOME_VAR",
-				fallback: "https://example.com",
+			assertEquals(result[Configuration.spec], {
+				type: "url",
+				value: {
+					variable: "SOME_VAR",
+					flag: "--some-flag",
+					fallback: "https://example.com",
+				},
 			});
 		});
 	});

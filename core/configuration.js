@@ -6,10 +6,11 @@ import { Structure, StructError } from "./structures.js";
 // NOTE: the schema generation will include whatever value is passed to the structure, in the context of configuration it will be whatever is configured and may be something secret
 
 /**
+ * @template [T=any]
  * @typedef {object} SpecOptions
  * @property {string} [variable]
  * @property {string} [flag]
- * @property {string} fallback
+ * @property {T} fallback
  */
 
 /**
@@ -54,7 +55,7 @@ export class Configuration {
 	}
 
 	/**
-	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @template {SpecOptions<string>} Spec @param {Spec} spec
 	 * @returns {Structure<string>}
 	 */
 	string(spec = {}) {
@@ -67,11 +68,37 @@ export class Configuration {
 	}
 
 	/**
-	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @template {SpecOptions<number>} Spec @param {Spec} spec
+	 * @returns {Structure<number>}
+	 */
+	number(spec) {
+		if (typeof spec.fallback !== "number") {
+			throw new TypeError("spec.fallback must be a number");
+		}
+		const struct = Structure.number(this._getValue(spec));
+		struct[Configuration.spec] = { type: "number", value: spec };
+		return struct;
+	}
+
+	/**
+	 * @template {SpecOptions<boolean>} Spec @param {Spec} spec
+	 * @returns {Structure<number>}
+	 */
+	boolean(spec) {
+		if (typeof spec.fallback !== "boolean") {
+			throw new TypeError("spec.fallback must be a boolean");
+		}
+		const struct = Structure.boolean(this._getValue(spec));
+		struct[Configuration.spec] = { type: "boolean", value: spec };
+		return struct;
+	}
+
+	/**
+	 * @template {SpecOptions<string|URL>} Spec @param {Spec} spec
 	 * @returns {Structure<URL>}
 	 */
 	url(spec) {
-		if (typeof spec.fallback !== "string") {
+		if (typeof spec.fallback !== "string" && !(spec.fallback instanceof URL)) {
 			throw new TypeError("spec.fallback must be a string");
 		}
 		const struct = Structure.url(this._getValue(spec));

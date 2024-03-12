@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**new**
+
+- add number and boolean configurations (and their structures)
+
 ## 0.3.0
 
 **new**

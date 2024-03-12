@@ -248,6 +248,12 @@ export function getSpecification() {
 			fallback: "development",
 		}),
 
+		port: config.number({
+			variable: "APP_PORT",
+			flag: "--port",
+			fallback: 8000,
+		}),
+
 		selfUrl: config.url({
 			variable: "SELF_URL",
 			fallback: "http://localhost:3000",
@@ -260,6 +266,7 @@ export function getSpecification() {
 		}),
 
 		database: config.object({
+			enabled: config.boolean({ fallback: true }),
 			url: config.url({
 				variable: "DATABASE_URL",
 				flag: "--database-url",
