@@ -2,6 +2,13 @@
 
 This file documents notable changes to the project
 
+## next
+
+**new**
+
+- Structure primatives' fallback is now optional. If a fallback isn't provided, validation will fail if with a "Missing value" if no value is provided.
+- Added an unstable/experimental `Structure.array` for validating an array of a single Structure, e.g. an array of strings.
+
 ## 0.3.0
 
 **new**
