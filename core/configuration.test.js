@@ -89,6 +89,20 @@ describe("Configuration", () => {
 				},
 			});
 		});
+		it("parses strings", () => {
+			const vars = { SOME_VAR: "12.34" };
+			const config = new Configuration({
+				...bareOptions,
+				getEnvironmentVariable: (key) => vars[key],
+			});
+
+			const result = config.number({
+				variable: "SOME_VAR",
+				fallback: 42,
+			});
+
+			assertEquals(result.process(undefined), 12.34);
+		});
 	});
 
 	describe("boolean", () => {
@@ -116,6 +130,20 @@ describe("Configuration", () => {
 					fallback: false,
 				},
 			});
+		});
+		it("parses strings", () => {
+			const vars = { SOME_VAR: "true" };
+			const config = new Configuration({
+				...bareOptions,
+				getEnvironmentVariable: (key) => vars[key],
+			});
+
+			const result = config.boolean({
+				variable: "SOME_VAR",
+				fallback: false,
+			});
+
+			assertEquals(result.process(undefined), true);
 		});
 	});
 
@@ -162,7 +190,10 @@ describe("Configuration", () => {
 			const result = config._getValue({
 				flag: "--option",
 			});
-			assertEquals(result, "value-from-arg");
+			assertEquals(result, {
+				source: "argument",
+				value: "value-from-arg",
+			});
 		});
 		it("uses environment variables", () => {
 			const env = { MY_VAR: "value-from-env" };
@@ -173,12 +204,74 @@ describe("Configuration", () => {
 			const result = config._getValue({
 				variable: "MY_VAR",
 			});
-			assertEquals(result, "value-from-env");
+			assertEquals(result, {
+				source: "variable",
+				value: "value-from-env",
+			});
 		});
 		it("uses the fallback", () => {
 			const config = new Configuration(bareOptions);
 			const result = config._getValue({ fallback: "value-from-fallback" });
-			assertEquals(result, "value-from-fallback");
+			assertEquals(result, {
+				source: "fallback",
+				value: "value-from-fallback",
+			});
+		});
+	});
+
+	describe("_parseFloat", () => {
+		it("parses strings", () => {
+			const config = new Configuration(bareOptions);
+			assertEquals(
+				config._parseFloat({ source: "argument", value: "12.34" }),
+				12.34,
+				"should parse the float from the result",
+			);
+		});
+		it("passes numbers through", () => {
+			const config = new Configuration(bareOptions);
+			assertEquals(
+				config._parseFloat({ source: "fallback", value: 98.76 }),
+				98.76,
+				"should preserve number literals",
+			);
+		});
+	});
+
+	describe("_parseBoolean", () => {
+		it("parses strings", () => {
+			const config = new Configuration(bareOptions);
+			assertEquals(
+				config._parseBoolean({ source: "argument", value: "1" }),
+				true,
+			);
+			assertEquals(
+				config._parseBoolean({ source: "argument", value: "true" }),
+				true,
+			);
+			assertEquals(
+				config._parseBoolean({ source: "argument", value: "0" }),
+				false,
+			);
+			assertEquals(
+				config._parseBoolean({ source: "argument", value: "false" }),
+				false,
+			);
+		});
+		it("passes booleans through", () => {
+			const config = new Configuration(bareOptions);
+			assertEquals(
+				config._parseBoolean({ source: "fallback", value: true }),
+				true,
+				"should preserve boolean literals",
+			);
+		});
+		it("allows empty-string for arguments", () => {
+			const config = new Configuration(bareOptions);
+			assertEquals(
+				config._parseBoolean({ source: "argument", value: "" }),
+				true,
+			);
 		});
 	});
 

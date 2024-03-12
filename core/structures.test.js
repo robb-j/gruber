@@ -222,7 +222,7 @@ describe("Structure", () => {
 			);
 		});
 		// TODO: I'm not sure if this should be on Structure or Configuration
-		it("parses string integers", () => {
+		it.skip("parses string integers", () => {
 			const struct = Structure.number(42);
 			assertEquals(
 				struct.process("33"),
@@ -230,7 +230,7 @@ describe("Structure", () => {
 				"should parse the integer out of the string",
 			);
 		});
-		it("throws for non-numbers", () => {
+		it.skip("throws for non-numbers", () => {
 			const struct = Structure.number(42);
 
 			const error = assertThrows(

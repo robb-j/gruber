@@ -136,10 +136,10 @@ export class Structure {
 			if (input === undefined) {
 				throw new StructError("Missing value", context?.path);
 			}
-			if (typeof input === "string") {
-				const parsed = Number.parseFloat(input);
-				if (!Number.isNaN(parsed)) return parsed;
-			}
+			// if (typeof input === "string") {
+			// 	const parsed = Number.parseFloat(input);
+			// 	if (!Number.isNaN(parsed)) return parsed;
+			// }
 			if (typeof input !== "number") {
 				throw new StructError("Expected a number", context?.path);
 			}
