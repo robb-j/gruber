@@ -129,7 +129,7 @@ export class Structure {
 	 * @returns {Structure<number>}
 	 */
 	static number(fallback) {
-		const schema = { type: "number", default: fallback };
+		const schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
 
 		return new Structure(schema, (input = fallback, context = undefined) => {
@@ -142,6 +142,23 @@ export class Structure {
 			// }
 			if (typeof input !== "number") {
 				throw new StructError("Expected a number", context?.path);
+			}
+			return input;
+		});
+	}
+
+	/**
+	 * @param {boolean} fallback
+	 * @returns {Structure<boolean>}
+	 */
+	static boolean(fallback) {
+		const schema = { type: "boolean" };
+		if (fallback !== undefined) schema.default = fallback;
+
+		return new Structure(schema, (input, context) => {
+			if (input === undefined) return fallback;
+			if (typeof input !== "boolean") {
+				throw new StructError("Not a boolean", context?.path);
 			}
 			return input;
 		});
@@ -166,24 +183,6 @@ export class Structure {
 				throw new StructError("Not a string or URL", context?.path);
 			}
 			return new URL(input);
-		});
-	}
-
-	/**
-	 * @param {boolean} fallback
-	 * @returns {Structure<boolean>}
-	 */
-	static boolean(fallback) {
-		const schema = {
-			type: "boolean",
-			default: fallback,
-		};
-		return new Structure(schema, (input, context) => {
-			if (input === undefined) return fallback;
-			if (typeof input !== "boolean") {
-				throw new StructError("Not a boolean", context?.path);
-			}
-			return input;
 		});
 	}
 
