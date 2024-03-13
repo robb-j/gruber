@@ -136,6 +136,10 @@ export class Structure {
 			if (input === undefined) {
 				throw new StructError("Missing value", context?.path);
 			}
+			// if (typeof input === "string") {
+			// 	const parsed = Number.parseFloat(input);
+			// 	if (!Number.isNaN(parsed)) return parsed;
+			// }
 			if (typeof input !== "number") {
 				throw new StructError("Expected a number", context?.path);
 			}
@@ -162,6 +166,24 @@ export class Structure {
 				throw new StructError("Not a string or URL", context?.path);
 			}
 			return new URL(input);
+		});
+	}
+
+	/**
+	 * @param {boolean} fallback
+	 * @returns {Structure<boolean>}
+	 */
+	static boolean(fallback) {
+		const schema = {
+			type: "boolean",
+			default: fallback,
+		};
+		return new Structure(schema, (input, context) => {
+			if (input === undefined) return fallback;
+			if (typeof input !== "boolean") {
+				throw new StructError("Not a boolean", context?.path);
+			}
+			return input;
 		});
 	}
 

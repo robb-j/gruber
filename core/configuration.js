@@ -6,10 +6,18 @@ import { Structure, StructError } from "./structures.js";
 // NOTE: the schema generation will include whatever value is passed to the structure, in the context of configuration it will be whatever is configured and may be something secret
 
 /**
+ * @template [T=any]
  * @typedef {object} SpecOptions
  * @property {string} [variable]
  * @property {string} [flag]
- * @property {string} fallback
+ * @property {T} fallback
+ */
+
+/**
+ * @template T
+ * @typedef {object} SpecResult
+ * @property {'argument' | 'variable' | 'fallback'} source
+ * @property {string|T} value
  */
 
 /**
@@ -31,6 +39,12 @@ const _requiredOptions = [
 
 export class Configuration {
 	static spec = Symbol("Configuration.spec");
+	static booleanStrings = {
+		1: true,
+		true: true,
+		0: false,
+		false: false,
+	};
 
 	/** @type {ConfigurationOptions} */ options;
 
@@ -66,42 +80,100 @@ export class Configuration {
 	// }
 
 	/**
-	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @template {SpecOptions<string>} Spec @param {Spec} spec
 	 * @returns {Structure<string>}
 	 */
 	string(spec = {}) {
 		if (typeof spec.fallback !== "string") {
 			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
 		}
-		const struct = Structure.string(this._getValue(spec));
+		const struct = Structure.string(this._getValue(spec).value);
 		struct[Configuration.spec] = { type: "string", value: spec };
 		return struct;
 	}
 
 	/**
-	 * @template {SpecOptions} Spec @param {Spec} spec
+	 * @template {SpecOptions<number>} Spec @param {Spec} spec
+	 * @returns {Structure<number>}
+	 */
+	number(spec) {
+		if (typeof spec.fallback !== "number") {
+			throw new TypeError("spec.fallback must be a number");
+		}
+		const fallback = this._parseFloat(this._getValue(spec));
+		const struct = Structure.number(fallback);
+		struct[Configuration.spec] = { type: "number", value: spec };
+		return struct;
+	}
+
+	/**
+	 * @template {SpecOptions<boolean>} Spec @param {Spec} spec
+	 * @returns {Structure<number>}
+	 */
+	boolean(spec) {
+		if (typeof spec.fallback !== "boolean") {
+			throw new TypeError("spec.fallback must be a boolean");
+		}
+		const fallback = this._parseBoolean(this._getValue(spec));
+		const struct = Structure.boolean(fallback);
+		struct[Configuration.spec] = { type: "boolean", value: spec };
+		return struct;
+	}
+
+	/**
+	 * @template {SpecOptions<string|URL>} Spec @param {Spec} spec
 	 * @returns {Structure<URL>}
 	 */
 	url(spec) {
-		if (typeof spec.fallback !== "string") {
+		if (typeof spec.fallback !== "string" && !(spec.fallback instanceof URL)) {
 			throw new TypeError("spec.fallback must be a string");
 		}
-		const struct = Structure.url(this._getValue(spec));
+		const struct = Structure.url(this._getValue(spec).value);
 		struct[Configuration.spec] = { type: "url", value: spec };
 		return struct;
 	}
 
-	/** @param {SpecOptions} spec */
+	/**
+	 * @template T
+	 * @param {SpecOptions<T>} spec
+	 * @returns {SpecResult<T>}
+	 */
 	_getValue(spec) {
 		const argument = spec.flag
 			? this.options.getCommandArgument(spec.flag)
 			: null;
+		if (argument) return { source: "argument", value: argument };
 
 		const variable = spec.variable
 			? this.options.getEnvironmentVariable(spec.variable)
 			: null;
+		if (variable) return { source: "variable", value: variable };
 
-		return argument ?? variable ?? spec.fallback;
+		return { source: "fallback", value: spec.fallback };
+	}
+
+	/** @param {SpecResult<number>} result */
+	_parseFloat(result) {
+		if (typeof result.value === "string") {
+			return Number.parseFloat(result.value);
+		}
+		if (typeof result.value === "number") {
+			return result.value;
+		}
+		throw new TypeError("Unknown result");
+	}
+
+	/** @param {SpecResult<boolean>} result */
+	_parseBoolean(result) {
+		if (typeof result.value === "boolean") return result.value;
+
+		if (typeof Configuration.booleanStrings[result.value] === "boolean") {
+			return Configuration.booleanStrings[result.value];
+		}
+		if (result.source === "argument" && result.value === "") {
+			return true;
+		}
+		throw new TypeError("Unknown result");
 	}
 
 	/**

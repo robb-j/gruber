@@ -248,6 +248,12 @@ export function getSpecification() {
 			fallback: "development",
 		}),
 
+		port: config.number({
+			variable: "APP_PORT",
+			flag: "--port",
+			fallback: 8000,
+		}),
+
 		selfUrl: config.url({
 			variable: "SELF_URL",
 			fallback: "http://localhost:3000",
@@ -260,6 +266,7 @@ export function getSpecification() {
 		}),
 
 		database: config.object({
+			useSsl: config.boolean({ flag: "--database-ssl", fallback: true }),
 			url: config.url({
 				variable: "DATABASE_URL",
 				flag: "--database-url",
@@ -332,11 +339,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3"
+		"version": "1.2.3",
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database"
-	}
+		"url": "postgres://user:secret@localhost:5432/database",
+	},
 }
 ```
 
