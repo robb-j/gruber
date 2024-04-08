@@ -259,7 +259,6 @@ export function getSpecification() {
 			fallback: "http://localhost:3000",
 		}),
 
-		// Short hands?
 		meta: config.object({
 			name: config.string({ flag: "--app-name", fallback: pkg.name }),
 			version: config.string({ fallback: pkg.version }),
@@ -339,11 +338,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3",
+		"version": "1.2.3"
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database",
-	},
+		"url": "postgres://user:secret@localhost:5432/database"
+	}
 }
 ```
 

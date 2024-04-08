@@ -5,6 +5,19 @@ import { Structure, StructError } from "./structures.js";
 
 // NOTE: the schema generation will include whatever value is passed to the structure, in the context of configuration it will be whatever is configured and may be something secret
 
+// NAMING: this has got a bit confusing there is:
+// - `Configuration` the class with `config` as an instance of it
+// - config.object et all return a `spec` which is a Structure
+// - spec[Configuration.spec] returns a `spec`
+// - spec[Configuration.spec] are {X}Configuration instances
+//
+// hmmm
+//
+// changes:
+// - config.object (et all) return a `struct`
+// - struct[Config.spec] return a spec
+// - struct[Config.spec] are {X}Specification instances
+
 /**
  * @template [T=any]
  * @typedef {object} SpecOptions
@@ -21,13 +34,116 @@ import { Structure, StructError } from "./structures.js";
  */
 
 /**
- * @typedef {object} ConfigurationOptions
- * @property {(url: URL) => Promise<string | null>} readTextFile
- * @property {(key: string) => (string | undefined)} getEnvironmentVariable
- * @property {(key: string) => (string | undefined)} getCommandArgument
- * @property {(value: any) => (string | Promise<string>)} stringify
- * @property {(value: string) => (any)} parse
+ * @typedef {object} DescribeResult
+ * @property {unknown} fallback
+ * @property {Record<string,string>[]} fields
  */
+
+/**
+ * @typedef {object} ConfigurationType
+ * @property {string} type
+ * @property {unknown} options
+ * @property {(name: string, describe: Function) => DescribeResult} describe
+ */
+
+/**
+ * @typedef ConfigSpec
+ * @property {string} type
+ * @property {any} options
+ * @property {(name: string) => DescribeResult} describe
+ */
+
+/**
+ * @param {string} name
+ * @param {unknown} value
+ * @returns {ConfigSpec}
+ */
+function getSpec(name, value) {
+	if (
+		typeof value[Configuration.spec] !== "object" ||
+		typeof value[Configuration.spec].type !== "string" ||
+		typeof value[Configuration.spec].options !== "object" ||
+		typeof value[Configuration.spec].describe !== "function"
+	) {
+		throw new TypeError(`Invalid [Configuration.spec] for '${name}'`);
+	}
+	return value[Configuration.spec];
+}
+
+class _ObjectSpecification {
+	/** @param {Record<string, SpecOptions>} options  */
+	constructor(options) {
+		this.type = "object";
+		this.options = options;
+	}
+	describe(name) {
+		const fallback = {};
+		const fields = [];
+		for (const [key, childOptions] of Object.entries(this.options)) {
+			const childName = (name ? name + "." : "") + key;
+			const childSpec = getSpec(childName, childOptions).describe(childName);
+
+			fallback[key] = childSpec.fallback;
+			fields.push(...childSpec.fields);
+		}
+		return { fallback, fields };
+	}
+}
+
+class _StringSpecification {
+	/** @param {SpecOptions<string>} */
+	constructor(options) {
+		this.type = "string";
+		this.options = options;
+	}
+	describe(name) {
+		return {
+			fallback: this.options.fallback,
+			fields: [{ name, type: "string", ...this.options }],
+		};
+	}
+}
+
+class _NumberSpecification {
+	/** @param {SpecOptions<string>} options */
+	constructor(options) {
+		this.type = "number";
+		this.options = options;
+	}
+	describe(name) {
+		return {
+			fallback: this.options.fallback,
+			fields: [{ name, type: "number", ...this.options }],
+		};
+	}
+}
+
+class _BooleanSpecification {
+	/** @param {SpecOptions<boolean>} options */
+	constructor(options) {
+		this.type = "boolean";
+		this.options = options;
+	}
+	describe(name) {
+		return {
+			fallback: this.options.fallback,
+			fields: [{ name, type: "boolean", ...this.options }],
+		};
+	}
+}
+class _URLSpecification {
+	/** @param {SpecOptions<string|URL>} options */
+	constructor(options) {
+		this.type = "url";
+		this.options = options;
+	}
+	describe(name) {
+		return {
+			fallback: new URL(this.options.fallback),
+			fields: [{ name, type: "url", ...this.options }],
+		};
+	}
+}
 
 const _requiredOptions = [
 	"readTextFile",
@@ -36,6 +152,15 @@ const _requiredOptions = [
 	"stringify",
 	"parse",
 ];
+
+/**
+ * @typedef {object} ConfigurationOptions
+ * @property {(url: URL) => Promise<string | null>} readTextFile
+ * @property {(key: string) => (string | undefined)} getEnvironmentVariable
+ * @property {(key: string) => (string | undefined)} getCommandArgument
+ * @property {(value: any) => (string | Promise<string>)} stringify
+ * @property {(value: string) => (any)} parse
+ */
 
 export class Configuration {
 	static spec = Symbol("Configuration.spec");
@@ -58,12 +183,15 @@ export class Configuration {
 
 	/**
 	 * @template {Record<string, Structure<any>>} T
-	 * @param {T} spec
+	 * @param {T} options
 	 * @returns {Structure<{ [K in keyof T]: import("./structures.js").Infer<T[K]> }>}
 	 */
-	object(spec) {
-		const struct = Structure.object(spec);
-		struct[Configuration.spec] = { type: "object", value: spec };
+	object(options) {
+		if (typeof options !== "object" || options === null) {
+			throw new TypeError("options must be a non-null object");
+		}
+		const struct = Structure.object(options);
+		struct[Configuration.spec] = new _ObjectSpecification(options);
 		return struct;
 	}
 
@@ -80,56 +208,65 @@ export class Configuration {
 	// }
 
 	/**
-	 * @template {SpecOptions<string>} Spec @param {Spec} spec
+	 * @param {SpecOptions<string>} options
 	 * @returns {Structure<string>}
 	 */
-	string(spec = {}) {
-		if (typeof spec.fallback !== "string") {
-			throw new TypeError("spec.fallback must be a string: " + spec.fallback);
+	string(options = {}) {
+		if (typeof options.fallback !== "string") {
+			throw new TypeError(
+				"options.fallback must be a string: " + options.fallback,
+			);
 		}
-		const struct = Structure.string(this._getValue(spec).value);
-		struct[Configuration.spec] = { type: "string", value: spec };
+
+		const struct = Structure.string(this._getValue(options).value);
+		struct[Configuration.spec] = new _StringSpecification(options);
 		return struct;
 	}
 
 	/**
-	 * @template {SpecOptions<number>} Spec @param {Spec} spec
+	 * @param {SpecOptions<number>} options
 	 * @returns {Structure<number>}
 	 */
-	number(spec) {
-		if (typeof spec.fallback !== "number") {
-			throw new TypeError("spec.fallback must be a number");
+	number(options) {
+		if (typeof options.fallback !== "number") {
+			throw new TypeError("options.fallback must be a number");
 		}
-		const fallback = this._parseFloat(this._getValue(spec));
+
+		const fallback = this._parseFloat(this._getValue(options));
 		const struct = Structure.number(fallback);
-		struct[Configuration.spec] = { type: "number", value: spec };
+		// struct[Configuration.spec] = { type: "number", value: options };
+		struct[Configuration.spec] = new _NumberSpecification(options);
 		return struct;
 	}
 
 	/**
-	 * @template {SpecOptions<boolean>} Spec @param {Spec} spec
+	 * @param {SpecOptions<boolean>} options
 	 * @returns {Structure<number>}
 	 */
-	boolean(spec) {
-		if (typeof spec.fallback !== "boolean") {
-			throw new TypeError("spec.fallback must be a boolean");
+	boolean(options) {
+		if (typeof options.fallback !== "boolean") {
+			throw new TypeError("options.fallback must be a boolean");
 		}
-		const fallback = this._parseBoolean(this._getValue(spec));
+
+		const fallback = this._parseBoolean(this._getValue(options));
 		const struct = Structure.boolean(fallback);
-		struct[Configuration.spec] = { type: "boolean", value: spec };
+		struct[Configuration.spec] = new _BooleanSpecification(options);
 		return struct;
 	}
 
 	/**
-	 * @template {SpecOptions<string|URL>} Spec @param {Spec} spec
+	 * @param {SpecOptions<string|URL>} options
 	 * @returns {Structure<URL>}
 	 */
-	url(spec) {
-		if (typeof spec.fallback !== "string" && !(spec.fallback instanceof URL)) {
-			throw new TypeError("spec.fallback must be a string");
+	url(options) {
+		if (
+			typeof options.fallback !== "string" &&
+			!(options.fallback instanceof URL)
+		) {
+			throw new TypeError("options.fallback must be a string");
 		}
-		const struct = Structure.url(this._getValue(spec).value);
-		struct[Configuration.spec] = { type: "url", value: spec };
+		const struct = Structure.url(this._getValue(options).value);
+		struct[Configuration.spec] = new _URLSpecification(options);
 		return struct;
 	}
 
@@ -202,9 +339,9 @@ export class Configuration {
 		}
 	}
 
-	/** @template T @param {T} config */
-	getUsage(spec) {
-		const { fallback, fields } = this.describeSpecification(spec);
+	/** @param {unknown} value */
+	getUsage(value) {
+		const { fallback, fields } = this.describe(value);
 
 		const lines = [
 			"Usage:",
@@ -224,46 +361,16 @@ export class Configuration {
 	}
 
 	/**
-	 * @template T @param {T} config
+	 * @param {unknown} struct
 	 * @param {string} [prefix]
 	 * @returns {{ config: any, fields: [string, string] }}
 	 */
-	describeSpecification(spec, prefix = "") {
-		if (!spec[Configuration.spec]) {
-			throw new TypeError("Invalid [Configuration.spec]");
-		}
-		const { type, value } = spec[Configuration.spec];
-
-		if (type === "object") {
-			const fallback = {};
-			const fields = [];
-			for (const [key, value2] of Object.entries(value)) {
-				const child = this.describeSpecification(
-					value2,
-					(prefix ? prefix + "." : "") + key,
-				);
-				fallback[key] = child.fallback;
-				fields.push(...child.fields);
-			}
-			return { fallback, fields };
-		}
-		if (type === "string") {
-			return {
-				fallback: value.fallback,
-				fields: [{ name: prefix, type, ...value }],
-			};
-		}
-		if (type === "url") {
-			return {
-				fallback: new URL(value.fallback),
-				fields: [{ name: prefix, type, ...value }],
-			};
-		}
-		throw new TypeError("Invalid [Configuration.spec].type '" + type + "'");
+	describe(value, prefix = "") {
+		return getSpec(prefix || ".", value).describe(prefix);
 	}
 
-	/** @param {Structure<any>} spec */
-	getJSONSchema(spec) {
-		return spec.getSchema();
+	/** * @param {Structure<any>} struct */
+	getJSONSchema(struct) {
+		return struct.getSchema();
 	}
 }
