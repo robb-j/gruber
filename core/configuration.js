@@ -15,37 +15,30 @@ import { Structure, StructError } from "./structures.js";
 
 /**
  * @template T
- * @typedef {object} SpecResult
+ * @typedef {object} ConfigurationResult
  * @property {'argument' | 'variable' | 'fallback'} source
  * @property {string|T} value
  */
 
 /**
- * @typedef {object} DescribeResult
+ * @typedef {object} ConfigurationDescription
  * @property {unknown} fallback
  * @property {Record<string,string>[]} fields
  */
 
 /**
- * @typedef {object} ConfigurationType
- * @property {string} type
- * @property {unknown} options
- * @property {(name: string, describe: Function) => DescribeResult} describe
- */
-
-/**
- * @typedef ConfigurationSpec
+ * @typedef {object} Specification
  * @property {string} type
  * @property {any} options
- * @property {(name: string) => DescribeResult} describe
+ * @property {(name: string) => ConfigurationDescription} describe
  */
 
 /**
  * @param {string} name
  * @param {unknown} value
- * @returns {ConfigurationSpec}
+ * @returns {Specification}
  */
-function getSpec(name, value) {
+export function _getSpec(name, value) {
 	if (
 		typeof value[Configuration.spec] !== "object" ||
 		typeof value[Configuration.spec].type !== "string" ||
@@ -68,7 +61,7 @@ export class _ObjectSpec {
 		const fields = [];
 		for (const [key, childOptions] of Object.entries(this.options)) {
 			const childName = (name ? name + "." : "") + key;
-			const childSpec = getSpec(childName, childOptions).describe(childName);
+			const childSpec = _getSpec(childName, childOptions).describe(childName);
 
 			fallback[key] = childSpec.fallback;
 			fields.push(...childSpec.fields);
@@ -213,7 +206,7 @@ export class Configuration {
 	/**
 	 * @template T
 	 * @param {SpecOptions<T>} options
-	 * @returns {SpecResult<T>}
+	 * @returns {ConfigurationResult<T>}
 	 */
 	_getValue(options) {
 		const argument = options.flag
@@ -229,7 +222,7 @@ export class Configuration {
 		return { source: "fallback", value: options.fallback };
 	}
 
-	/** @param {SpecResult<number>} result */
+	/** @param {ConfigurationResult<number>} result */
 	_parseFloat(result) {
 		if (typeof result.value === "string") {
 			const parsed = Number.parseFloat(result.value);
@@ -244,7 +237,7 @@ export class Configuration {
 		throw new TypeError("Unknown result");
 	}
 
-	/** @param {SpecResult<boolean>} result */
+	/** @param {ConfigurationResult<boolean>} result */
 	_parseBoolean(result) {
 		if (typeof result.value === "boolean") return result.value;
 
@@ -310,7 +303,7 @@ export class Configuration {
 	 * @returns {{ config: any, fields: [string, string] }}
 	 */
 	describe(value, prefix = "") {
-		return getSpec(prefix || ".", value).describe(prefix);
+		return _getSpec(prefix || ".", value).describe(prefix);
 	}
 
 	/** * @param {Structure<any>} struct */
