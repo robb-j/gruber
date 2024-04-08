@@ -241,12 +241,9 @@ import { getNodeConfiguration } from "gruber";
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const config = getNodeConfiguration();
 
-export function getSpecification() {
+export function getConfigStruct() {
 	return config.object({
-		env: config.string({
-			variable: "NODE_ENV",
-			fallback: "development",
-		}),
+		env: config.string({ variable: "NODE_ENV", fallback: "development" }),
 
 		port: config.number({
 			variable: "APP_PORT",
@@ -277,11 +274,11 @@ export function getSpecification() {
 
 // Load the configuration and parse it
 export function loadConfiguration(path) {
-	return config.load(path, getSpecification());
+	return config.load(path, getConfigStruct());
 }
 
 // TypeScript thought:
-// export type Configuration = Infer<ReturnType<typeof getSpecification>>
+// export type Configuration = Infer<ReturnType<typeof getConfigStruct>>
 
 // Expose the configutation for use in the application
 export const appConfig = await loadConfiguration(
@@ -290,12 +287,12 @@ export const appConfig = await loadConfiguration(
 
 // Export a method to generate usage documentation
 export function getConfigurationUsage() {
-	return config.getUsage(getSpecification());
+	return config.getUsage(getConfigStruct());
 }
 
 // Export a method to generate a JSON Schema for the configuration
 export function getConfigurationSchema() {
-	return config.getJSONSchema(getSpecification());
+	return config.getJSONSchema(getConfigStruct());
 }
 ```
 
@@ -338,11 +335,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3"
+		"version": "1.2.3",
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database"
-	}
+		"url": "postgres://user:secret@localhost:5432/database",
+	},
 }
 ```
 
@@ -368,7 +365,7 @@ this can be done like so:
 
 ```js
 export function loadConfiguration() {
-	const appConfig = config.loadJsonSync(path, getSpecification());
+	const appConfig = config.loadJsonSync(path, getConfigStruct());
 
 	// Only run these checks when running in production
 	if (appConfig.env === "production") {

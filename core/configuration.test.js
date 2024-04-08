@@ -215,7 +215,7 @@ describe("Configuration", () => {
 			assertEquals(result[Configuration.spec].options, {
 				variable: "SOME_VAR",
 				flag: "--some-flag",
-				fallback: "https://example.com",
+				fallback: new URL("https://example.com"),
 			});
 		});
 	});
@@ -392,7 +392,7 @@ describe("Configuration", () => {
 				{
 					name: "selfUrl",
 					type: "url",
-					fallback: "https://example.com",
+					fallback: new URL("https://example.com"),
 					variable: "SELF_URL",
 					flag: "--self-url",
 				},
