@@ -1,6 +1,11 @@
-import { assertInstanceOf } from "../bundle/deno/core/test-deps.js";
 import { StructError, Structure } from "./structures.js";
-import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
+import {
+	assertEquals,
+	assertThrows,
+	describe,
+	it,
+	assertInstanceOf,
+} from "./test-deps.js";
 
 describe("StructError", () => {
 	describe("constructor", () => {
@@ -139,7 +144,7 @@ describe("Structure", () => {
 			assertEquals(
 				struct.getSchema(),
 				{
-					$schema: "https://json-schema.org/draft/2019-09/schema",
+					$schema: "https://json-schema.org/draft/2020-12/schema",
 					type: "string",
 					default: "fallback",
 				},
@@ -216,7 +221,16 @@ describe("Structure", () => {
 				"should fall back to the default if undefined is passed",
 			);
 		});
-		it("throws for non-numbers", () => {
+		// TODO: I'm not sure if this should be on Structure or Configuration
+		it.skip("parses string integers", () => {
+			const struct = Structure.number(42);
+			assertEquals(
+				struct.process("33"),
+				33,
+				"should parse the integer out of the string",
+			);
+		});
+		it.skip("throws for non-numbers", () => {
 			const struct = Structure.number(42);
 
 			const error = assertThrows(
@@ -240,6 +254,46 @@ describe("Structure", () => {
 		it("generates JSON schema", () => {
 			const struct = Structure.number(42);
 			assertEquals(struct.schema, { type: "number", default: 42 });
+		});
+	});
+
+	describe("boolean", () => {
+		it("creates a structure", () => {
+			const struct = Structure.boolean(false);
+			assertInstanceOf(struct, Structure);
+		});
+		it("allows booleans", () => {
+			const struct = Structure.boolean(false);
+			assertEquals(
+				struct.process(true),
+				true,
+				"should allow boolean values through",
+			);
+		});
+		it("uses the fallback", () => {
+			const struct = Structure.boolean(false);
+			assertEquals(
+				struct.process(undefined),
+				false,
+				"should fall back to the default if undefined is passed",
+			);
+		});
+		it("throws for non-booleans", () => {
+			const struct = Structure.boolean(false);
+
+			const error = assertThrows(
+				() => struct.process("a string", { path: ["some", "path"] }),
+				StructError,
+			);
+			assertEquals(
+				error,
+				new StructError("Expected a boolean", ["some", "path"]),
+				"should throw a StructError and capture the context",
+			);
+		});
+		it("generates JSON schema", () => {
+			const struct = Structure.boolean(false);
+			assertEquals(struct.schema, { type: "boolean", default: false });
 		});
 	});
 

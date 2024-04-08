@@ -5,40 +5,48 @@
 
 import { getNodeConfiguration } from "gruber/configuration.js";
 
-function getConfigSpec() {
-	return config.object({
-		env: config.string({ variable: "NODE_ENV", fallback: "development" }),
-
-		selfUrl: config.url({
-			variable: "SELF_URL",
-			fallback: "http://localhost:3000",
-		}),
-
-		// Short hands?
-		meta: config.object({
-			name: config.string({ fallback: pkg.name, flag: "--app-name" }),
-			version: config.string({ fallback: pkg.version }),
-		}),
-
-		database: config.object({
-			url: config.url({
-				flag: "--database-url",
-				variable: "DATABASE_URL",
-				fallback: "postgres://user:secret@localhost:5432/database",
-			}),
-		}),
-	});
-}
-
+const config = getNodeConfiguration();
 const pkg = { name: "gruber-app", version: "1.2.3" };
 
-const config = getNodeConfiguration();
+const struct = config.object({
+	env: config.string({ variable: "NODE_ENV", fallback: "development" }),
+
+	port: config.number({
+		variable: "APP_PORT",
+		flag: "--port",
+		fallback: 8000,
+	}),
+
+	selfUrl: config.url({
+		variable: "SELF_URL",
+		fallback: "http://localhost:3000",
+	}),
+
+	meta: config.object({
+		name: config.string({ flag: "--app-name", fallback: pkg.name }),
+		version: config.string({ fallback: pkg.version }),
+	}),
+
+	database: config.object({
+		useSsl: config.boolean({ flag: "--database-ssl", fallback: false }),
+		url: config.url({
+			variable: "DATABASE_URL",
+			flag: "--database-url",
+			fallback: "postgres://user:secret@localhost:5432/database",
+		}),
+	}),
+});
+
 const appConfig = await config.load(
 	new URL("./config.json", import.meta.url),
-	getConfigSpec(),
+	struct,
 );
 
-console.log(config.getUsage(getConfigSpec()));
+console.log(config.getUsage(struct));
 console.log();
-console.log("Loaded:");
+console.log("Current:");
 console.log(JSON.stringify(appConfig, null, 2));
+console.log();
+console.log();
+console.log("JSON Schema:");
+console.log(JSON.stringify(config.getJSONSchema(struct)));

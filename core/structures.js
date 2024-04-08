@@ -100,7 +100,7 @@ export class Structure {
 
 	getSchema() {
 		return {
-			$schema: "https://json-schema.org/draft/2019-09/schema",
+			$schema: "https://json-schema.org/draft/2020-12/schema",
 			...this.schema,
 		};
 	}
@@ -129,15 +129,36 @@ export class Structure {
 	 * @returns {Structure<number>}
 	 */
 	static number(fallback) {
-		const schema = { type: "number", default: fallback };
+		const schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
 
 		return new Structure(schema, (input = fallback, context = undefined) => {
 			if (input === undefined) {
 				throw new StructError("Missing value", context?.path);
 			}
+			// if (typeof input === "string") {
+			// 	const parsed = Number.parseFloat(input);
+			// 	if (!Number.isNaN(parsed)) return parsed;
+			// }
 			if (typeof input !== "number") {
 				throw new StructError("Expected a number", context?.path);
+			}
+			return input;
+		});
+	}
+
+	/**
+	 * @param {boolean} fallback
+	 * @returns {Structure<boolean>}
+	 */
+	static boolean(fallback) {
+		const schema = { type: "boolean" };
+		if (fallback !== undefined) schema.default = fallback;
+
+		return new Structure(schema, (input, context) => {
+			if (input === undefined) return fallback;
+			if (typeof input !== "boolean") {
+				throw new StructError("Not a boolean", context?.path);
 			}
 			return input;
 		});
