@@ -2,7 +2,7 @@
 
 This file documents notable changes to the project
 
-## next
+## 0.4.0
 
 **new**
 
@@ -12,6 +12,12 @@ This file documents notable changes to the project
 - Structure primatives' fallback is now optional. If a fallback isn't provided, validation will fail if with a "Missing value" if no value is provided.
 - Added an unstable/experimental `Structure.array` for validating an array of a single Structure, e.g. an array of strings.
 - Add number and boolean configurations (and their structures)
+
+**fixes**
+
+- Improve JSDoc types for Deno / Node clients
+- Fix Structure typings
+- Organise Config/Structure/Spec wording
 
 ## 0.3.0
 
