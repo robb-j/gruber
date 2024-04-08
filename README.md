@@ -811,6 +811,8 @@ more can be added in the future as the need arrises.
 They directly map to HTTP error as codes documented on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
 
 ```js
+import { HTTPError } from "gruber";
+
 const teapot = new HTTPError(418, "I'm a teapot");
 ```
 
@@ -823,6 +825,55 @@ teapot.toResponse();
 
 Currently, you can't set the body of the generated Response objects.
 This would be nice to have in the future, but the API should be thoughtfully designed first.
+
+**Request body**
+
+You can set the body to be returned when the HTTPError is thrown from the constructor or the factory methods:
+
+```ts
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(418, "I'm a teapot", "model=teabot-5000");
+
+throw HTTPError.badRequest("no coffee provided");
+```
+
+The value of the body is the same as the `body` in the
+[Response constructor](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#body).
+
+**Headers**
+
+> _EXPERIMENTAL_
+
+If you really want, you can set headers on a HTTPError too:
+
+```ts
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(
+	400,
+	"Bad Request",
+	JSON.stringify({ some: "thing" }),
+	{ "Content-Type": "application/json" },
+);
+
+// or via mutating the headers object
+teapot.headers.set("X-HOTEL-BAR", "Hotel Bar?");
+```
+
+If you want fine-grain control, you might be better off creating a subclass, e.g. `BadJSONRequest`:
+
+```ts
+class BadJSONRequest extends HTTPError {
+	constructor(body) {
+		super(400, "Bad Request", body, { "Content-type": "application/json" });
+		this.name = "BadJSONRequest";
+		Error.captureStackTrace(this, BadJSONRequest);
+	}
+}
+
+throw new BadJSONRequest({ message: "Something went wrong..." });
+```
 
 ### FetchRouter
 
