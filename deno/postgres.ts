@@ -27,7 +27,7 @@ export function getDenoPostgresMigratorOptions(
 	options: DenoPostgresMigratorOptions,
 ) {
 	return {
-		...getPostgresMigratorOptions({ sql: options.sql }),
+		...getPostgresMigratorOptions({ sql: options.sql as any }),
 
 		async getDefinitions() {
 			const migrations = [{ name: "000-bootstrap.ts", ...bootstrapMigration }];
