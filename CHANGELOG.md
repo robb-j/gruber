@@ -6,10 +6,11 @@ This file documents notable changes to the project
 
 **new**
 
+- Added `config.number(...)` & `config.boolean(...)` types along with `Structure` equivolents.
 - Set a response body when creating a `HTTPError`, either via the constructor or the static methods.
+- Set headers when creating an `HTTPError` and mutate the headers on it too, to be passed to the Response.
 - Structure primatives' fallback is now optional. If a fallback isn't provided, validation will fail if with a "Missing value" if no value is provided.
 - Added an unstable/experimental `Structure.array` for validating an array of a single Structure, e.g. an array of strings.
-- Added `config.number(...)` & `config.boolean(...)` types along with `Structure` equivolents.
 
 ## 0.3.0
 

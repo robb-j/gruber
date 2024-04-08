@@ -332,11 +332,11 @@ You can provide a configuration file like **config.json** to load through the co
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3"
+		"version": "1.2.3",
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database"
-	}
+		"url": "postgres://user:secret@localhost:5432/database",
+	},
 }
 ```
 
@@ -837,6 +837,26 @@ throw HTTPError.badRequest("no coffee provided");
 
 The value of the body is the same as the `body` in the
 [Response constructor](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#body).
+
+**Headers**
+
+> _EXPERIMENTAL_
+
+If you really want, you can set headers on a HTTPError too:
+
+```ts
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(
+	400,
+	"Bad Request",
+	JSON.stringify({ some: "thing" }),
+	{ "Content-Type": "application/json" },
+);
+
+// or via mutating the headers object
+teapot.headers.set("X-HOTEL-BAR", "Hotel Bar?");
+```
 
 ### FetchRouter
 

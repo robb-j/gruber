@@ -87,14 +87,21 @@ export class HTTPError extends Error {
 	/**
 	 * @param {number} status
 	 * @param {string} statusText
-	 * @param {BodyInit} [body=null]
+	 * @param {BodyInit|null|undefined} [body=null]
+	 * @param {HeadersInit} [headers=undefined]
 	 */
-	constructor(status = 200, statusText = "OK", body = undefined) {
+	constructor(
+		status = 200,
+		statusText = "OK",
+		body = null,
+		headers = undefined,
+	) {
 		super(statusText);
 		this.status = status;
 		this.statusText = statusText;
 		this.body = body;
 		this.name = "HTTPError";
+		this.headers = new Headers(headers);
 		Error.captureStackTrace(this, HTTPError);
 	}
 
@@ -102,6 +109,7 @@ export class HTTPError extends Error {
 		return new Response(this.body, {
 			status: this.status,
 			statusText: this.statusText,
+			headers: this.headers,
 		});
 	}
 }
