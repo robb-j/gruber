@@ -858,6 +858,20 @@ const teapot = new HTTPError(
 teapot.headers.set("X-HOTEL-BAR", "Hotel Bar?");
 ```
 
+If you want fine-grain control, you might be better off creating a subclass, e.g. `BadJSONRequest`:
+
+```ts
+class BadJSONRequest extends HTTPError {
+	constructor(body) {
+		super(400, "Bad Request", body, { "Content-type": "application/json" });
+		this.name = "BadJSONRequest";
+		Error.captureStackTrace(this, BadJSONRequest);
+	}
+}
+
+throw new BadJSONRequest({ message: "Something went wrong..." });
+```
+
 ### FetchRouter
 
 `FetchRouter` is a web-native router for routes defined with `defineRoute`.
