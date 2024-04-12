@@ -74,7 +74,7 @@ export class _ObjectSpec {
 // NOTE: describe() calls should return the actual value in "fallback"
 //       and the string-value in fields
 //
-export class _LiteralSpec {
+export class _PrimativeSpec {
 	/**
 	 * @param {string} type
 	 * @param {SpecOptions<any>} options
@@ -161,7 +161,7 @@ export class Configuration {
 		}
 
 		const struct = Structure.string(this._getValue(options).value);
-		struct[Configuration.spec] = new _LiteralSpec("string", options);
+		struct[Configuration.spec] = new _PrimativeSpec("string", options);
 		return struct;
 	}
 
@@ -176,7 +176,7 @@ export class Configuration {
 
 		const fallback = this._parseFloat(this._getValue(options));
 		const struct = Structure.number(fallback);
-		struct[Configuration.spec] = new _LiteralSpec("number", options);
+		struct[Configuration.spec] = new _PrimativeSpec("number", options);
 		return struct;
 	}
 
@@ -191,7 +191,7 @@ export class Configuration {
 
 		const fallback = this._parseBoolean(this._getValue(options));
 		const struct = Structure.boolean(fallback);
-		struct[Configuration.spec] = new _LiteralSpec("boolean", options);
+		struct[Configuration.spec] = new _PrimativeSpec("boolean", options);
 		return struct;
 	}
 
@@ -207,7 +207,7 @@ export class Configuration {
 			throw new TypeError("options.fallback must be a string or URL");
 		}
 		const struct = Structure.url(this._getValue(options).value);
-		struct[Configuration.spec] = new _LiteralSpec("url", {
+		struct[Configuration.spec] = new _PrimativeSpec("url", {
 			...options,
 			fallback: new URL(options.fallback),
 		});
