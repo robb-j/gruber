@@ -148,7 +148,7 @@ export class Structure {
 	}
 
 	/**
-	 * @param {boolean} fallback
+	 * @param {boolean} [fallback]
 	 * @returns {Structure<boolean>}
 	 */
 	static boolean(fallback) {
