@@ -85,6 +85,11 @@ export class StructError extends Error {
  * @typedef {T extends Structure<infer U> ? U : never} Infer
  */
 
+function _additionalProperties(fields, input) {
+	const allowed = new Set(Object.keys(fields));
+	return Array.from(Object.keys(input)).filter((key) => !allowed.has(key));
+}
+
 /**
  * @template T
  */
@@ -206,6 +211,9 @@ export class Structure {
 			if (input && typeof input !== "object") {
 				throw new StructError("Expected an object", path);
 			}
+			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
+				throw new StructError("Should not have a prototype", path);
+			}
 			const output = {};
 			const errors = [];
 			for (const key in fields) {
@@ -216,6 +224,13 @@ export class Structure {
 					errors.push(StructError.chain(error, ctx));
 				}
 			}
+
+			for (const key of _additionalProperties(fields, input)) {
+				errors.push(
+					new StructError("Additional field not allowed", [...path, key]),
+				);
+			}
+
 			if (errors.length > 0) {
 				throw new StructError("Object does not match schema", path, errors);
 			}

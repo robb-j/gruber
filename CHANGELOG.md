@@ -10,6 +10,7 @@ This file documents notable changes to the project
 - The Configuration markdown tables calculates the width properly when there are non-strings (URLs) in there
 - The `Structure.boolean` method correctly types the optional fallback argument.
 - Add experimental `Structure.literal` construct
+- `Structure.object` fails if there are additional fields or the value is an instance of a class
 
 ## 0.4.0
 

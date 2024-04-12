@@ -425,6 +425,44 @@ describe("Structure", () => {
 			assertEquals(error.children[0].message, "Expected a string");
 			assertEquals(error.children[0].path, ["key"], "should capture context");
 		});
+		it("throws for unknown fields", () => {
+			const struct = Structure.object({
+				key: Structure.string("fallback"),
+			});
+			const error = assertThrows(
+				() =>
+					struct.process(
+						{ key: "value", something: "else" },
+						{ path: ["some", "path"] },
+					),
+				StructError,
+			);
+
+			assertEquals(error.message, "Object does not match schema");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+
+			assertEquals(error.children[0].message, "Additional field not allowed");
+			assertEquals(
+				error.children[0].path,
+				["some", "path", "something"],
+				"should capture the context",
+			);
+		});
+		it("throws for non-null prototypes", () => {
+			const struct = Structure.object({
+				key: Structure.string("fallback"),
+			});
+			class Injector {
+				key = "value";
+			}
+			const error = assertThrows(
+				() => struct.process(new Injector(), { path: ["some", "path"] }),
+				StructError,
+			);
+
+			assertEquals(error.message, "Should not have a prototype");
+			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
 	});
 
 	describe("array", () => {
