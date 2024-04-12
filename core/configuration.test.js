@@ -56,7 +56,7 @@ describe("Configuration", () => {
 						name: "person.age",
 						type: "number",
 						flag: "--age",
-						fallback: 42,
+						fallback: "42",
 					},
 				],
 			});
@@ -381,7 +381,7 @@ describe("Configuration", () => {
 			const config = new Configuration(bareOptions);
 			const result = config.describe(
 				config.url({
-					fallback: "https://example.com",
+					fallback: "https://example.com/",
 					variable: "SELF_URL",
 					flag: "--self-url",
 				}),
@@ -392,7 +392,7 @@ describe("Configuration", () => {
 				{
 					name: "selfUrl",
 					type: "url",
-					fallback: new URL("https://example.com"),
+					fallback: "https://example.com/",
 					variable: "SELF_URL",
 					flag: "--self-url",
 				},

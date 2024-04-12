@@ -7,6 +7,7 @@ This file documents notable changes to the project
 **fixes**
 
 - `getDenoConfigOptions`, `getDenoConfiguration`, `getNodeConfigOptions` and `getNodeConfiguration` all have a default options of `{}`
+- The Configuration markdown tables calculates the width properly when there are non-strings (URLs) in there
 
 ## 0.4.0
 

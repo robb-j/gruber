@@ -70,6 +70,10 @@ export class _ObjectSpec {
 	}
 }
 
+//
+// NOTE: describe() calls should return the actual value in "fallback"
+//       and the string-value in fields
+//
 export class _LiteralSpec {
 	/**
 	 * @param {string} type
@@ -82,7 +86,14 @@ export class _LiteralSpec {
 	describe(name) {
 		return {
 			fallback: this.options.fallback,
-			fields: [{ name, type: this.type, ...this.options }],
+			fields: [
+				{
+					...this.options,
+					name,
+					type: this.type,
+					fallback: this.options.fallback?.toString(),
+				},
+			],
 		};
 	}
 }
