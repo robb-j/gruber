@@ -11,7 +11,7 @@ export interface DenoConfigurationOptions {}
 //   - so you can work out if invalid options were passed
 // - argument checking logic could be better / needs testing
 export function getDenoConfigOptions(
-	_options: DenoConfigurationOptions,
+	_options: DenoConfigurationOptions = {},
 ): ConfigurationOptions {
 	const args = parseArgs(Deno.args);
 	return {
@@ -39,6 +39,6 @@ export function getDenoConfigOptions(
 }
 
 /** This is a syntax sugar for `new Configuration(getDenoConfigOptions(options))` */
-export function getDenoConfiguration(options: DenoConfigurationOptions) {
+export function getDenoConfiguration(options: DenoConfigurationOptions = {}) {
 	return new Configuration(getDenoConfigOptions(options));
 }

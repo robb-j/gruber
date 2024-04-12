@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## 0.4.1
+
+**fixes**
+
+- `getDenoConfigOptions`, `getDenoConfiguration`, `getNodeConfigOptions` and `getNodeConfiguration` all have a default options of `{}`
+
 ## 0.4.0
 
 **new**

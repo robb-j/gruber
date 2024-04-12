@@ -11,7 +11,7 @@ export { Configuration };
 */
 
 /** @param {NodeConfigurationOptions} options */
-export function getNodeConfigOptions(options) {
+export function getNodeConfigOptions(options = {}) {
 	const args = util.parseArgs({
 		args: process.args,
 		strict: false,
@@ -43,6 +43,6 @@ export function getNodeConfigOptions(options) {
  * This is a syntax sugar for `new Configuration(getNodeConfigOptions(options))`
  * @param {NodeConfigurationOptions} options
  */
-export function getNodeConfiguration(options) {
+export function getNodeConfiguration(options = {}) {
 	return new Configuration(getNodeConfigOptions(options));
 }
