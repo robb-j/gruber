@@ -9,6 +9,7 @@ This file documents notable changes to the project
 - `getDenoConfigOptions`, `getDenoConfiguration`, `getNodeConfigOptions` and `getNodeConfiguration` all have a default options of `{}`
 - The Configuration markdown tables calculates the width properly when there are non-strings (URLs) in there
 - The `Structure.boolean` method correctly types the optional fallback argument.
+- Add experimental `Structure.literal` construct
 
 ## 0.4.0
 

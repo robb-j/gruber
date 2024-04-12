@@ -257,4 +257,28 @@ export class Structure {
 			return output;
 		});
 	}
+
+	/**
+	 * **UNSTABLE** use at your own risk
+	 *
+	 * @template {string|number|boolean} T
+	 * @param {T} value
+	 * @returns {Structure<T>}
+	 */
+	static literal(value) {
+		const schema = { type: typeof value, const: value };
+
+		return new Structure(schema, (input, context = undefined) => {
+			if (input === undefined) {
+				throw new StructError("Missing value", context?.path);
+			}
+			if (input !== value) {
+				throw new StructError(
+					`Expected ${schema.type} literal: ${value}`,
+					context?.path,
+				);
+			}
+			return value;
+		});
+	}
 }

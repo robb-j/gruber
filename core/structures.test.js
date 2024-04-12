@@ -471,4 +471,54 @@ describe("Structure", () => {
 			assertEquals(error.children[0].path, ["1"], "should capture context");
 		});
 	});
+
+	describe("literal", () => {
+		it("creates a structure", () => {
+			const struct = Structure.literal(42);
+			assertInstanceOf(struct, Structure);
+		});
+		it("allows that value", () => {
+			const struct = Structure.literal(42);
+			assertEquals(struct.process(42), 42, "should pass the value through");
+		});
+		it("throws for different values", () => {
+			const struct = Structure.literal(42);
+
+			const error = assertThrows(
+				() => struct.process(69, { path: ["some", "path"] }),
+				StructError,
+			);
+			assertEquals(
+				error,
+				new StructError("Expected number literal: 42", ["some", "path"]),
+				"should throw a StructError and capture the context",
+			);
+		});
+		it("throws for different types", () => {
+			const struct = Structure.literal(42);
+
+			const error = assertThrows(
+				() => struct.process("nice", { path: ["some", "path"] }),
+				StructError,
+			);
+			assertEquals(
+				error,
+				new StructError("Expected number literal: 42", ["some", "path"]),
+				"should throw a StructError and capture the context",
+			);
+		});
+		it("throws for missing values", () => {
+			const struct = Structure.literal(42);
+
+			const error = assertThrows(
+				() => struct.process(undefined, { path: ["some", "path"] }),
+				StructError,
+			);
+			assertEquals(
+				error,
+				new StructError("Missing value", ["some", "path"]),
+				"should throw a StructError and capture the context",
+			);
+		});
+	});
 });
