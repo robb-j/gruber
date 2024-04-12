@@ -3,7 +3,7 @@ import { assertEquals } from "./test-deps.js";
 
 const expected = `
 | name    | type   | argument   | variable | fallback              |
-| ======= | ====== | ========== | ======== | ===================== |
+| ------- | ------ | ---------- | -------- | --------------------- |
 | env     | string | ~          | NODE_ENV | development           |
 | selfUrl | url    | --self-url | ~        | http://localhost:3000 |
 `.trim();

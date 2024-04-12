@@ -21,7 +21,7 @@ export function formatMarkdownTable(fields, columns, fallback) {
 			" |",
 
 		// Seperator
-		"| " + columns.map((_, i) => "=".padEnd(widths[i], "=")).join(" | ") + " |",
+		"| " + columns.map((_, i) => "-".padEnd(widths[i], "-")).join(" | ") + " |",
 
 		// Values
 		...fields.map(

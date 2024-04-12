@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**fixes**
+
+- fix `formatMarkdownTable` to generate a valid markdown table
+
 ## 0.4.1
 
 **fixes**
