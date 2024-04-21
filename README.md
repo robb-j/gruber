@@ -4,18 +4,47 @@ An isomorphic JavaScript library for creating web apps.
 
 > Named for [Hans](https://purl.r0b.io/gruber)
 
+## Contents
+
+- [About](#about)
+- [Install](#install)
+- [HTTP server](#http-server) — Creating and structuring HTTP routes
+- [Configuration](#configuration) – Define configuration for apps
+- [Migrations](#migrations) — Run procedures in an organised fashion
+- [Testing](#testing) — Make sure your code works
+- [Core library](#core-library) — Other utilities available in Gruber
+- [Meta APIs](#meta-apis) — Use Gruber in different ways
+- [Node.js library](#nodejs-library) — Stuff just for Node.js servers
+
 ## Foreword
 
-I don't really know if I should be making a JavaScript library like this.
+This is very much a WIP library, it started out as a documentation-driven-development project and I've slowly been building it.
 The various ideas it's composed of have been floating around in my mind for a year or so and writing this has helped explore those ideas.
-The documentation below is written as if the library I want to make exists, **it does not**.
 
 I quite like this documentation-driven-design.
 It really helps to think through the concepts and ideas of something before spending lots of time building it.
 
-If this is something that interests you, reach out to me on [Mastodon](https://hyem.tech/@rob).
+## About
 
-## Background
+Gruber is a library of composable utilities for creating isomorphic JavaScript applications,
+that means web-standards JavaScript on the front- and backend.
+It's bet is that web-standards aren't going to change, so it best to be based around them to create apps that don't break in the future.
+There's also a hope that [WinterCG](https://wintercg.org/work) works some stuff out.
+
+Gruber acknowledges that web-standards don't do everything we want (yet) and that they aren't implemented properly everwhere.
+For this reason, the core of Gruber is agnostic but there are helpers for using common runtimes & libraries with the core.
+
+Gruber itself is a library and can be used however you like. The rest is **patterns** which you can apply if you like.
+Patterns are ways of structuring your code if you don't already have opinions on the matter.
+They also help to explain why Gruber is made in the way it is.
+
+With a common agnostic core, there can be modules built on top that can be used agnostically too.
+If the modules themselves are agnostic of course.
+
+There is a lot not in Gruber too. By design things like CORs should be implemented at a higher networking level.
+A Gruber app should be run behind a reverse proxy and that can do those things for you.
+
+### Background
 
 I've spent the past few years working on JavaScript backends and nothing has really stuck with me.
 There have been lots of nice ideas along the way but no one solution ever felt like home.
@@ -39,36 +68,17 @@ Some of the apps I've made:
 - [Poster Vote](https://github.com/digitalinteraction/poster-vote)
   — Node.js + Express + vue + webpack
 
-## About
-
-Gruber is a library of composable utilities for creating isomorphic JavaScript applications,
-that means web-standards JavaScript on the front- and backend.
-It's bet is that web-standards aren't going to change, so it is be based around them to create apps that don't break in the future.
-There's also a hope that [WinterCG](https://wintercg.org/work) works some stuff out.
-
-Gruber acknowledges that web-standards don't do everything we want (yet) and that they aren't implemented properly everwhere.
-For this reason, the core of Gruber is agnostic but there are helpers for using common runtimes & libraries with the core.
-
-Gruber itself is a library and can be used however you like. There are **patterns** which you can apply if you like.
-Patterns are ways of structuring your code if you don't already have opinions on the matter.
-They also help to explain why Gruber is made in the way it is.
-
-With a common agnostic core, there can be modules built on top that can be used agnostically too.
-If the modules themselves are agnostic of course.
-
-There is a lot not in Gruber too. By design things like CORs should be implemented at a higher level.
-A Gruber app should be run behind a reverse proxy and that can do those things for you.
-
-## Focus
+### Focus
 
 - `URLPattern` based routing that is testable
 - `fetch` based routes using [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
   and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-- Simple database migrations
+- Basic database migrations
 - Configuration to control how apps work
+- Structures to validate data and provide types
 - A common core for reusable modules to built be upon
 
-## Design goals
+### Design goals
 
 - Composability — logic should be composed together rather than messily intertwined
 - Standards based — where available existing standards should be applied or migrated towards
@@ -90,12 +100,12 @@ npm install gruber
 
 **Deno**
 
-> WORK IN PROGRESS
+Gruber is available at `esm.r0b.io/gruber@VERSION/mod.ts`.
 
-Gruber is available at [esm.r0b.io/gruber@0.1.0/mod.ts](https://esm.r0b.io/gruber@0.1.0/mod.ts).
+> Replace `VERSION` with the one you want to use, maybe see [Releases](https://github.com/robb-j/gruber/releases).
 
 ```js
-import { defineRoute } from "https://esm.r0b.io/gruber@0.1.0/mod.ts";
+import { defineRoute } from "https://esm.r0b.io/gruber@VERSION/mod.ts";
 ```
 
 ## HTTP server
@@ -123,11 +133,12 @@ export default defineRoute({
 A route is a definition to handle a specific HTTP request by returning a response.
 It defines which method and path it is responding to and an asynchronous function to handle the request.
 
-The request is a fetch [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
-and the [response too](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+Both the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+are from the web Fetch API.
 
-It also takes the `url` (as a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)) of the request and `params`.
-The parameters are matched from the pathname, part of the result of [URLPattern.exec](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/exec).
+It also has a `url` (as a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)) of the request and `params`.
+The parameters, `params`, are matched from the pathname, part of the result of [URLPattern.exec](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/exec).
 In this example `name` is matched in the request URL and is used to process the request.
 
 Let's add the route to a Node.js server:
@@ -151,7 +162,7 @@ export async function runServer(options) {
 }
 ```
 
-Then you could have a cli:
+Then you could have a cli, maybe with [yargs](https://www.npmjs.com/package/yargs):
 
 **cli.js**
 
@@ -194,8 +205,6 @@ export async function runServer(options) {
 	const router = new DenoRouter({ routes });
 
 	Deno.serve({ port: options.port }, router.forDenoServe());
-
-	console.log("Listening on http://localhost:%d", options.port);
 }
 ```
 
@@ -205,8 +214,8 @@ but now you can have more-common-looking code on different projects.
 
 ## Configuration
 
-In production, it is very useful to be able to configure how an app behaves without having to modify the code and redeploy the entire app.
-That is what configuration is for, it lets you change how the app runs by altering the configuration.
+In production, it's very useful to be able to configure how an app behaves without having to modify the code and redeploy the entire app.
+That is what configuration is for. It lets you change how the app runs by altering the configuration.
 The configuration can come from different places too, like a JSON file, environment variables or maybe arguments to your CLI.
 
 [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) really inspired the design of configuration, to summerise it should be:
@@ -225,7 +234,7 @@ Things you might want to configure:
 - Who to send emails from
 
 Gruber provides the utilities to specify this information and load it in from the environment youe code is running in.
-It uses a pattern of `environment variables > configuration file > fallback` to decide which values to use.
+It uses a pattern of `cli args > environment variables > configuration file > fallback` to decide which values to use.
 The end result is a configuration object you can share between all of your code that you know is well-formed.
 
 Configuration is heavily inspired by [superstruct](https://docs.superstructjs.org/) which has a lovely API.
@@ -241,58 +250,53 @@ import { getNodeConfiguration } from "gruber";
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const config = getNodeConfiguration();
 
-export function getConfigStruct() {
-	return config.object({
-		env: config.string({ variable: "NODE_ENV", fallback: "development" }),
+const struct = config.object({
+	env: config.string({ variable: "NODE_ENV", fallback: "development" }),
 
-		port: config.number({
-			variable: "APP_PORT",
-			flag: "--port",
-			fallback: 8000,
-		}),
+	port: config.number({
+		variable: "APP_PORT",
+		flag: "--port",
+		fallback: 8000,
+	}),
 
-		selfUrl: config.url({
-			variable: "SELF_URL",
-			fallback: "http://localhost:3000",
-		}),
+	selfUrl: config.url({
+		variable: "SELF_URL",
+		fallback: "http://localhost:3000",
+	}),
 
-		meta: config.object({
-			name: config.string({ flag: "--app-name", fallback: pkg.name }),
-			version: config.string({ fallback: pkg.version }),
-		}),
+	meta: config.object({
+		name: config.string({ flag: "--app-name", fallback: pkg.name }),
+		version: config.string({ fallback: pkg.version }),
+	}),
 
-		database: config.object({
-			useSsl: config.boolean({ flag: "--database-ssl", fallback: true }),
-			url: config.url({
-				variable: "DATABASE_URL",
-				flag: "--database-url",
-				fallback: "postgres://user:secret@localhost:5432/database",
-			}),
+	database: config.object({
+		useSsl: config.boolean({ flag: "--database-ssl", fallback: true }),
+		url: config.url({
+			variable: "DATABASE_URL",
+			flag: "--database-url",
+			fallback: "postgres://user:secret@localhost:5432/database",
 		}),
-	});
-}
+	}),
+});
 
 // Load the configuration and parse it
 export function loadConfiguration(path) {
-	return config.load(path, getConfigStruct());
+	return config.load(path, struct);
 }
 
-// TypeScript thought:
-// export type Configuration = Infer<ReturnType<typeof getConfigStruct>>
-
-// Expose the configutation for use in the application
+// The configutation for use in the application
 export const appConfig = await loadConfiguration(
 	new URL("./config.json", import.meta.url),
 );
 
-// Export a method to generate usage documentation
+// A method to generate usage documentation
 export function getConfigurationUsage() {
-	return config.getUsage(getConfigStruct());
+	return config.getUsage(struct);
 }
 
-// Export a method to generate a JSON Schema for the configuration
+// A method to generate a JSON Schema for the configuration
 export function getConfigurationSchema() {
-	return config.getJSONSchema(getConfigStruct());
+	return config.getJSONSchema(struct);
 }
 ```
 
@@ -303,25 +307,30 @@ The usage output will be:
 ```
 Usage:
 
-| key          | type   | argument       | variable     | default value |
-| ============ | ====== | ============== | ============ | ============= |
-| env          | string | ~              | NODE_ENV     | "development" |
-| selfUrl      | url    | ~              | SELF_URL     | "http://localhost:3000" |
-| meta.name    | string | --app-name     | ~            | gruber-app |
-| meta.version | string | ~              | ~            | 1.2.3 |
-| database.url | url    | --database-url | DATABASE_URL | postgres://user:top_secret@database.io:5432/database_name |
+| name            | type    | flag           | variable     | fallback                                       |
+| --------------- | ------- | -------------- | ------------ | ---------------------------------------------- |
+| database.url    | url     | --database-url | DATABASE_URL | postgres://user:secret@localhost:5432/database |
+| database.useSsl | boolean | --database-ssl | ~            | true                                           |
+| env             | string  | ~              | NODE_ENV     | development                                    |
+| meta.name       | string  | --app-name     | ~            | gruber-app                                     |
+| meta.version    | string  | ~              | ~            | 1.2.3                                          |
+| port            | number  | --port         | APP_PORT     | 8000                                           |
+| selfUrl         | url     | ~              | SELF_URL     | http://localhost:3000/                         |
 
-Defaults:
+
+Default:
 {
-	"env": "development",
-	"selfUrl": "http://localhost:3000",
-	"meta": {
-		"name": "gruber-app",
-		"version": "1.2.3"
-	},
-	"database": {
-		"url": "postgres://user:top_secret@database.io:5432/database_name"
-	}
+  "env": "development",
+  "port": 8000,
+  "selfUrl": "http://localhost:3000/",
+  "meta": {
+    "name": "gruber-app",
+    "version": "1.2.3"
+  },
+  "database": {
+    "useSsl": true,
+    "url": "postgres://user:secret@localhost:5432/database"
+  }
 }
 ```
 
@@ -329,17 +338,17 @@ Defaults:
 
 You can provide a configuration file like **config.json** to load through the config specification:
 
-```jsonc
+```json
 {
 	"env": "production",
 	"selfUrl": "http://localhost:3000",
 	"meta": {
 		"name": "gruber-app",
-		"version": "1.2.3",
+		"version": "1.2.3"
 	},
 	"database": {
-		"url": "postgres://user:secret@localhost:5432/database",
-	},
+		"url": "postgres://user:secret@localhost:5432/database"
+	}
 }
 ```
 
@@ -358,14 +367,14 @@ You should to consider the security for your default values,
 e.g. if you app runs differently under NODE_ENV=production
 and you forget to set it, what is the implication?
 
-If you use something like `dotenv`, ensure it has already loaded before creating the `Configuration`
+If you use something like `dotenv`, ensure it has already loaded before creating the configuration.
 
 You could add extra checks to `loadConfiguration` to ensure things are correct in production,
 this can be done like so:
 
 ```js
 export function loadConfiguration() {
-	const appConfig = config.loadJsonSync(path, getConfigStruct());
+	const appConfig = config.loadJsonSync(path, struct);
 
 	// Only run these checks when running in production
 	if (appConfig.env === "production") {
@@ -449,7 +458,7 @@ import postgres from "postgres";
 import { loader, getNodePostgresMigrator } from "gruber";
 import { appConfig } from "./config.js";
 
-export const useDatabase = loader(async () => {
+export const useDatabase = loader(() => {
 	// You could do some retries/backoffs here
 	return postgres(appConfig.database.url);
 });
@@ -666,10 +675,306 @@ describe("queryPeople", () => {
 
 TODO: I'm not happy with this, will need to come back to it.
 
+## Core library
+
+### defineRoute
+
+`defineRoute` is the way of creating route primatives to be passed to your router to handle web traffic.
+
+```js
+import { defineRoute } from "gruber";
+
+export const helloRoute = defineRoute({
+	method: "GET",
+	pathname: "/hello/:name",
+	handler({ request, url, params }) {
+		if (params.name === "McClane") {
+			throw HTTPError.unauthorized();
+		}
+		return new Response(`Hello, ${params.name}!`);
+	},
+});
+```
+
+### HTTPError
+
+`HTTPError` is an Error subclass with specific information about HTTP errors.
+Gruber catches these errors and converts them into HTTP Responses.
+
+```js
+import { HTTPError } from "gruber";
+
+throw HTTPError.badRequest();
+throw HTTPError.unauthorized();
+throw HTTPError.notFound();
+throw HTTPError.internalServerError();
+throw HTTPError.notImplemented();
+```
+
+The static methods are implemented on an "as-needed" basis,
+more can be added in the future as the need arrises.
+They directly map to HTTP error as codes documented on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
+
+```js
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(418, "I'm a teapot");
+```
+
+You can also instantiate your own instance with whatever status code and text you like.
+With an instance, you can ask it to create a Response for you.
+
+```js
+teapot.toResponse();
+```
+
+**Request body**
+
+You can set the body to be returned when the HTTPError is thrown from the constructor or the factory methods:
+
+```ts
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(418, "I'm a teapot", "model=teabot-5000");
+
+throw HTTPError.badRequest("no coffee provided");
+```
+
+The value of the body is the same as the `body` in the
+[Response constructor](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#body).
+
+**Headers**
+
+> _EXPERIMENTAL_
+
+If you really want, you can set headers on a HTTPError too:
+
+```ts
+import { HTTPError } from "gruber";
+
+const teapot = new HTTPError(
+	400,
+	"Bad Request",
+	JSON.stringify({ some: "thing" }),
+	{ "Content-Type": "application/json" },
+);
+
+// or via mutating the headers object
+teapot.headers.set("X-HOTEL-BAR", "Hotel Bar?");
+```
+
+> The argument for `HTTPError` is aany [headers init](https://developer.mozilla.org/en-US/docs/Web/API/Headers/Headers) value that gets passed to the Headers constructor.
+
+If you want fine-grain control, you might be better off creating a subclass, e.g. `BadJSONRequest`:
+
+```ts
+class BadJSONRequest extends HTTPError {
+	constructor(body) {
+		super(400, "Bad Request", body, { "Content-type": "application/json" });
+		this.name = "BadJSONRequest";
+		Error.captureStackTrace(this, BadJSONRequest);
+	}
+}
+
+throw new BadJSONRequest({ message: "Something went wrong..." });
+```
+
+### FetchRouter
+
+`FetchRouter` is a web-native router for routes defined with `defineRoute`.
+
+```js
+import { FetchRouter, defineRoute } from "gruber";
+
+const routes = [defineRoute("..."), defineRoute("..."), defineRoute("...")];
+
+const router = new FetchRouter({
+	routes,
+	errorHandler(error, request) {
+		console.log("Route error", error);
+	},
+});
+```
+
+All options to the `FetchRouter` constructor are optional and you can create a router without any options if you want.
+
+`routes` are the route definitions you want the router to processes, the router will handle a request based on the first route that matches.
+So order is important.
+
+`errorHandler` is called if a non-`HTTPError` or a 5xx `HTTPError` is thrown.
+It is called with the offending error and the request it is associated with.
+
+> NOTE: The `errorHandler` could do more in the future, like create it's own Response or mutate the existing response.
+> This has not been design and is left open to future development if it becomes important.
+
+**getResponse**
+
+`getResponse` is the main method on a router.
+Use it to get a `Response` from the provided request, based on the router's route definitions.
+
+```js
+const response = await router.getResponse(new Request("http://localhost"));
+```
+
+There are some unstable internal methods too:
+
+- `findMatchingRoutes(request)` is a generator function to get the first route definition that matches the supplied request. It's a generator so as few routes are matched as possible and execution can be stopped if you like.
+- `processMatches(request, matches)` attempts to get a `Response` from a request and an Iterator of route definitions.
+- `handleError(error, request)` converts a error into a Response and triggers the `errorHandler`
+
+### Postgres
+
+#### getPostgresMigratorOptions
+
+`getPostgresMigratorOptions` generates the default options for a `PostgresMigrator`.
+You can use it and override parts of it to customise how the postgres migrator works.
+
+### Structure
+
+This is an internal primative for validating objects, strings, numbers and URLs for use in [Configuration](#configuration).
+It is based on a very specific use of [superstruct](https://github.com/ianstormtaylor/superstruct) which it made sense to internalise to make the code base more portable.
+A `Structure` is a type that validates a value is correct by throwing an error if validation fails, i.e. the wrong type is passed.
+Every struct has an intrinsic `fallback` so that if no value (`undefined`) is passed, that is used instead.
+
+```js
+import { Structure } from "gruber/structures.js";
+
+// A string primative, or use "Geoff Testington" if no value is passed.
+const name = Structure.string("Geoff Testington");
+
+// A URL instance or a string that contains a valid URL, always converting to a URL
+const website = Structure.url("https://example.com");
+
+// A number primative, falling back to 42
+const age = Structure.number(42);
+
+// A boolean primative, falling back true
+const hasPets = Structure.boolean(true);
+
+// An object with all of the fields above and nothing else
+// defaulting to create { name: "Geoff..", age: 42, website: "https..." } with the same fallback values
+const person = Structure.object({ name, age, website });
+
+// Process the Structure and get a value out. The returned value is strongly typed!
+// This will throw if the value passed does not match the schema.
+const value = person.process(/* ... */);
+```
+
+Those static Structure methods return a `Structure` instance. These are the different types:
+
+- `Structure.string(fallback)` — A string primative
+- `Structure.number(fallback)` — A number primative
+- `Structure.boolean(fallback)` — A boolean primative
+- `Structure.literal(value)` — **unstable** — A specific string/number/boolean value
+- `Structure.url(fallback)` — A valid url for the [URL constructor](https://developer.mozilla.org/en-US/docs/Web/API/URL/URL)
+- `Structure.object(value)` — An object of other structures
+- `Structure.array(value)` — **unstable** — An array of a structure
+
+You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [StructError](#structerror).
+
+```js
+import { Structure, StructError } from "gruber/structures.js";
+
+// Create a new boolean structure (this should probably be included as Structure.boolean tbh)
+const boolean = new Structure(
+	{ type: "boolean", default: false },
+	(input, context) => {
+		if (input === undefined) return false;
+		if (typeof input !== "boolean") {
+			throw new StructError("Expected a boolean", context?.path);
+		}
+		return input;
+	},
+);
+```
+
+To create a custom Structure, you give it a [JSON schema](https://json-schema.org/) and a "process" function.
+The function is called to validate a value against the structure. It should return the processed value or throw a `StructError`.
+
+The `context` object might not be set and this means the struct is at the root level. If it is nested in an `object` then the context contains the path that the struct is located at, all the way from the root object. That path is expressed as an array of strings. That path is used to generate friendlier error messages to explain which nested field failed.
+
+With a Structure, you can generate a JSON Schema:
+
+```js
+import { Structure } from "gruber/structures.js";
+
+const person = Structure.object({
+	name: Structure.string("Geoff Testington"),
+	age: Structure.number(42),
+	website: Structure.url("https://example.com"),
+});
+
+console.log(JSON.stringify(person.getSchema(), null, 2));
+```
+
+This is a bit WIP, but you could use this to generate a JSON schema to lint configurations in your IDE.
+
+#### StructError
+
+This Error subclass contains extra information about why parsing a `Structure` failed.
+
+- The `message` field is a description of what went wrong, in the context of the structure.
+- An extra `path` field exists to describe the path from the root object to get to this failed structure
+- `children` is also available to let a structure have multiple child errors, i.e. for an object to have failures for each of the fields that have failed.
+
+On the error, there are also methods to help use it:
+
+- `toFriendlyString` goes through all nested failures and outputs a single message to describe everything that went wrong.
+- `getOneLiner` converts the error to a succint one-line error message, concatentating the path and message
+- `[Symbol.iterator]` is also available if you want to loop through all children nodes, only those that do not have children themselves.
+
+There is also the static method `StructError.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a StructError).
+
+### Utilities
+
+#### loader
+
+`loader` let's you memoize the result of a function to create a singleton from it.
+It works synchronously or with promises.
+
+```js
+import { loader } from "gruber";
+
+const useRedis = loader(async () => {
+	return "connect to the database somehow...";
+});
+
+// Then elsewhere
+const redis = await useRedis();
+```
+
+#### formatMarkdownTable
+
+`formatMarkdownTable` generates a pretty markdown table based on an array of rows and the desired column names.
+
+```js
+import { formatMarkdownTable } from "gruber";
+
+const table = formatMarkdownTable(
+	[
+		{ name: "Geoff Testington", age: 42 },
+		{ name: "Jess Smith", age: 32 },
+		{ name: "Tyler Rockwell" },
+	],
+	["name", "age"],
+	"~",
+);
+```
+
+This will generate the table:
+
+```
+| name             | age |
+| ---------------- | --- |
+| Geoff Testington | 42  |
+| Jess Smith       | 32  |
+| Tyler Rockwell   | ~   |
+```
+
 ## Meta APIs
 
 There are APIs within Gruber for using it at a meta level.
-That means internal interfaces for using Gruber in different ways than described above.
+That means internal interfaces for using Gruber in different ways than the patterns above.
 
 ### Configuration API
 
@@ -769,290 +1074,6 @@ It has a store of records at `migrations.json` to keep track of which have been 
 When it runs the migrations it'll update the json file to reflect that.
 
 With the code above in place, you can use the migrator to run and undo migrations with the `up` and `down` methods on it.
-
-## Core library
-
-### defineRoute
-
-`defineRoute` is the way of creating route primatives to be passed to your router to handle web traffic.
-
-```js
-import { defineRoute } from "gruber";
-
-export const helloRoute = defineRoute({
-	method: "GET",
-	pathname: "/hello/:name",
-	handler({ request, url, params }) {
-		if (params.name === "McClane") {
-			throw HTTPError.unauthorized();
-		}
-		return new Response(`Hello, ${params.name}!`);
-	},
-});
-```
-
-### HTTPError
-
-`HTTPError` is an Error subclass with specific information about HTTP errors.
-Gruber catches these errors and converts them into HTTP Responses.
-
-```js
-import { HTTPError } from "gruber";
-
-throw HTTPError.badRequest();
-throw HTTPError.unauthorized();
-throw HTTPError.notFound();
-throw HTTPError.internalServerError();
-throw HTTPError.notImplemented();
-```
-
-The static methods are implemented on an "as-needed" basis,
-more can be added in the future as the need arrises.
-They directly map to HTTP error as codes documented on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
-
-```js
-import { HTTPError } from "gruber";
-
-const teapot = new HTTPError(418, "I'm a teapot");
-```
-
-You can also instantiate your own instance with whatever status code and text you like.
-With an instance, you can ask it to create a Response for you.
-
-```js
-teapot.toResponse();
-```
-
-Currently, you can't set the body of the generated Response objects.
-This would be nice to have in the future, but the API should be thoughtfully designed first.
-
-**Request body**
-
-You can set the body to be returned when the HTTPError is thrown from the constructor or the factory methods:
-
-```ts
-import { HTTPError } from "gruber";
-
-const teapot = new HTTPError(418, "I'm a teapot", "model=teabot-5000");
-
-throw HTTPError.badRequest("no coffee provided");
-```
-
-The value of the body is the same as the `body` in the
-[Response constructor](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#body).
-
-**Headers**
-
-> _EXPERIMENTAL_
-
-If you really want, you can set headers on a HTTPError too:
-
-```ts
-import { HTTPError } from "gruber";
-
-const teapot = new HTTPError(
-	400,
-	"Bad Request",
-	JSON.stringify({ some: "thing" }),
-	{ "Content-Type": "application/json" },
-);
-
-// or via mutating the headers object
-teapot.headers.set("X-HOTEL-BAR", "Hotel Bar?");
-```
-
-If you want fine-grain control, you might be better off creating a subclass, e.g. `BadJSONRequest`:
-
-```ts
-class BadJSONRequest extends HTTPError {
-	constructor(body) {
-		super(400, "Bad Request", body, { "Content-type": "application/json" });
-		this.name = "BadJSONRequest";
-		Error.captureStackTrace(this, BadJSONRequest);
-	}
-}
-
-throw new BadJSONRequest({ message: "Something went wrong..." });
-```
-
-### FetchRouter
-
-`FetchRouter` is a web-native router for routes defined with `defineRoute`.
-
-```js
-import { FetchRouter, defineRoute } from "gruber";
-
-const routes = [defineRoute("..."), defineRoute("..."), defineRoute("...")];
-
-const router = new FetchRouter({
-	routes,
-	errorHandler(error, request) {
-		console.log("Route error", error);
-	},
-});
-```
-
-All options to the `FetchRouter` constructor are optional and you can create a router without any options if you want.
-
-`routes` are the route definitions you want the router to processes, the router will handle a request based on the first route that matches.
-So order is important.
-
-`errorHandler` is called if a non-`HTTPError` or a 5xx `HTTPError` is thrown.
-It is called with the offending error and the request it is associated with.
-
-> NOTE: The `errorHandler` could do more in the future, like create it's own Response or mutate the existing response.
-> This has not been design and is left open to future development if it becomes important.
-
-**getResponse**
-
-`getResponse` is the main method on a router.
-Use it to get a `Response` from the provided request, based on the router's route definitions.
-
-```js
-const response = await router.getResponse(new Request("http://localhost"));
-```
-
-There are some unstable internal methods too:
-
-- `findMatchingRoutes(request)` is a generator function to get the first route definition that matches the supplied request. It's a generator so as few routes are matched as possible and execution can be stopped if you like.
-- `processMatches(request, matches)` attempts to get a `Response` from a request and an Iterator of route definitions.
-- `handleError(error, request)` converts a error into a Response and triggers the `errorHandler`
-
-### Postgres
-
-#### getPostgresMigratorOptions
-
-`getPostgresMigratorOptions` generates the default options for a `PostgresMigrator`.
-You can use it and override parts of it to customise how the postgres migrator works.
-
-### Utilities
-
-#### loader
-
-`loader` let's you memoize the result of a function to create a singleton from it.
-It works synchronously or with promises.
-
-```js
-import { loader } from "gruber";
-
-const useRedis = loader(async () => {
-	return "connect to the database somehow...";
-});
-
-// Then elsewhere
-const redis = await useRedis();
-```
-
-#### formatMarkdownTable
-
-`formatMarkdownTable` generates a pretty markdown table based on an array of rows and the desired column names.
-
-```js
-import { formatMarkdownTable } from "gruber";
-
-const table = formatMarkdownTable(
-	[
-		{ name: "Geoff Testington", age: 42 },
-		{ name: "Jess Smith", age: 32 },
-		{ name: "Tyler Rockwell" },
-	],
-	["name", "age"],
-	"~",
-);
-```
-
-This will generate the table:
-
-```
-| name             | age |
-| ================ | === |
-| Geoff Testington | 42  |
-| Jess Smith       | 32  |
-| Tyler Rockwell   | ~   |
-```
-
-#### Structure
-
-This is an internal primative for validating objects, strings, numbers and URLs for use in [Configuration](#configuration).
-It is based on a very specific use of [superstruct](https://github.com/ianstormtaylor/superstruct) which it made sense to internalise to make the code base more portable.
-A `Structure` is a type that validates a value is correct by throwing an error if validation fails, i.e. the wrong type is passed.
-Every struct has an intrinsic `fallback` so that if no value (`undefined`) is passed, that is used instead.
-
-```js
-import { Structure } from "gruber/structures.js";
-
-// A string primative, or use "Geoff Testington" if no value is passed.
-const name = Structure.string("Geoff Testington");
-
-// A URL instance or a string that contains a valid URL, always converting to a URL
-const website = Structure.url("https://example.com");
-
-// A number primative, falling back to 42
-const age = Structure.number(42);
-
-// An object with all of the fields above and nothing else
-// defaulting to create { name: "Geoff..", age: 42, website: "https..." } with the same fallback values
-const person = Structure.object({ name, age, website });
-
-// Process the Structure and get a value out. The returned value is strongly typed!
-// This will throw if the value passed does not match the schema.
-const value = person.process(/* ... */);
-```
-
-Those static Structure methods return a `Structure` instance. You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [StructError](#structerror).
-
-```js
-import { Structure, StructError } from "gruber/structures.js";
-
-// Create a new boolean structure (this should probably be included as Structure.boolean tbh)
-const boolean = new Structure(
-	{ type: "boolean", default: false },
-	(input, context) => {
-		if (input === undefined) return false;
-		if (typeof input !== "boolean") {
-			throw new StructError("Expected a boolean", context?.path);
-		}
-		return input;
-	},
-);
-```
-
-To create a custom Structure, you give it a [JSON schema](https://json-schema.org/) and a "process" function.
-The function is called to validate a value against the structure. It should return the processed value or throw a `StructError`.
-
-The `context` object might not be set and this means the struct is at the root level. If it is nested in an `object` then the context contains the path that the struct is located at, all the way from the root object. That path is expressed as an array of strings. That path is used to generate friendlier error messages to explain which nested field failed.
-
-With a Structure, you can generate a JSON Schema:
-
-```js
-import { Structure } from "gruber/structures.js";
-
-const person = Structure.object({
-	name: Structure.string("Geoff Testington"),
-	age: Structure.number(42),
-	website: Structure.url("https://example.com"),
-});
-
-console.log(JSON.stringify(person.getSchema(), null, 2));
-```
-
-This is a bit WIP, but you could use this to generate a JSON schema to lint configurations in your IDE.
-
-#### StructError
-
-This Error subclass contains extra information about why parsing a `Structure` failed.
-
-- The `message` field is a description of what went wrong, in the context of the structure.
-- An extra `path` field exists to describe the path from the root object to get to this failed structure
-- `children` is also available to let a structure have multiple child errors, i.e. for an object to have failures for each of the fields that have failed.
-
-On the error, there are also methods to help use it:
-
-- `toFriendlyString` goes through all nested failures and outputs a single message to describe everything that went wrong.
-- `getOneLiner` converts the error to a succint one-line error message, concatentating the path and message
-- `[Symbol.iterator]` is also available if you want to loop through all children nodes, only those that do not have children themselves.
-
-There is also the static method `StructError.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a StructError).
 
 ## Node.js library
 
@@ -1163,7 +1184,11 @@ const server = http.createServer((req) => {
 });
 ```
 
-## Release process
+## Development
+
+WIP stuff
+
+### Release process
 
 1. Generate a new version at the root with `npm version <version>`
 2. Run the bundle `./bundle.js`
@@ -1172,31 +1197,7 @@ const server = http.createServer((req) => {
    2. `npm publish`
 4. Copy the deno source to the S3 bucket — `bundle/deno` → `esm.r0b.io/gruber@VERSION/`
 
----
-
-<!-- -->
-<!-- -->
-<!-- -->
-<!-- -->
-<!-- -->
-
-## nice snippets
-
-**simpler loader**
-
-```ts
-interface Loader<T> {
-	(): T;
-}
-
-export function loader<T>(handler: Loader<T>): Loader<T> {
-	let result: T | null = null;
-	return () => {
-		if (!result) result = handler();
-		return result;
-	};
-}
-```
+### nice snippets
 
 **magic loader**
 
@@ -1252,8 +1253,6 @@ retryWithBackoff({
 ## Rob's notes
 
 - `core` tests are deno because it's hard to do both and Deno is more web-standards based
-- json schema for configuration specs?
-- note or info about loading dot-env files
 - explain functional approach more and use of it instead of middleware
 - `defineRouteGroup` type primative for grouping routes together
 - Something like a `res/` directory of files loaded into memory for use
