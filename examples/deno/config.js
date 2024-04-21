@@ -42,10 +42,7 @@ const appConfig = await config.load(
 	struct,
 );
 
-console.log(config.getUsage(struct));
-console.log();
-console.log("Current:");
-console.log(JSON.stringify(appConfig, null, 2));
+console.log(config.getUsage(struct, appConfig));
 console.log();
 console.log();
 console.log("JSON Schema:");

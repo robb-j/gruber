@@ -287,9 +287,12 @@ export class Configuration {
 		}
 	}
 
-	/** @param {unknown} value */
-	getUsage(value) {
-		const { fallback, fields } = this.describe(value);
+	/**
+	 * @param {unknown} struct
+	 * @param {unknown} [currentValue]
+	 */
+	getUsage(struct, currentValue) {
+		const { fallback, fields } = this.describe(struct);
 
 		const lines = [
 			"Usage:",
@@ -304,6 +307,10 @@ export class Configuration {
 			"Default:",
 			this.options.stringify(fallback),
 		];
+
+		if (currentValue) {
+			lines.push("", "", "Current:", JSON.stringify(currentValue, null, 2));
+		}
 
 		return lines.join("\n");
 	}

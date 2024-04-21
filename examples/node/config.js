@@ -28,7 +28,7 @@ const struct = config.object({
 	}),
 
 	database: config.object({
-		useSsl: config.boolean({ flag: "--database-ssl", fallback: false }),
+		useSsl: config.boolean({ flag: "--database-ssl", fallback: true }),
 		url: config.url({
 			variable: "DATABASE_URL",
 			flag: "--database-url",
@@ -42,10 +42,7 @@ const appConfig = await config.load(
 	struct,
 );
 
-console.log(config.getUsage(struct));
-console.log();
-console.log("Current:");
-console.log(JSON.stringify(appConfig, null, 2));
+console.log(config.getUsage(struct, appConfig));
 console.log();
 console.log();
 console.log("JSON Schema:");

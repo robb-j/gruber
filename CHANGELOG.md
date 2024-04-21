@@ -4,6 +4,10 @@ This file documents notable changes to the project
 
 ## next
 
+**new**
+
+- add the second argument to `config.getUsage(struct, currentValue)` so that is also documents the current configuration value after the default one
+
 **fixes**
 
 - fix `formatMarkdownTable` to generate a valid markdown table
