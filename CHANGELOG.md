@@ -11,6 +11,7 @@ This file documents notable changes to the project
 **fixes**
 
 - fix `formatMarkdownTable` to generate a valid markdown table
+- `ExpressRouter` & `KoaRouter` processing routes again
 
 ## 0.4.1
 

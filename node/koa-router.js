@@ -22,7 +22,7 @@ import { getFetchRequest } from "./node-router.js";
 export class KoaRouter {
 	/** @param {NodeRouterOptions} options */
 	constructor(options = {}) {
-		this.router = new FetchRouter(options.routes ?? []);
+		this.router = new FetchRouter({ routes: options.routes ?? [] });
 	}
 
 	/** @returns {import("koa").Middleware} */
