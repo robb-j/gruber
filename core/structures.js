@@ -100,7 +100,19 @@ export class Structure {
 	 */
 	constructor(schema, process) {
 		this.schema = schema;
-		this.process = process;
+		this._process = process;
+	}
+
+	/**
+	 * @param {unknown} input
+	 * @param {StructContext} [context]
+	 */
+	process(input, context) {
+		try {
+			return this._process(input, context);
+		} catch (error) {
+			throw StructError.chain(error, context);
+		}
 	}
 
 	getSchema() {
@@ -187,11 +199,7 @@ export class Structure {
 			if (typeof input !== "string") {
 				throw new StructError("Not a string or URL", context?.path);
 			}
-			try {
 				return new URL(input);
-			} catch (error) {
-				throw StructError.chain(error, context);
-			}
 		});
 	}
 
