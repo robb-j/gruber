@@ -1,4 +1,5 @@
 import { Configuration } from "./configuration.js";
+import { Structure } from "./structures.js";
 import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
 
 /** @type {import("./configuration.js").ConfigurationOptions} */
@@ -29,7 +30,6 @@ describe("Configuration", () => {
 		it("stores the options", () => {
 			const result = config.object({ key: "value" });
 
-			assertEquals(result[Configuration.spec].type, "object");
 			assertEquals(result[Configuration.spec].options, { key: "value" });
 		});
 		it("describes itself", () => {
@@ -37,7 +37,7 @@ describe("Configuration", () => {
 				fullName: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 				age: config.number({ flag: "--age", fallback: 42 }),
 			});
-			//
+
 			const result = spec[Configuration.spec].describe(
 				"person",
 				(options, name) => ({ name, ...options }),
@@ -57,6 +57,29 @@ describe("Configuration", () => {
 						type: "number",
 						flag: "--age",
 						fallback: "42",
+					},
+				],
+			});
+		});
+		it("ignores non-Configuration", () => {
+			const spec = config.object({
+				fullName: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
+				pet: Structure.string(),
+			});
+
+			const result = spec[Configuration.spec].describe(
+				"person",
+				(options, name) => ({ name, ...options }),
+			);
+
+			assertEquals(result, {
+				fallback: { fullName: "Geoff T" },
+				fields: [
+					{
+						name: "person.fullName",
+						type: "string",
+						variable: "FULL_NAME",
+						fallback: "Geoff T",
 					},
 				],
 			});

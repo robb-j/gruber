@@ -28,52 +28,48 @@ import { Structure, StructError } from "./structures.js";
 
 /**
  * @typedef {object} Specification
- * @property {string} type
- * @property {any} options
  * @property {(name: string) => ConfigurationDescription} describe
  */
 
 /**
- * @param {string} name
  * @param {unknown} value
- * @returns {Specification}
+ * @returns {Specification | null}
  */
-export function _getSpec(name, value) {
-	if (
-		typeof value[Configuration.spec] !== "object" ||
-		typeof value[Configuration.spec].type !== "string" ||
-		typeof value[Configuration.spec].options !== "object" ||
-		typeof value[Configuration.spec].describe !== "function"
-	) {
-		throw new TypeError(`Invalid [Configuration.spec] for '${name}'`);
-	}
-	return value[Configuration.spec];
-}
-
-export class _ObjectSpec {
-	/** @param {Record<string, SpecOptions>} options  */
-	constructor(options) {
-		this.type = "object";
-		this.options = options;
-	}
-	describe(name) {
-		const fallback = {};
-		const fields = [];
-		for (const [key, childOptions] of Object.entries(this.options)) {
-			const childName = (name ? name + "." : "") + key;
-			const childSpec = _getSpec(childName, childOptions).describe(childName);
-
-			fallback[key] = childSpec.fallback;
-			fields.push(...childSpec.fields);
-		}
-		return { fallback, fields };
-	}
+export function _getSpec(value) {
+	return typeof value[Configuration.spec] === "object" &&
+		typeof value[Configuration.spec].describe === "function"
+		? value[Configuration.spec]
+		: null;
 }
 
 //
 // NOTE: describe() calls should return the actual value in "fallback"
 //       and the string-value in fields
 //
+
+// TODO: needs its own tests
+export class _ObjectSpec {
+	/** @param {Record<string, Structure<unknown>>} options  */
+	constructor(options) {
+		this.options = options;
+	}
+	describe(name) {
+		const fallback = {};
+		const fields = [];
+		for (const [key, struct] of Object.entries(this.options)) {
+			const childName = (name ? name + "." : "") + key;
+			const childSpec = _getSpec(struct)?.describe(childName);
+
+			if (childSpec) {
+				fallback[key] = childSpec.fallback;
+				fields.push(...childSpec.fields);
+			}
+		}
+		return { fallback, fields };
+	}
+}
+
+// TODO: needs its own tests
 export class _PrimativeSpec {
 	/**
 	 * @param {string} type
@@ -323,7 +319,9 @@ export class Configuration {
 	 * @returns {{ config: any, fields: [string, string] }}
 	 */
 	describe(value, prefix = "") {
-		return _getSpec(prefix || ".", value).describe(prefix);
+		const spec = _getSpec(value);
+		if (!spec) throw new TypeError("Invalid [Configuration.spec]");
+		return spec.describe(prefix);
 	}
 
 	/** * @param {Structure<any>} struct */
