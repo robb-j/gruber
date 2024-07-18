@@ -137,7 +137,38 @@ describe("Structure", () => {
 		});
 	});
 
-	describe("getSchema", () => {
+	describe("#process", () => {
+		it("calls process", () => {
+			const struct = new Structure({}, () => 42);
+			const result = struct.process();
+			assertEquals(result, 42, "should call the internal process method");
+		});
+		it("passes input through", () => {
+			const struct = new Structure({}, (value) => value);
+			const result = struct.process(42);
+			assertEquals(result, 42, "should pass through the input");
+		});
+		it("passes context through", () => {
+			const struct = new Structure({}, (_value, context) => context);
+			const result = struct.process(42, { path: "/some/path" });
+			assertEquals(
+				result,
+				{ path: "/some/path" },
+				"should pass through the context",
+			);
+		});
+		it("wraps errors in StructError", () => {
+			const struct = new Structure({}, () => {
+				throw new Error("input error");
+			});
+			const exec = () => struct.process(42, { path: "/some/path" });
+			const error = assertThrows(exec, StructError);
+			assertEquals(error.message, "input error");
+			assertEquals(error.path, "/some/path");
+		});
+	});
+
+	describe("#getSchema", () => {
 		it("injects $schema", () => {
 			const schema = { type: "string", default: "fallback" };
 			const struct = new Structure(schema, () => {});
