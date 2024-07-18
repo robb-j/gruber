@@ -366,6 +366,11 @@ describe("Structure", () => {
 				default: "https://fallback.example.com/",
 			});
 		});
+		it("catches URL errors", () => {
+			const struct = Structure.url("https://example.com");
+			const exec = () => struct.process("not a url");
+			assertThrows(exec, StructError);
+		});
 	});
 
 	describe("object", () => {

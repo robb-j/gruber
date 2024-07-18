@@ -187,7 +187,11 @@ export class Structure {
 			if (typeof input !== "string") {
 				throw new StructError("Not a string or URL", context?.path);
 			}
-			return new URL(input);
+			try {
+				return new URL(input);
+			} catch (error) {
+				throw StructError.chain(error, context);
+			}
 		});
 	}
 

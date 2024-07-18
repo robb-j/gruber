@@ -14,6 +14,7 @@ This file documents notable changes to the project
 - fix `formatMarkdownTable` to generate a valid markdown table
 - `ExpressRouter` & `KoaRouter` are processing routes again
 - update deno postgres type-only dependency from `3.4.3` to `3.4.4`
+- `Structure.url` handles bad URLs better
 
 ## 0.4.1
 
