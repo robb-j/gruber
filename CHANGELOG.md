@@ -9,6 +9,7 @@ This file documents notable changes to the project
 - Add the second argument to `config.getUsage(struct, currentValue)` so that is also documents the current configuration value after the default one
 - `ConfigurationOptions#readTextField` accepts URLs and strings
 - Allow HTTP `OPTIONS` method
+- Experimental `Structure.union` type
 
 **fixes**
 
