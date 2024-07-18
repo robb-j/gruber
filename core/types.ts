@@ -7,7 +7,8 @@ export type HTTPMethod =
 	| "PUT"
 	| "PATCH"
 	| "DELETE"
-	| "CONNECT";
+	| "CONNECT"
+	| "OPTIONS";
 
 export type RouteResult = Promise<Response | undefined> | Response | undefined;
 

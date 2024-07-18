@@ -6,16 +6,17 @@ This file documents notable changes to the project
 
 **new**
 
-- add the second argument to `config.getUsage(struct, currentValue)` so that is also documents the current configuration value after the default one
+- Add the second argument to `config.getUsage(struct, currentValue)` so that is also documents the current configuration value after the default one
 - `ConfigurationOptions#readTextField` accepts URLs and strings
+- Allow HTTP `OPTIONS` method
 
 **fixes**
 
-- fix `formatMarkdownTable` to generate a valid markdown table
+- Fix `formatMarkdownTable` to generate a valid markdown table
 - `ExpressRouter` & `KoaRouter` are processing routes again
-- update deno postgres type-only dependency from `3.4.3` to `3.4.4`
+- Update deno postgres type-only dependency from `3.4.3` to `3.4.4`
 - `Structure.url` handles bad URLs better
-- ignore `$schema` field when parsing configuration
+- Ignore `$schema` field when parsing configuration
 
 ## 0.4.1
 
