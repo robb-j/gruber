@@ -319,6 +319,7 @@ describe("Configuration", () => {
 		const files = {
 			"config.json":
 				'{"env":"production","meta":{"version":"1.2.3"},"selfUrl":"https://example.com"}',
+			"config2.json": '{"$schema":"https://example.com/schema.json"}',
 		};
 
 		const config = new Configuration({
@@ -351,6 +352,10 @@ describe("Configuration", () => {
 				meta: { version: "0.0.0" },
 				selfUrl: new URL("http://localhost"),
 			});
+		});
+
+		it("ignores $schema", async () => {
+			await config.load("config2.json", spec);
 		});
 	});
 

@@ -15,6 +15,7 @@ This file documents notable changes to the project
 - `ExpressRouter` & `KoaRouter` are processing routes again
 - update deno postgres type-only dependency from `3.4.3` to `3.4.4`
 - `Structure.url` handles bad URLs better
+- ignore `$schema` field when parsing configuration
 
 ## 0.4.1
 

@@ -277,7 +277,9 @@ export class Configuration {
 
 		// Fail outside the try-catch to surface structure errors
 		try {
-			return spec.process(await this.options.parse(file));
+			const value = await this.options.parse(file);
+			delete value.$schema;
+			return spec.process(value);
 		} catch (error) {
 			console.error("Configuration failed to parse");
 			if (error instanceof StructError) {
