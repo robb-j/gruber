@@ -28,9 +28,10 @@ describe("Configuration", () => {
 		const config = new Configuration(bareOptions);
 
 		it("stores the options", () => {
-			const result = config.object({ key: "value" });
+			const name = new Structure({}, () => {});
+			const result = config.object({ name });
 
-			assertEquals(result[Configuration.spec].options, { key: "value" });
+			assertEquals(result[Configuration.spec].options, { name });
 		});
 		it("describes itself", () => {
 			const spec = config.object({
@@ -38,10 +39,7 @@ describe("Configuration", () => {
 				age: config.number({ flag: "--age", fallback: 42 }),
 			});
 
-			const result = spec[Configuration.spec].describe(
-				"person",
-				(options, name) => ({ name, ...options }),
-			);
+			const result = spec[Configuration.spec].describe("person");
 
 			assertEquals(result, {
 				fallback: { fullName: "Geoff T", age: 42 },
@@ -67,10 +65,7 @@ describe("Configuration", () => {
 				pet: Structure.string(),
 			});
 
-			const result = spec[Configuration.spec].describe(
-				"person",
-				(options, name) => ({ name, ...options }),
-			);
+			const result = spec[Configuration.spec].describe("person");
 
 			assertEquals(result, {
 				fallback: { fullName: "Geoff T" },
@@ -82,6 +77,74 @@ describe("Configuration", () => {
 						fallback: "Geoff T",
 					},
 				],
+			});
+		});
+	});
+
+	describe("array", () => {
+		const config = new Configuration(bareOptions);
+
+		it("stores the options", () => {
+			const name = new Structure({}, () => {});
+			const result = config.array(name);
+
+			assertEquals(result[Configuration.spec].options, name);
+		});
+		it("describes literals", () => {
+			const spec = config.array(
+				config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
+			);
+
+			const result = spec[Configuration.spec].describe("names");
+
+			assertEquals(result, {
+				fallback: [],
+				fields: [
+					{
+						name: "names[]",
+						type: "string",
+						variable: "FULL_NAME",
+						fallback: "Geoff T",
+					},
+				],
+			});
+		});
+		it("describes objects", () => {
+			const spec = config.array(
+				config.object({
+					name: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
+					age: config.number({ flag: "--age", fallback: 42 }),
+				}),
+			);
+
+			const result = spec[Configuration.spec].describe("people");
+
+			assertEquals(result, {
+				fallback: [],
+				fields: [
+					{
+						name: "people[].name",
+						type: "string",
+						variable: "FULL_NAME",
+						fallback: "Geoff T",
+					},
+					{
+						name: "people[].age",
+						type: "number",
+						flag: "--age",
+						fallback: "42",
+					},
+				],
+			});
+		});
+		it("ignores non-specified", () => {
+			const spec = config.array(new Structure({}, () => {}));
+
+			const result = spec[Configuration.spec].describe("names");
+
+			assertEquals(result, {
+				fallback: [],
+				fields: [],
 			});
 		});
 	});

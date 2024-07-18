@@ -70,6 +70,24 @@ export class _ObjectSpec {
 }
 
 // TODO: needs its own tests
+export class _ArraySpec {
+	/** @param {Structure<unknown>} options  */
+	constructor(options) {
+		this.options = options;
+	}
+	describe(name) {
+		const childName = !name ? "[]" : name + "[]";
+		const childSpec = _getSpec(this.options)?.describe(childName);
+		if (!childSpec) return { fallback: [], fields: [] };
+
+		return {
+			fallback: [],
+			fields: childSpec.fields,
+		};
+	}
+}
+
+// TODO: needs its own tests
 export class _PrimativeSpec {
 	/**
 	 * @param {string} type
@@ -140,8 +158,27 @@ export class Configuration {
 		if (typeof options !== "object" || options === null) {
 			throw new TypeError("options must be a non-null object");
 		}
+		for (const key in options) {
+			if (!(options[key] instanceof Structure)) {
+				throw new TypeError(`options[${key}] is not a Structure`);
+			}
+		}
 		const struct = Structure.object(options);
 		struct[Configuration.spec] = new _ObjectSpec(options);
+		return struct;
+	}
+
+	/**
+	 * @template {Structure<any>} T
+	 * @param {T} options
+	 * @returns {Structure<Infer<T>>[]}
+	 */
+	array(options) {
+		if (!(options instanceof Structure)) {
+			throw new TypeError("options is not a Structure");
+		}
+		const struct = Structure.array(options);
+		struct[Configuration.spec] = new _ArraySpec(options);
 		return struct;
 	}
 

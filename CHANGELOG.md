@@ -10,6 +10,7 @@ This file documents notable changes to the project
 - `ConfigurationOptions#readTextField` accepts URLs and strings
 - Allow HTTP `OPTIONS` method
 - Experimental `Structure.union` type
+- Experimental `Configuration.array` type
 - Non `[Configuration.spec]` types are allowed in configuration (and ignored)
 
 **fixes**
