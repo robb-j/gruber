@@ -11,7 +11,8 @@ This file documents notable changes to the project
 **fixes**
 
 - fix `formatMarkdownTable` to generate a valid markdown table
-- `ExpressRouter` & `KoaRouter` processing routes again
+- `ExpressRouter` & `KoaRouter` are processing routes again
+- update deno postgres type-only dependency from `3.4.3` to `3.4.4`
 
 ## 0.4.1
 
