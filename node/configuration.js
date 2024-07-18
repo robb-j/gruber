@@ -10,8 +10,11 @@ export { Configuration };
 	@typedef {object} NodeConfigurationOptions
 */
 
-/** @param {NodeConfigurationOptions} options */
-export function getNodeConfigOptions(options = {}) {
+/**
+ * @param {NodeConfigurationOptions} options
+ * @returns {import("./core.js").ConfigurationOptions}
+ */
+export function getNodeConfigOptions(_options = {}) {
 	const args = util.parseArgs({
 		args: process.args,
 		strict: false,

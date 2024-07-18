@@ -15,7 +15,7 @@ export function getDenoConfigOptions(
 ): ConfigurationOptions {
 	const args = parseArgs(Deno.args);
 	return {
-		async readTextFile(url: URL) {
+		async readTextFile(url: URL | string) {
 			try {
 				return await Deno.readTextFile(url);
 			} catch (error) {
