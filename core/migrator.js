@@ -66,3 +66,26 @@ export class Migrator {
 			.slice(0, count === -1 ? Infinity : count);
 	}
 }
+
+/**
+ * @param {string} name
+ * @param {string | URL} directory
+ * @returns {Promise<MigrationDefinition>}
+ */
+export async function loadMigration(name, directory) {
+	const url = new URL(name, directory);
+
+	const def = await import(url.toString());
+
+	const up = def.default.up ?? def.up ?? null;
+	if (up && typeof up !== "function") {
+		throw new Error(`migration "${name}" - up is not a function`);
+	}
+
+	const down = def.default.down ?? def.down ?? null;
+	if (down && typeof down !== "function") {
+		throw new Error(`migration "${name}" - down is not a function`);
+	}
+
+	return { name, up, down };
+}

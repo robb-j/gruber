@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { Migrator, defineMigration } from "../core/migrator.js";
+import { Migrator, defineMigration, loadMigration } from "../core/migrator.js";
 import {
 	getPostgresMigratorOptions,
 	bootstrapMigration,
@@ -53,25 +53,10 @@ export function getNodePostgresMigratorOptions(options) {
 			});
 
 			for (const stat of files) {
-				const url = new URL(stat.name, options.directory);
-
 				if (!stat.isFile()) continue;
 				if (!migrationExtensions.has(path.extname(stat.name))) continue;
 
-				const def = await import(url);
-
-				if (def.default.up && typeof def.default.up !== "function") {
-					throw new Error(`migration "${stat.name}" - up is not a function`);
-				}
-				if (def.default.down && typeof def.default.down !== "function") {
-					throw new Error(`migration "${stat.name}" - down is not a function`);
-				}
-
-				migrations.push({
-					name: stat.name,
-					up: def.default.up ?? null,
-					down: def.default.down ?? null,
-				});
+				migrations.push(await loadMigration(stat.name, options.directory));
 			}
 
 			return migrations.sort((a, b) => a.name.localeCompare(b.name));

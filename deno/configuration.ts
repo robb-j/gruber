@@ -6,10 +6,6 @@ export { Configuration };
 // deno-lint-ignore no-empty-interface
 export interface DenoConfigurationOptions {}
 
-// TODO: this implementation could be better
-// - pass in arguments / expose which ones were used or not
-//   - so you can work out if invalid options were passed
-// - argument checking logic could be better / needs testing
 export function getDenoConfigOptions(
 	_options: DenoConfigurationOptions = {},
 ): ConfigurationOptions {
