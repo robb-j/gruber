@@ -133,7 +133,7 @@ describe("Structure", () => {
 		it("stores fields", () => {
 			const result = new Structure("schema", "process");
 			assertEquals(result.schema, "schema");
-			assertEquals(result.process, "process");
+			assertEquals(result._process, "process");
 		});
 	});
 
@@ -562,6 +562,43 @@ describe("Structure", () => {
 				new StructError("Missing value", ["some", "path"]),
 				"should throw a StructError and capture the context",
 			);
+		});
+	});
+
+	describe("union", () => {
+		it("creates a structure", () => {
+			const struct = Structure.union([Structure.string(), Structure.number()]);
+			assertInstanceOf(struct, Structure);
+		});
+		it("allows each value", () => {
+			const struct = Structure.union([Structure.string(), Structure.number()]);
+			assertEquals(struct.process(42), 42, "should pass the value through");
+			assertEquals(
+				struct.process("Geoff"),
+				"Geoff",
+				"should pass the value through",
+			);
+		});
+		it("combines the schema", () => {
+			const struct = Structure.union([Structure.string(), Structure.number()]);
+			assertEquals(struct.schema, {
+				oneOf: [{ type: "string" }, { type: "number" }],
+			});
+		});
+		it("enables enums", () => {
+			const struct = Structure.union([
+				Structure.literal("a"),
+				Structure.literal("b"),
+				Structure.literal("c"),
+			]);
+			assertEquals(struct.process("a"), "a", "should pass the value through");
+			assertEquals(struct.process("b"), "b", "should pass the value through");
+			assertEquals(struct.process("c"), "c", "should pass the value through");
+		});
+		it("fails when no matches", () => {
+			const struct = Structure.union([Structure.string(), Structure.number()]);
+			const exec = () => struct.process(true);
+			assertThrows(exec, StructError);
 		});
 	});
 });

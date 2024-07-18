@@ -199,7 +199,7 @@ export class Structure {
 			if (typeof input !== "string") {
 				throw new StructError("Not a string or URL", context?.path);
 			}
-				return new URL(input);
+			return new URL(input);
 		});
 	}
 
@@ -306,6 +306,32 @@ export class Structure {
 				);
 			}
 			return value;
+		});
+	}
+
+	/**
+	 * **UNSTABLE** use at your own risk
+	 *
+	 * @template {Structure<unknown>[]} T
+	 * @param {T} types
+	 * @returns {Structure<Infer<T[number]>>}
+	 */
+	static union(types) {
+		const schema = {
+			oneOf: types.map((s) => s.schema),
+		};
+		return new Structure(schema, (value, context = undefined) => {
+			for (const type of types) {
+				try {
+					return type.process(value);
+				} catch {
+					// ...
+				}
+			}
+			throw new StructError(
+				"does not match any type in the union",
+				context?.path,
+			);
 		});
 	}
 }
