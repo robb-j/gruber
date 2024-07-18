@@ -115,7 +115,7 @@ const _booleans = {
 
 /**
  * @typedef {object} ConfigurationOptions
- * @property {(url: URL) => Promise<string | null>} readTextFile
+ * @property {(url: URL|string) => Promise<string | null>} readTextFile
  * @property {(key: string) => (string | undefined)} getEnvironmentVariable
  * @property {(key: string) => (string | undefined)} getCommandArgument
  * @property {(value: any) => (string | Promise<string>)} stringify
@@ -263,7 +263,7 @@ export class Configuration {
 
 	/**
 	 * @template T
-	 * @param {URL} url
+	 * @param {URL|string} url
 	 * @param {Structure<T>} spec
 	 * @returns {Promise<T>}
 	 */
