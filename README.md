@@ -73,7 +73,7 @@ Some of the apps I've made:
 - `URLPattern` based routing that is testable
 - `fetch` based routes using [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
   and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-- Basic database migrations
+- Basic only-run-once migrations up & down
 - Configuration to control how apps work
 - Structures to validate data and provide types
 - A common core for reusable modules to built be upon
@@ -162,7 +162,27 @@ export async function runServer(options) {
 }
 ```
 
-Then you could have a cli, maybe with [yargs](https://www.npmjs.com/package/yargs):
+If you were using Deno, the same server would look like:
+
+```js
+import { DenoRouter } from "@gruber/deno/mod.js";
+
+import helloRoute from "./hello-route.js";
+
+export const routes = [helloRoute];
+
+export async function runServer(options) {
+	const router = new DenoRouter({ routes });
+
+	Deno.serve({ port: options.port }, router.forDenoServe());
+}
+```
+
+That's how the same HTTP logic can be run on Deno and Node.
+Gruber doesn't expect you'll change runtime during a project,
+but now you can have more-common-looking code on different projects.
+
+Back in Node.js, next you could add a cli with [yargs](https://www.npmjs.com/package/yargs):
 
 **cli.js**
 
@@ -190,32 +210,10 @@ try {
 }
 ```
 
-If you were using Deno, you can alter your **server.js**:
-
-> You'd have to change the `const cli = yargs(hideBin(process.argv))` of **cli.js** too
-
-```js
-import { DenoRouter } from "@gruber/deno/mod.js";
-
-import helloRoute from "./hello-route.js";
-
-export const routes = [helloRoute];
-
-export async function runServer(options) {
-	const router = new DenoRouter({ routes });
-
-	Deno.serve({ port: options.port }, router.forDenoServe());
-}
-```
-
-That's how the same HTTP logic can be run on Deno and Node.
-Gruber doesn't expect you'll change runtime during a project,
-but now you can have more-common-looking code on different projects.
-
 ## Configuration
 
-In production, it's very useful to be able to configure how an app behaves without having to modify the code and redeploy the entire app.
-That is what configuration is for. It lets you change how the app runs by altering the configuration.
+In production, it's very useful to be able to configure how an app behaves without having to modify the code and redeploy the entire thing.
+That is what configuration is for. It lets you change how the app works by running it with different configuration.
 The configuration can come from different places too, like a JSON file, environment variables or maybe arguments to your CLI.
 
 [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) really inspired the design of configuration, to summerise it should be:
@@ -291,7 +289,7 @@ export const appConfig = await loadConfiguration(
 
 // A method to generate usage documentation
 export function getConfigurationUsage() {
-	return config.getUsage(struct);
+	return config.getUsage(struct, appConfig);
 }
 
 // A method to generate a JSON Schema for the configuration
@@ -302,7 +300,8 @@ export function getConfigurationSchema() {
 
 ### Usage info
 
-The usage output will be:
+By defining the configuration like this, you can easily load a strongly typed configuration object that is self documenting.
+If you output the usage information you will get:
 
 ```
 Usage:
@@ -398,23 +397,11 @@ Add this command to **cli.js**, below the "serve" command":
 ```ts
 import { appConfig, getConfigurationUsage } from "./config.js";
 
-// cli.command(
-//   "serve",
-//   ...
-// );
+// cli.command('serve', ...
 
 cli.command(
 	"config",
-	"outputs computed configuration",
-	(yargs) => yargs,
-	(args) => {
-		console.log(appConfig);
-	},
-);
-
-cli.command(
-	"usage",
-	"outputs computed configuration",
+	"outputs computed configuration and usage information",
 	(yargs) => yargs,
 	(args) => {
 		console.log(getConfigurationUsage());
@@ -425,6 +412,10 @@ cli.command(
 ## Migrations
 
 Building on [Configuration](#configuration), we'll add database migrations to our Gruber app.
+
+Migrations are a directory of JavaScript or (TypeScript in Deno) that are designed to be run in alphabetical order.
+A migration is made up of an "up" and "down" function, one to do the change, one to undo it.
+Each migration will only be ran once, so you don't try to create the same table twice.
 
 First, lets create a migration, **migrations/001-add-people.js**:
 
@@ -450,6 +441,8 @@ export default defineMigration({
 });
 ```
 
+> `defineMigration` is generic but there is `definePostgresMigration` too
+
 and we need to set up our database with **database.js**
 
 ```js
@@ -473,6 +466,7 @@ export async function getMigrator() {
 
 > `loader` is a utility to run a function once and cache the result for subsequent calls.
 > It returns a method that either calls the factory function or returns the cached result.
+> The name could be better.
 
 ### Migrate command
 
@@ -481,10 +475,7 @@ Then we can add to our CLI again, **cli.js**:
 ```ts
 import { getMigrator } from "./database.js";
 
-// cli.command(
-//   "config",
-//   ...
-// );
+// cli.command("config", ...
 
 cli.command(
 	"migrate up",
@@ -805,7 +796,7 @@ So order is important.
 It is called with the offending error and the request it is associated with.
 
 > NOTE: The `errorHandler` could do more in the future, like create it's own Response or mutate the existing response.
-> This has not been design and is left open to future development if it becomes important.
+> This has not been designed and is left open to future development if it becomes important.
 
 **getResponse**
 
@@ -856,7 +847,7 @@ const hasPets = Structure.boolean(true);
 const person = Structure.object({ name, age, website });
 
 // Process the Structure and get a value out. The returned value is strongly typed!
-// This will throw if the value passed does not match the schema.
+// This will throw a StructError if the value passed does not match the schema.
 const value = person.process(/* ... */);
 ```
 
@@ -868,7 +859,8 @@ Those static Structure methods return a `Structure` instance. These are the diff
 - `Structure.literal(value)` — **unstable** — A specific string/number/boolean value
 - `Structure.url(fallback)` — A valid url for the [URL constructor](https://developer.mozilla.org/en-US/docs/Web/API/URL/URL)
 - `Structure.object(value)` — An object of other structures
-- `Structure.array(value)` — **unstable** — An array of a structure
+- `Structure.array(struct)` — **unstable** — An array of a structure
+- `Structure.union(structs)` — **unstable** — Exactly one of the structures
 
 You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [StructError](#structerror).
 
