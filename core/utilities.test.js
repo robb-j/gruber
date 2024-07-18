@@ -1,5 +1,9 @@
-import { formatMarkdownTable } from "./utilities.js";
-import { assertEquals } from "./test-deps.js";
+import { assertEquals, describe, it } from "./test-deps.js";
+import {
+	formatMarkdownTable,
+	reconstructTemplateString,
+	trimIndentation,
+} from "./utilities.js";
 
 const expected = `
 | name    | type   | argument   | variable | fallback              |
@@ -8,8 +12,8 @@ const expected = `
 | selfUrl | url    | --self-url | ~        | http://localhost:3000 |
 `.trim();
 
-Deno.test("formatMarkdownTable", async ({ step }) => {
-	await step("returns a table", () => {
+describe("formatMarkdownTable", () => {
+	it("returns a table", () => {
 		const result = formatMarkdownTable(
 			[
 				{
@@ -30,5 +34,59 @@ Deno.test("formatMarkdownTable", async ({ step }) => {
 			"~",
 		);
 		assertEquals(result, expected);
+	});
+});
+
+describe("trimIndentation", () => {
+	it("trims a line", () => {
+		const result = trimIndentation(`
+			Hello there	
+		`);
+
+		assertEquals(result, "Hello there");
+	});
+	it("trims two lines", () => {
+		const result = trimIndentation(`
+			Hello there
+			General Kenobi
+		`);
+
+		assertEquals(result, "Hello there\nGeneral Kenobi");
+	});
+	it("keeps relative indentation", () => {
+		const result = trimIndentation(`
+			Hello there
+				General Kenobi
+		`);
+		assertEquals(result, "Hello there\n	General Kenobi");
+	});
+	it("preserves empty lines", () => {
+		const result = trimIndentation(`
+			Hello there
+
+			General Kenobi
+		`);
+		assertEquals(result, "Hello there\n\nGeneral Kenobi");
+	});
+	it("trims spaces too", () => {
+		const result = trimIndentation(`
+      Hello there
+        General Kenobi
+    `);
+		assertEquals(result, "Hello there\n  General Kenobi");
+	});
+	it("trims with variables", () => {
+		const result = trimIndentation`
+			Hello there
+			${"General Kenobi"}
+		`;
+		assertEquals(result, "Hello there\nGeneral Kenobi");
+	});
+});
+
+describe("reconstructTemplateString", () => {
+	it("rejoins strings with arguments", () => {
+		const result = reconstructTemplateString`Hello ${"there"}!`;
+		assertEquals(result, "Hello there!");
 	});
 });

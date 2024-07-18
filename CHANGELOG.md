@@ -12,6 +12,7 @@ This file documents notable changes to the project
 - Experimental `Structure.union` type
 - Experimental `Configuration.array` type
 - Non `[Configuration.spec]` types are allowed in configuration (and ignored)
+- Added `trimIndentation` utility
 
 **fixes**
 

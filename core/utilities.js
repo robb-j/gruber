@@ -51,3 +51,47 @@ export function loader(handler) {
 		return result;
 	};
 }
+
+/**
+ * @param {string|TemplateStringsArray} input
+ * @param {...unknown} args
+ * @returns {string}
+ */
+export function trimIndentation(input, ...args) {
+	if (typeof input !== "string") {
+		return trimIndentation(reconstructTemplateString(input, ...args));
+	}
+
+	const lines = input.split(/\r?\n/);
+
+	let n = input.length;
+
+	for (const line of lines) {
+		if (!line.trim()) continue;
+		const match = line.match(/^(\s+)/);
+		if (match && match[1].length < n) n = match[1].length;
+	}
+
+	if (n === input.length) return input;
+
+	const regex = new RegExp("^\\s{" + n + "}");
+
+	return lines
+		.map((line) => line.replace(regex, ""))
+		.join("\n")
+		.trim();
+}
+
+/**
+ * @param {string|TemplateStringsArray} input
+ * @param {...unknown} args
+ * @returns {string}
+ */
+export function reconstructTemplateString(input, ...args) {
+	let output = "";
+	for (let i = 0; i < input.length; i++) {
+		output += input[i];
+		if (i < args.length) output += args[i];
+	}
+	return output;
+}

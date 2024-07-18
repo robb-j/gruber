@@ -971,6 +971,29 @@ This will generate the table:
 | Tyler Rockwell   | ~   |
 ```
 
+#### trimIndentation
+
+`trimIndentation` takes a template literal (with values) and takes out the common whitespace.
+Very heavily based on [dedent](https://github.com/dmnd/dedent/tree/main)
+
+```js
+import { trimIndentation } from "gruber";
+
+console.log(
+	trimIndentation`
+		Hello there!
+		My name is Geoff
+	`,
+);
+```
+
+Which will output this, without any extra whitespace:
+
+```
+Hello there!
+My name is Geoff
+```
+
 ## Meta APIs
 
 There are APIs within Gruber for using it at a meta level.
