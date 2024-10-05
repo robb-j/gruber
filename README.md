@@ -165,7 +165,7 @@ export async function runServer(options) {
 If you were using Deno, the same server would look like:
 
 ```js
-import { DenoRouter } from "@gruber/deno/mod.js";
+import { DenoRouter } from "@gruber/mod.js";
 
 import helloRoute from "./hello-route.js";
 
@@ -209,6 +209,57 @@ try {
 	console.error("Fatal error:", e);
 }
 ```
+
+**a terminator**
+
+For highly available deployments and/or where you want a zero downtime deployment,
+you might run your server behind a load balancer.
+When a deployment goes out you run both instances at the same time
+and instantly switch traffic at the network level when the new deployment is up and running.
+
+To help with this your app often implements a `/healthz`-type endpoint that returns when your app is accepting network connections
+or if it is terminating existing connections ready to be descheduled.
+Terminator is here to help with this use-case.
+
+```js
+import { DenoRouter, Terminator } from "@gruber/mod.js";
+
+import { appConfig } from "./config.js";
+import helloRoute from "./hello-route.js";
+
+// 1. Create your Terminator, maybe call them arnie
+export const terminator = new Terminator({
+	timeout: appConfig.env === "development" ? 0 : 5_000,
+});
+
+// 2. Define the health endpoint
+const healthzRoute = defineRoute({
+	method: "GET",
+	pathname: "/healthz",
+	handler: () => terminator.getResponse(),
+});
+
+export const routes = [helloRoute, healthzRoute];
+
+export async function runServer(options) {
+	const router = new DenoRouter({ routes });
+
+	const server = Deno.serve({ port: options.port }, router.forDenoServe());
+
+	// 3. Start the terminator and define the shutdown procedure
+	terminus.start(async () => {
+		await server.shutdown();
+		// Perform clean-up
+		// Close the database connection
+		// ...
+	});
+}
+```
+
+> You might want to have this in separate files, this is just to easily document it in one place.
+
+By default Terminator waits 5 seconds to terminate and listens for `SIGINT` and `SIGTERM`.
+A nice pattern is to skip waiting in development, shown above.
 
 ## Configuration
 
@@ -916,6 +967,34 @@ On the error, there are also methods to help use it:
 - `[Symbol.iterator]` is also available if you want to loop through all children nodes, only those that do not have children themselves.
 
 There is also the static method `StructError.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a StructError).
+
+### Terminator
+
+Terminator helps you gracefully deploy servers with zero downtime when using a load balancer.
+
+```js
+import { Terminator } from "gruber/terminator.js";
+
+// All options are optional, these are also the defaults
+const arnie = new Terminator({
+	signals: ["SIGINT", "SIGTERM"],
+	timeout: 5_000,
+});
+
+// Generate a HTTP response based on the current state of the Terminator
+// A 200 if running or 503 if terminating
+const response = arnie.getResponse();
+
+// Get the current state of the Terminator, either 'running' or 'terminating'
+arnie.state;
+
+// Start the Terminator process and define the shutdown procedure
+arnie.start(async () => {
+	// shut down things like HTTP servers or database connections
+});
+```
+
+The block passed to `start` can be async and it handles errors by logging them and exiting with a non-zero status code.
 
 ### Utilities
 

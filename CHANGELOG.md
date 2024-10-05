@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**new**
+
+- Create the Terminator, an API like [@godaddy/terminus](https://github.com/godaddy/terminus) for cross-platform graceful HTTP shutdown.
+
 ## 0.5.0
 
 **new**
