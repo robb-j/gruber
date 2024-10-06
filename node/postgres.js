@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { Migrator, defineMigration, loadMigration } from "../core/migrator.js";
 import {
-	getPostgresMigratorOptions,
+	getPostgresMigratorOptions as getCorePostgresMigratorOptions,
 	bootstrapMigration,
 } from "../core/postgres.js";
 
@@ -41,9 +41,9 @@ export function definePostgresMigration(options) {
  * @param {NodePostgresMigratorOptions} options
  * @returns {MigratorOptions}
  */
-export function getNodePostgresMigratorOptions(options) {
+export function getPostgresMigratorOptions(options) {
 	return {
-		...getPostgresMigratorOptions({ sql: options.sql }),
+		...getCorePostgresMigratorOptions({ sql: options.sql }),
 
 		async getDefinitions() {
 			const migrations = [{ name: "000-bootstrap.js", ...bootstrapMigration }];
@@ -64,14 +64,20 @@ export function getNodePostgresMigratorOptions(options) {
 	};
 }
 
+/** @deprecated use `getPostgresMigratorOptions` */
+export const getNodePostgresMigratorOptions = getPostgresMigratorOptions;
+
 /**
- * This is a syntax sugar for `new Migrator(getNodePostgresMigratorOptions(...))`
+ * This is a syntax sugar for `new Migrator(getPostgresMigratorOptions(...))`
  *
  * @param {NodePostgresMigratorOptions} options
  */
-export function getNodePostgresMigrator(options) {
+export function getPostgresMigrator(options) {
 	if (!options.directory.pathname.endsWith("/")) {
 		throw new Error("Postgres migration directory must end with a '/'");
 	}
-	return new Migrator(getNodePostgresMigratorOptions(options));
+	return new Migrator(getPostgresMigratorOptions(options));
 }
+
+/** @deprecated use `getPostgresMigrator` */
+export const getNodePostgresMigrator = getPostgresMigrator;

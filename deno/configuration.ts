@@ -6,7 +6,7 @@ export { Configuration };
 // deno-lint-ignore no-empty-interface
 export interface DenoConfigurationOptions {}
 
-export function getDenoConfigOptions(
+export function getConfigurationOptions(
 	_options: DenoConfigurationOptions = {},
 ): ConfigurationOptions {
 	const args = parseArgs(Deno.args);
@@ -35,6 +35,12 @@ export function getDenoConfigOptions(
 }
 
 /** This is a syntax sugar for `new Configuration(getDenoConfigOptions(options))` */
-export function getDenoConfiguration(options: DenoConfigurationOptions = {}) {
-	return new Configuration(getDenoConfigOptions(options));
+export function getConfiguration(options: DenoConfigurationOptions = {}) {
+	return new Configuration(getConfigurationOptions(options));
 }
+
+/** @deprecated use `getConfigurationOptions` */
+export const getDenoConfigOptions = getConfigurationOptions;
+
+/** @deprecated use `getConfiguration` */
+export const getDenoConfiguration = getConfiguration;

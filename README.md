@@ -294,10 +294,10 @@ Building on the [HTTP server](#http-server) above, we'll setup configuration. St
 
 ```js
 import fs from "node:fs";
-import { getNodeConfiguration } from "gruber";
+import { getConfiguration } from "gruber";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const config = getNodeConfiguration();
+const config = getConfiguration();
 
 const struct = config.object({
 	env: config.string({ variable: "NODE_ENV", fallback: "development" }),
@@ -499,7 +499,7 @@ and we need to set up our database with **database.js**
 ```js
 import process from "node:process";
 import postgres from "postgres";
-import { loader, getNodePostgresMigrator } from "gruber";
+import { loader, getPostgresMigrator } from "gruber";
 import { appConfig } from "./config.js";
 
 export const useDatabase = loader(() => {
@@ -508,7 +508,7 @@ export const useDatabase = loader(() => {
 });
 
 export async function getMigrator() {
-	return getNodePostgresMigrator({
+	return getPostgresMigrator({
 		directory: new URL("./migrations/", import.meta.url),
 		sql: await useDatabase(),
 	});
@@ -1088,11 +1088,11 @@ These are the options:
 For example, to override in Node:
 
 ```js
-import { Configuration, getNodeConfigOptions } from "gruber";
+import { Configuration, getConfigurationOptions } from "gruber";
 import Yaml from "yaml";
 
 const config = new Configuration({
-	...getNodeConfigOptions(),
+	...getConfigurationOptions(),
 	getEnvionmentVariable: () => undefined,
 	stringify: (v) => Yaml.stringify(v),
 	parse: (v) => Yaml.parse(v),
@@ -1276,6 +1276,16 @@ const server = http.createServer((req) => {
 	const stream = getIncomingMessageBody(req);
 	// ...
 });
+```
+
+#### getResponseReadable
+
+`getResponseReadable` creates a [streams:Readable](https://nodejs.org/api/stream.html#class-streamreadable) from the body of a fetch Response.
+
+```js
+import { getResponseReadable } from "gruber/node-router.js";
+
+const readable = getResponseReadable(new Response("some body"));
 ```
 
 ## Development

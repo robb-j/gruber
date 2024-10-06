@@ -1,12 +1,11 @@
 import {
-	MigrationDefinition,
 	MigrationOptions,
 	Migrator,
 	defineMigration,
 	loadMigration,
 } from "../core/migrator.js";
 import {
-	getPostgresMigratorOptions,
+	getPostgresMigratorOptions as getCorePostgresMigratorOptions,
 	bootstrapMigration,
 } from "../core/postgres.js";
 import { extname, type Sql } from "./deps.ts";
@@ -25,11 +24,11 @@ export function definePostgresMigration(options: MigrationOptions<Sql>) {
 	return defineMigration(options);
 }
 
-export function getDenoPostgresMigratorOptions(
+export function getPostgresMigratorOptions(
 	options: DenoPostgresMigratorOptions,
 ) {
 	return {
-		...getPostgresMigratorOptions({ sql: options.sql as any }),
+		...getCorePostgresMigratorOptions({ sql: options.sql as any }),
 
 		async getDefinitions() {
 			const migrations = [{ name: "000-bootstrap.ts", ...bootstrapMigration }];
@@ -46,12 +45,18 @@ export function getDenoPostgresMigratorOptions(
 	};
 }
 
+/** @deprecated */
+export const getDenoPostgresMigratorOptions = getPostgresMigratorOptions;
+
 /**
  * This is a syntax sugar for `new Migrator(getDenoPostgresMigratorOptions(...))`
  */
-export function getDenoPostgresMigrator(options: DenoPostgresMigratorOptions) {
+export function getPostgresMigrator(options: DenoPostgresMigratorOptions) {
 	if (!options.directory.pathname.endsWith("/")) {
 		throw new Error("Postgres migration directory must end with a '/'");
 	}
-	return new Migrator(getDenoPostgresMigratorOptions(options));
+	return new Migrator(getPostgresMigratorOptions(options));
 }
+
+/** @deprecated */
+export const getDenoPostgresMigrator = getPostgresMigrator;

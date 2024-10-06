@@ -87,6 +87,7 @@ export function getPostgresMigratorOptions(options) {
 	return {
 		getRecords: () => _getMigrationRecords(options.sql),
 		execute: (def, direction) => _execute(def, direction, options.sql),
-		getDefinitions: () => [bootstrapMigration],
+		getDefinitions: () =>
+			Promise.resolve([{ name: "000-bootstrap", ...bootstrapMigration }]),
 	};
 }

@@ -14,15 +14,15 @@ export { Configuration };
  * @param {NodeConfigurationOptions} options
  * @returns {import("./core.js").ConfigurationOptions}
  */
-export function getNodeConfigOptions(_options = {}) {
+export function getConfigurationOptions(_options = {}) {
 	const args = util.parseArgs({
-		args: process.args,
+		args: process.argv,
 		strict: false,
 	});
 	return {
 		async readTextFile(url) {
 			try {
-				return await fs.promises.readFile(url);
+				return await fs.promises.readFile(url, "utf-8");
 			} catch (error) {
 				return null;
 			}
@@ -43,9 +43,15 @@ export function getNodeConfigOptions(_options = {}) {
 }
 
 /**
- * This is a syntax sugar for `new Configuration(getNodeConfigOptions(options))`
+ * This is a syntax sugar for `new Configuration(getConfigurationOptions(options))`
  * @param {NodeConfigurationOptions} options
  */
-export function getNodeConfiguration(options = {}) {
-	return new Configuration(getNodeConfigOptions(options));
+export function getConfiguration(options = {}) {
+	return new Configuration(getConfigurationOptions(options));
 }
+
+/** @deprecated use `getConfigurationOptions` */
+export const getNodeConfigOptions = getConfigurationOptions;
+
+/** @deprecated use `getNodeConfiguration` */
+export const getNodeConfiguration = getConfiguration;

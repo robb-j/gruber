@@ -58,7 +58,7 @@ export class NodeRouter {
 			res.setHeader(key, values.length === 1 ? value : values);
 		}
 
-		if (response.body) Readable.fromWeb(response.body).pipe(res);
+		if (response.body) getResponseReadable(response).pipe(res);
 		else res.end();
 	}
 }
@@ -87,4 +87,10 @@ export function getFetchHeaders(input) {
 export function getIncomingMessageBody(req) {
 	if (req.method === "HEAD" || req.method === "GET") return undefined;
 	return Readable.toWeb(req);
+}
+
+/** @param {Reqsponse} response */
+export function getResponseReadable(response) {
+	// TODO: check this...
+	return Readable.fromWeb(response.body);
 }

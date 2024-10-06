@@ -3,9 +3,9 @@
 // Usage:
 // NODE_ENV=staging node examples/node/config.js --database-url=mysql://database
 
-import { getNodeConfiguration } from "gruber/configuration.js";
+import { getConfiguration } from "gruber/configuration.js";
 
-const config = getNodeConfiguration();
+const config = getConfiguration();
 const pkg = { name: "gruber-app", version: "1.2.3" };
 
 const struct = config.object({

@@ -1,7 +1,5 @@
-import { Readable } from "node:stream";
-
 import { FetchRouter } from "../core/fetch-router.js";
-import { getFetchRequest } from "./node-router.js";
+import { getFetchRequest, getResponseReadable } from "./node-router.js";
 
 /**
 	A HTTP router for Express applications
@@ -49,7 +47,7 @@ export class ExpressRouter {
 			res.set(key, values.length === 1 ? value : values);
 		}
 
-		if (response.body) Readable.fromWeb(response.body).pipe(res);
+		if (response.body) getResponseReadable(response).pipe(res);
 		else res.end();
 	}
 }

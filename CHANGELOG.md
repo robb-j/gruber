@@ -8,6 +8,14 @@ This file documents notable changes to the project
 
 - Create the Terminator, an API like [@godaddy/terminus](https://github.com/godaddy/terminus) for cross-platform graceful HTTP shutdown.
 
+**changed**
+
+- Deprecated environment-specific functions in favour of simpler names
+  - `get{Node,Deno}ConfigOptions` → `getConfigurationOptions`
+  - `get{Node,Deno}Configuration` → `getConfiguration`
+  - `get{Node,Deno}PostgresMigratorOptions` → `getPostgresMigratorOptions`
+  - `get{Node,Deno}PostgresMigrator` → `getPostgresMigrator`
+
 ## 0.5.0
 
 **new**

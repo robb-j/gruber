@@ -1,2 +1,2 @@
 // Conditional ESM module loading (Node.js and browser)
-if (!globalThis.URLPattern) await import("urlpattern-polyfill");
+if (typeof URLPattern !== "function") await import("urlpattern-polyfill");
