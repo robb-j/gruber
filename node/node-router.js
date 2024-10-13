@@ -83,9 +83,11 @@ export function getFetchHeaders(input) {
 	return result;
 }
 
+const noHttpBody = new Set(['HEAD', 'GET', 'OPTIONS', 'TRACE'])
+
 /** @param {import("node:http").IncomingMessage} req */
 export function getIncomingMessageBody(req) {
-	if (req.method === "HEAD" || req.method === "GET") return undefined;
+	if (noHttpBody.has(req.method)) return undefined;
 	return Readable.toWeb(req);
 }
 
