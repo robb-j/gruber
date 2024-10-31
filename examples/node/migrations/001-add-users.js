@@ -1,6 +1,6 @@
-import { defineMigration } from "gruber/postgres.js";
+import { definePostgresMigration } from "gruber";
 
-export default defineMigration({
+export default definePostgresMigration({
 	async up(sql) {
 		await sql`
       CREATE TABLE "users" (

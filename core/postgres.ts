@@ -35,6 +35,7 @@ export function executePostgresMigration(
 			await sql`
 				INSERT INTO migrations (name) VALUES (${def.name})
 			`;
+			return;
 		}
 
 		if (direction === "down") {
@@ -45,6 +46,7 @@ export function executePostgresMigration(
 					DELETE FROM migrations WHERE name = ${def.name}
 				`;
 			}
+			return;
 		}
 
 		throw new TypeError(`Invalid direction: ${direction}`);

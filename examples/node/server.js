@@ -29,9 +29,9 @@ async function runServer(options) {
 	const router = new NodeRouter({ routes });
 	const server = createServer(router.forHttpServer());
 
-	server.listen(options.port, () => {
-		console.log("Listening on http://localhost:%d", options.port);
+	server.listen(options, () => {
+		console.log("Listening on http://%s:%d", options.hostname, options.port);
 	});
 }
 
-runServer({ port: 3000 });
+runServer({ port: 3000, hostname: "127.0.0.1" });

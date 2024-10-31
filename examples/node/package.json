@@ -2,7 +2,7 @@
 	"private": true,
 	"type": "module",
 	"dependencies": {
-		"gruber": "file:../../node",
+		"gruber": "file:../../bundle/node",
 		"postgres": "^3.4.3"
 	}
 }
