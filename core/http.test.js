@@ -1,5 +1,5 @@
 import { assertInstanceOf, assertEquals, describe, it } from "./test-deps.js";
-import { defineRoute, HTTPError } from "./http.js";
+import { defineRoute, HTTPError } from "./http.ts";
 
 describe("defineRoute", () => {
 	it("sets the method", () => {
