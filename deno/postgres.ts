@@ -49,7 +49,7 @@ export function getPostgresMigratorOptions(
 export const getDenoPostgresMigratorOptions = getPostgresMigratorOptions;
 
 /**
- * This is a syntax sugar for `new Migrator(getDenoPostgresMigratorOptions(...))`
+ * This is a syntax sugar for `new Migrator(getPostgresMigratorOptions(...))`
  */
 export function getPostgresMigrator(options: DenoPostgresMigratorOptions) {
 	if (!options.directory.pathname.endsWith("/")) {
