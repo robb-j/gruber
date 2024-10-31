@@ -1,0 +1,11 @@
+{
+	"$comment": "This is for node-based TypeScript",
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"strict": true
+	},
+	"include": ["core", "node", "bundle/node", "examples/node"]
+}

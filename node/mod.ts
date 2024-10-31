@@ -1,4 +1,4 @@
-export * from "../core/mod.ts";
 export * from "./configuration.ts";
+export * from "./core.ts";
+export * from "./node-router.ts";
 export * from "./postgres.ts";
-export * from "./deno-router.ts";

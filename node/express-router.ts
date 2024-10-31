@@ -1,5 +1,14 @@
-import { FetchRouter } from "../core/fetch-router.js";
-import { getFetchRequest, getResponseReadable } from "./node-router.js";
+import {
+	RequestHandler as ExpressRequestHandler,
+	Response as ExporessResponse,
+} from "express";
+
+import { FetchRouter } from "../core/fetch-router.ts";
+import {
+	getFetchRequest,
+	getResponseReadable,
+	NodeRouterOptions,
+} from "./node-router.ts";
 
 /**
 	A HTTP router for Express applications
@@ -14,13 +23,12 @@ import { getFetchRequest, getResponseReadable } from "./node-router.js";
 	```
 */
 export class ExpressRouter {
-	/** @param {import("./node-router.js").NodeRouterOptions} options */
-	constructor(options = {}) {
+	router: FetchRouter;
+	constructor(options: NodeRouterOptions = {}) {
 		this.router = new FetchRouter({ routes: options.routes ?? [] });
 	}
 
-	/** @returns {import("express").RequestHandler} */
-	middleware() {
+	middleware(): ExpressRequestHandler {
 		return async (req, res, next) => {
 			const request = getFetchRequest(req);
 			const response = await this.getResponse(request);
@@ -29,18 +37,13 @@ export class ExpressRouter {
 		};
 	}
 
-	/** @param {Request} request */
-	getResponse(request) {
+	getResponse(request: Request): Promise<Response> {
 		return this.router.getResponse(request);
 	}
 
-	/**
-		@param {import("express").Response} res 
-		@param {Response} response 
-	 */
-	respond(res, response) {
+	respond(res: ExporessResponse, response: Response): void {
 		res.statusCode = response.status;
-		res.statusMessage = response.statusMessage;
+		res.statusMessage = response.statusText;
 
 		for (const [key, value] of response.headers) {
 			const values = value.split(",");

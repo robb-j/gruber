@@ -1,4 +1,4 @@
-import { HTTPError, RouteDefinition } from "./http.js";
+import { HTTPError, RouteDefinition } from "./http.ts";
 
 export type RouteErrorHandler = (error: unknown, request: Request) => unknown;
 

@@ -1,12 +1,17 @@
 import { Readable } from "node:stream";
-import { FetchRouter } from "../core/fetch-router.js";
+import {
+	IncomingHttpHeaders,
+	IncomingMessage,
+	RequestListener,
+	ServerResponse,
+} from "node:http";
 
-/** @typedef {import("../core/mod.js").RouteDefinition} RouteDefinition */
+import { FetchRouter } from "../core/fetch-router.ts";
+import { RouteDefinition } from "../core/http.ts";
 
-/**
-	@typedef {object} NodeRouterOptions
-	@property {RouteDefinition []} routes
-	*/
+export interface NodeRouterOptions {
+	routes?: RouteDefinition[];
+}
 
 /**
 	A HTTP router for Node.js, powered by Koa
@@ -20,20 +25,19 @@ import { FetchRouter } from "../core/fetch-router.js";
 	```
 */
 export class NodeRouter {
-	/** @param {NodeRouterOptions} options */
-	constructor(options = {}) {
+	router: FetchRouter;
+	constructor(options: NodeRouterOptions = {}) {
 		this.router = new FetchRouter({
 			routes: options.routes,
 			errorHandler: (error, request) => this.onRouteError(error, request),
 		});
 	}
 
-	/** @param {Request} request */
-	getResponse(request) {
+	getResponse(request: Request): Promise<Response> {
 		return this.router.getResponse(request);
 	}
 
-	forHttpServer() {
+	forHttpServer(): RequestListener {
 		return async (req, res) => {
 			const request = getFetchRequest(req);
 			const response = await this.getResponse(request);
@@ -41,15 +45,11 @@ export class NodeRouter {
 		};
 	}
 
-	onRouteError(error, request) {
+	onRouteError(error: unknown, request: Request): void {
 		console.error("Fatal Route Error", error);
 	}
 
-	/**
-		@param {import("node:http").ServerResponse} res
-		@param {Response} response
-	*/
-	respond(res, response) {
+	respond(res: ServerResponse, response: Response): void {
 		res.statusCode = response.status;
 		res.statusMessage = response.statusText;
 
@@ -63,19 +63,18 @@ export class NodeRouter {
 	}
 }
 
-/** @param {import("node:http").IncomingMessage} req */
-export function getFetchRequest(req) {
+export function getFetchRequest(req: IncomingMessage) {
 	const url = "http://" + (req.headers.host ?? "localhost") + req.url;
 	return new Request(url, {
 		method: req.method,
 		headers: getFetchHeaders(req.headers),
 		body: getIncomingMessageBody(req),
+		// @ts-ignore
 		duplex: "half",
 	});
 }
 
-/** @param {import("node:http").IncomingHttpHeaders} input */
-export function getFetchHeaders(input) {
+export function getFetchHeaders(input: IncomingHttpHeaders) {
 	const result = new Headers();
 	for (const [name, value] of Object.entries(input)) {
 		if (Array.isArray(value)) for (const v of value) result.append(name, v);
@@ -86,14 +85,15 @@ export function getFetchHeaders(input) {
 
 const noHttpBody = new Set(["HEAD", "GET", "OPTIONS", "TRACE"]);
 
-/** @param {import("node:http").IncomingMessage} req */
-export function getIncomingMessageBody(req) {
+export function getIncomingMessageBody(
+	req: IncomingMessage,
+): BodyInit | undefined {
+	if (!req.method) return undefined;
 	if (noHttpBody.has(req.method)) return undefined;
-	return Readable.toWeb(req);
+	return Readable.toWeb(req) as ReadableStream;
 }
 
-/** @param {Reqsponse} response */
-export function getResponseReadable(response) {
+export function getResponseReadable(response: Response) {
 	// TODO: check this...
-	return Readable.fromWeb(response.body);
+	return Readable.fromWeb(response.body as any);
 }

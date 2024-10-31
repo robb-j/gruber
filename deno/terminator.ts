@@ -1,4 +1,4 @@
-import { Terminator, TerminatorOptions } from "../core/terminator.js";
+import { Terminator, TerminatorOptions } from "../core/terminator.ts";
 
 export interface DenoTerminatorOptions {
 	timeout?: number;

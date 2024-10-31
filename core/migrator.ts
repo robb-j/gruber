@@ -1,4 +1,4 @@
-import { MaybePromise } from "./types.ts";
+import type { MaybePromise } from "./types.ts";
 
 export interface MigrationOptions<T = unknown> {
 	up(value: T): MaybePromise<void>;

@@ -1,5 +1,5 @@
-import { FetchRouter } from "../core/fetch-router.js";
-import { RouteDefinition } from "../core/http.js";
+import { FetchRouter } from "../core/fetch-router.ts";
+import { RouteDefinition } from "../core/http.ts";
 
 export interface DenoRouterOptions {
 	routes?: RouteDefinition[];

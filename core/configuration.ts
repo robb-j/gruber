@@ -1,5 +1,5 @@
-import { formatMarkdownTable } from "./utilities.js";
-import { Structure, StructError, Infer } from "./structures.js";
+import { formatMarkdownTable } from "./utilities.ts";
+import { Structure, StructError, Infer } from "./structures.ts";
 
 // NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
 

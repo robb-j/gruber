@@ -1,10 +1,11 @@
-import { Readable } from "node:stream";
+import { Context, Middleware } from "koa";
 
-import { FetchRouter } from "../core/fetch-router.js";
-import { getFetchRequest, getResponseReadable } from "./node-router.js";
-
-/** @typedef {import("koa").Context} Context */
-/** @typedef {import("./node-router.js").NodeRouterOptions} NodeRouterOptions */
+import { FetchRouter } from "../core/fetch-router.ts";
+import {
+	getFetchRequest,
+	getResponseReadable,
+	NodeRouterOptions,
+} from "./node-router.ts";
 
 /** 
 	A HTTP router for Koa applications
@@ -20,13 +21,12 @@ import { getFetchRequest, getResponseReadable } from "./node-router.js";
 	```
 */
 export class KoaRouter {
-	/** @param {NodeRouterOptions} options */
-	constructor(options = {}) {
+	router: FetchRouter;
+	constructor(options: NodeRouterOptions = {}) {
 		this.router = new FetchRouter({ routes: options.routes ?? [] });
 	}
 
-	/** @returns {import("koa").Middleware} */
-	middleware() {
+	middleware(): Middleware {
 		return async (ctx, next) => {
 			const request = getFetchRequest(ctx.req);
 			const response = await this.getResponse(request);
@@ -35,18 +35,13 @@ export class KoaRouter {
 		};
 	}
 
-	/** @param {Request} request */
-	getResponse(request) {
+	getResponse(request: Request): Promise<Response> {
 		return this.router.getResponse(request);
 	}
 
-	/**
-		@param {Context} ctx
-		@param {Response} response
-	*/
-	respond(ctx, response) {
+	respond(ctx: Context, response: Response): void {
 		ctx.response.status = response.status;
-		ctx.response.statusMessage = response.statusText;
+		ctx.response.message = response.statusText;
 
 		for (const [key, value] of response.headers) {
 			const values = value.split(",");

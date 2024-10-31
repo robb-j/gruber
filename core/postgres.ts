@@ -5,7 +5,7 @@ import {
 	MigrationDefinition,
 	MigrationOptions,
 	MigrationRecord,
-} from "./migrator.ts"; // TODO: put back to .js
+} from "./migrator.ts";
 
 export async function getPostgresMigrations(
 	sql: Sql,

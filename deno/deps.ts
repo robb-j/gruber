@@ -1,3 +1,3 @@
-export type { Sql } from "npm:postgres@^3.4.4";
-export { parseArgs } from "https://deno.land/std@0.211.0/cli/mod.ts";
-export { extname } from "https://deno.land/std@0.211.0/path/extname.ts";
+export type { Sql } from "npm:postgres@^3.4.5";
+export { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
+export { extname } from "jsr:@std/path@1.0.6/extname";

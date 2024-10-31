@@ -3,7 +3,7 @@ export interface TerminatorOptions {
 	signals: string[];
 
 	startListeners: (signals: string[], block: TerminatorAction) => void;
-	exitProcess: (statusCode: number, error?: Error) => void;
+	exitProcess: (statusCode: number, error?: unknown) => void;
 	wait: (ms: number) => Promise<void>;
 }
 
