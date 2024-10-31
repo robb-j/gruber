@@ -29,6 +29,6 @@ export function getTerminatorOptions(
 	};
 }
 
-export function getTerminator(options: NodeTerminatorOptions): Terminator {
+export function getTerminator(options: NodeTerminatorOptions = {}): Terminator {
 	return new Terminator(getTerminatorOptions(options));
 }

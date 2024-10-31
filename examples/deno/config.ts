@@ -3,7 +3,7 @@
 // Usage:
 // DENO_ENV=staging deno run -A examples/deno/config.js --database-url=mysql://database
 
-import { getConfiguration } from "../../deno/mod.ts";
+import { getConfiguration } from "../../bundle/deno/mod.ts";
 
 const config = getConfiguration();
 const meta = { name: "gruber-app", version: "1.2.3" };

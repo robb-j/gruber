@@ -1,5 +1,4 @@
-import { definePostgresMigration } from "../../../deno/mod.ts";
-// import { defineMigration } from "../../../bundle/deno/mod.ts";
+import { definePostgresMigration } from "../../../bundle/deno/mod.ts";
 
 export default definePostgresMigration({
 	async up(sql) {

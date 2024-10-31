@@ -13,7 +13,7 @@ export function getTerminatorOptions(
 		signals: options.signals ?? ["SIGINT", "SIGTERM"],
 		startListeners(signals, block) {
 			for (const signal of signals) {
-				Deno.addSignalListener(signal as Deno.Signal, () => block);
+				Deno.addSignalListener(signal as Deno.Signal, () => block());
 			}
 		},
 		exitProcess(statusCode, error) {
@@ -28,6 +28,6 @@ export function getTerminatorOptions(
 	};
 }
 
-export function getTerminator(options: DenoTerminatorOptions) {
+export function getTerminator(options: DenoTerminatorOptions = {}) {
 	return new Terminator(getTerminatorOptions(options));
 }
