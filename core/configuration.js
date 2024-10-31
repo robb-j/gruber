@@ -171,7 +171,7 @@ export class Configuration {
 	/**
 	 * @template {Structure<any>} T
 	 * @param {T} options
-	 * @returns {Structure<Infer<T>>[]}
+	 * @returns {Structure<Infer<T>[]>}
 	 */
 	array(options) {
 		if (!(options instanceof Structure)) {
