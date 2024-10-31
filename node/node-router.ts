@@ -1,5 +1,6 @@
 import { Readable } from "node:stream";
 import {
+	createServer,
 	IncomingHttpHeaders,
 	IncomingMessage,
 	RequestListener,
@@ -8,6 +9,7 @@ import {
 
 import { FetchRouter } from "../core/fetch-router.ts";
 import { RouteDefinition } from "../core/http.ts";
+import { MaybePromise } from "../core/types.ts";
 
 export interface NodeRouterOptions {
 	routes?: RouteDefinition[];
@@ -50,17 +52,21 @@ export class NodeRouter {
 	}
 
 	respond(res: ServerResponse, response: Response): void {
-		res.statusCode = response.status;
-		res.statusMessage = response.statusText;
-
-		for (const [key, value] of response.headers) {
-			const values = value.split(",");
-			res.setHeader(key, values.length === 1 ? value : values);
-		}
-
-		if (response.body) getResponseReadable(response).pipe(res);
-		else res.end();
+		applyResponse(response, res);
 	}
+}
+
+export function applyResponse(response: Response, res: ServerResponse): void {
+	res.statusCode = response.status;
+	res.statusMessage = response.statusText;
+
+	for (const [key, value] of response.headers) {
+		const values = value.split(",");
+		res.setHeader(key, values.length === 1 ? value : values);
+	}
+
+	if (response.body) getResponseReadable(response).pipe(res);
+	else res.end();
 }
 
 export function getFetchRequest(req: IncomingMessage) {
@@ -96,4 +102,42 @@ export function getIncomingMessageBody(
 export function getResponseReadable(response: Response) {
 	// TODO: check this...
 	return Readable.fromWeb(response.body as any);
+}
+
+/** @unstable */
+export interface ServeHTTPOptions {
+	port: number;
+	hostname?: string;
+}
+
+/** @unstable */
+export interface ServeHTTPHandler {
+	(request: Request): MaybePromise<Response>;
+}
+
+/** @unstable A node version of Deno.serve now all the polyfills are in place */
+export function serveHTTP(
+	options: ServeHTTPOptions,
+	handler: ServeHTTPHandler,
+) {
+	const http = createServer(async (httpReq, httpRes) => {
+		const request = getFetchRequest(httpReq);
+		const response = await handler(request);
+		applyResponse(response, httpRes);
+	});
+
+	const server = http.listen(
+		{ port: options.port, hostname: options.hostname },
+		() => {
+			console.log(
+				"Listening on http://%s:%s",
+				options.hostname ?? "0.0.0.0",
+				options.port ?? 3000,
+			);
+		},
+	);
+
+	// NOTE: AbortSignal?
+
+	return server;
 }
