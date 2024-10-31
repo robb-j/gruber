@@ -1,41 +1,31 @@
 import { formatMarkdownTable } from "./utilities.js";
-import { Structure, StructError } from "./structures.js";
+import { Structure, StructError, Infer } from "./structures.js";
 
 // NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
 
 // NOTE: the schema generation will include whatever value is passed to the structure, in the context of configuration it will be whatever is configured and may be something secret
 
-/**
- * @template [T=any]
- * @typedef {object} SpecOptions
- * @property {string} [variable]
- * @property {string} [flag]
- * @property {T} fallback
- */
+export interface SpecOptions<T = any> {
+	variable?: string;
+	flag?: string;
+	fallback: T;
+}
 
-/**
- * @template T
- * @typedef {object} ConfigurationResult
- * @property {'argument' | 'variable' | 'fallback'} source
- * @property {string|T} value
- */
+export interface ConfigurationResult<T> {
+	source: "argument" | "variable" | "fallback";
+	value: string | T;
+}
 
-/**
- * @typedef {object} ConfigurationDescription
- * @property {unknown} fallback
- * @property {Record<string,string>[]} fields
- */
+export interface ConfigurationDescription {
+	fallback: unknown;
+	fields: Record<string, string>[];
+}
 
-/**
- * @typedef {object} Specification
- * @property {(name: string) => ConfigurationDescription} describe
- */
+export interface Specification {
+	describe(name: string): ConfigurationDescription;
+}
 
-/**
- * @param {unknown} value
- * @returns {Specification | null}
- */
-export function _getSpec(value) {
+export function _getSpec(value: any): Specification | null {
 	return typeof value[Configuration.spec] === "object" &&
 		typeof value[Configuration.spec].describe === "function"
 		? value[Configuration.spec]
@@ -48,14 +38,15 @@ export function _getSpec(value) {
 //
 
 // TODO: needs its own tests
-export class _ObjectSpec {
-	/** @param {Record<string, Structure<unknown>>} options  */
-	constructor(options) {
+export class _ObjectSpec implements Specification {
+	options: Record<string, Structure<unknown>>;
+
+	constructor(options: Record<string, Structure<unknown>>) {
 		this.options = options;
 	}
-	describe(name) {
-		const fallback = {};
-		const fields = [];
+	describe(name: string): ConfigurationDescription {
+		const fallback: Record<string, unknown> = {};
+		const fields: Record<string, string>[] = [];
 		for (const [key, struct] of Object.entries(this.options)) {
 			const childName = (name ? name + "." : "") + key;
 			const childSpec = _getSpec(struct)?.describe(childName);
@@ -70,12 +61,15 @@ export class _ObjectSpec {
 }
 
 // TODO: needs its own tests
-export class _ArraySpec {
+export class _ArraySpec implements Specification {
 	/** @param {Structure<unknown>} options  */
-	constructor(options) {
+	options: Structure<unknown>;
+
+	constructor(options: Structure<unknown>) {
 		this.options = options;
 	}
-	describe(name) {
+
+	describe(name: string): ConfigurationDescription {
 		const childName = !name ? "[]" : name + "[]";
 		const childSpec = _getSpec(this.options)?.describe(childName);
 		if (!childSpec) return { fallback: [], fields: [] };
@@ -89,15 +83,15 @@ export class _ArraySpec {
 
 // TODO: needs its own tests
 export class _PrimativeSpec {
-	/**
-	 * @param {string} type
-	 * @param {SpecOptions<any>} options
-	 */
-	constructor(type, options) {
+	type: string;
+	options: SpecOptions<any>;
+
+	constructor(type: string, options: SpecOptions<any>) {
 		this.type = type;
 		this.options = options;
 	}
-	describe(name) {
+
+	describe(name: string): ConfigurationDescription {
 		return {
 			fallback: this.options.fallback,
 			fields: [
@@ -112,49 +106,33 @@ export class _PrimativeSpec {
 	}
 }
 
-const _requiredOptions = [
-	"readTextFile",
-	"getEnvironmentVariable",
-	"getCommandArgument",
-	"stringify",
-	"parse",
-];
-
-const _booleans = {
+const _booleans: Record<string, boolean | undefined> = {
 	1: true,
 	true: true,
 	0: false,
 	false: false,
 };
 
-/**
- * @typedef {object} ConfigurationOptions
- * @property {(url: URL|string) => Promise<string | null>} readTextFile
- * @property {(key: string) => (string | undefined)} getEnvironmentVariable
- * @property {(key: string) => (string | undefined)} getCommandArgument
- * @property {(value: any) => (string | Promise<string>)} stringify
- * @property {(value: string) => (any)} parse
- */
+export interface ConfigurationOptions {
+	readTextFile(url: URL | string): Promise<string | null>;
+	getEnvironmentVariable(key: string): string | undefined;
+	getCommandArgument(key: string): string | undefined;
+	stringify(value: any): string | Promise<string>;
+	parse(value: string): any;
+}
 
 export class Configuration {
-	static spec = Symbol("Configuration.spec");
+	static readonly spec = Symbol("Configuration.spec");
 
-	/** @type {ConfigurationOptions} */ options;
+	options: ConfigurationOptions;
 
-	/** @param {ConfigurationOptions} options */
-	constructor(options) {
-		for (const key of _requiredOptions) {
-			if (!options[key]) throw new TypeError(`options.${key} is required`);
-		}
+	constructor(options: ConfigurationOptions) {
 		this.options = options;
 	}
 
-	/**
-	 * @template {Record<string, Structure<any>>} T
-	 * @param {T} options
-	 * @returns {Structure<{ [K in keyof T]: import("./structures.js").Infer<T[K]> }>}
-	 */
-	object(options) {
+	object<T extends Record<string, Structure<unknown>>>(
+		options: T,
+	): Structure<{ [K in keyof T]: Infer<T[K]> }> {
 		if (typeof options !== "object" || options === null) {
 			throw new TypeError("options must be a non-null object");
 		}
@@ -164,75 +142,61 @@ export class Configuration {
 			}
 		}
 		const struct = Structure.object(options);
-		struct[Configuration.spec] = new _ObjectSpec(options);
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _ObjectSpec(options),
+		});
 		return struct;
 	}
 
-	/**
-	 * @template {Structure<any>} T
-	 * @param {T} options
-	 * @returns {Structure<Infer<T>[]>}
-	 */
-	array(options) {
+	array<T extends Structure<unknown>>(options: T): Structure<Infer<T>[]> {
 		if (!(options instanceof Structure)) {
 			throw new TypeError("options is not a Structure");
 		}
 		const struct = Structure.array(options);
-		struct[Configuration.spec] = new _ArraySpec(options);
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _ArraySpec(options),
+		});
 		return struct;
 	}
 
-	/**
-	 * @param {SpecOptions<string>} options
-	 * @returns {Structure<string>}
-	 */
-	string(options = {}) {
-		if (typeof options.fallback !== "string") {
+	string(options: SpecOptions<string>): Structure<string> {
+		if (typeof options?.fallback !== "string") {
 			throw new TypeError(
 				"options.fallback must be a string: " + options.fallback,
 			);
 		}
-
 		const struct = Structure.string(this._getValue(options).value);
-		struct[Configuration.spec] = new _PrimativeSpec("string", options);
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _PrimativeSpec("string", options),
+		});
 		return struct;
 	}
 
-	/**
-	 * @param {SpecOptions<number>} options
-	 * @returns {Structure<number>}
-	 */
-	number(options) {
-		if (typeof options.fallback !== "number") {
+	number(options: SpecOptions<number>): Structure<number> {
+		if (typeof options?.fallback !== "number") {
 			throw new TypeError("options.fallback must be a number");
 		}
-
 		const fallback = this._parseFloat(this._getValue(options));
 		const struct = Structure.number(fallback);
-		struct[Configuration.spec] = new _PrimativeSpec("number", options);
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _PrimativeSpec("number", options),
+		});
 		return struct;
 	}
 
-	/**
-	 * @param {SpecOptions<boolean>} options
-	 * @returns {Structure<number>}
-	 */
-	boolean(options) {
-		if (typeof options.fallback !== "boolean") {
+	boolean(options: SpecOptions<boolean>): Structure<boolean> {
+		if (typeof options?.fallback !== "boolean") {
 			throw new TypeError("options.fallback must be a boolean");
 		}
-
 		const fallback = this._parseBoolean(this._getValue(options));
 		const struct = Structure.boolean(fallback);
-		struct[Configuration.spec] = new _PrimativeSpec("boolean", options);
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _PrimativeSpec("boolean", options),
+		});
 		return struct;
 	}
 
-	/**
-	 * @param {SpecOptions<string|URL>} options
-	 * @returns {Structure<URL>}
-	 */
-	url(options) {
+	url(options: SpecOptions<string | URL>): Structure<URL> {
 		if (
 			typeof options.fallback !== "string" &&
 			!(options.fallback instanceof URL)
@@ -240,19 +204,17 @@ export class Configuration {
 			throw new TypeError("options.fallback must be a string or URL");
 		}
 		const struct = Structure.url(this._getValue(options).value);
-		struct[Configuration.spec] = new _PrimativeSpec("url", {
-			...options,
-			fallback: new URL(options.fallback),
+		Object.defineProperty(struct, Configuration.spec, {
+			value: new _PrimativeSpec("url", {
+				...options,
+				fallback: new URL(options.fallback),
+			}),
 		});
+
 		return struct;
 	}
 
-	/**
-	 * @template T
-	 * @param {SpecOptions<T>} options
-	 * @returns {ConfigurationResult<T>}
-	 */
-	_getValue(options) {
+	_getValue<T>(options: SpecOptions<T>): ConfigurationResult<T> {
 		const argument = options.flag
 			? this.options.getCommandArgument(options.flag)
 			: null;
@@ -266,8 +228,7 @@ export class Configuration {
 		return { source: "fallback", value: options.fallback };
 	}
 
-	/** @param {ConfigurationResult<number>} result */
-	_parseFloat(result) {
+	_parseFloat(result: ConfigurationResult<number>): number {
 		if (typeof result.value === "string") {
 			const parsed = Number.parseFloat(result.value);
 			if (Number.isNaN(parsed)) {
@@ -278,29 +239,22 @@ export class Configuration {
 		if (typeof result.value === "number") {
 			return result.value;
 		}
-		throw new TypeError("Unknown result");
+		throw new TypeError("Unknown float result");
 	}
 
-	/** @param {ConfigurationResult<boolean>} result */
-	_parseBoolean(result) {
+	_parseBoolean(result: ConfigurationResult<boolean>): boolean {
 		if (typeof result.value === "boolean") return result.value;
 
 		if (typeof _booleans[result.value] === "boolean") {
-			return _booleans[result.value];
+			return _booleans[result.value]!;
 		}
 		if (result.source === "argument" && result.value === "") {
 			return true;
 		}
-		throw new TypeError("Unknown result");
+		throw new TypeError("Unknown boolean result");
 	}
 
-	/**
-	 * @template T
-	 * @param {URL|string} url
-	 * @param {Structure<T>} spec
-	 * @returns {Promise<T>}
-	 */
-	async load(url, spec) {
+	async load<T>(url: URL | string, spec: Structure<T>): Promise<T> {
 		const file = await this.options.readTextFile(url);
 
 		// Catch missing files and create a default configuration
@@ -322,11 +276,7 @@ export class Configuration {
 		}
 	}
 
-	/**
-	 * @param {unknown} struct
-	 * @param {unknown} [currentValue]
-	 */
-	getUsage(struct, currentValue) {
+	getUsage(struct: unknown, currentValue?: unknown) {
 		const { fallback, fields } = this.describe(struct);
 
 		const lines = [
@@ -350,19 +300,14 @@ export class Configuration {
 		return lines.join("\n");
 	}
 
-	/**
-	 * @param {unknown} struct
-	 * @param {string} [prefix]
-	 * @returns {{ config: any, fields: [string, string] }}
-	 */
-	describe(value, prefix = "") {
+	describe(value: unknown, prefix = ""): ConfigurationDescription {
 		const spec = _getSpec(value);
-		if (!spec) throw new TypeError("Invalid [Configuration.spec]");
+		// if (!spec) throw new TypeError("Invalid [Configuration.spec]");
+		if (!spec) return { fallback: undefined, fields: [] };
 		return spec.describe(prefix);
 	}
 
-	/** * @param {Structure<any>} struct */
-	getJSONSchema(struct) {
+	getJSONSchema(struct: Structure<any>) {
 		return struct.getSchema();
 	}
 }
