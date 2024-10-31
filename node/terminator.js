@@ -1,33 +1,38 @@
 import process from "node:process";
-import { CoreTerminator } from "../core/terminator.js";
+import { Terminator } from "../core/terminator.js";
 
-export class Terminator extends CoreTerminator {
-	/**
-	 * @param {string[]} signals The signals to listen for
-	 * @param {() => unknown)} block The code to run
-	 */
-	_startLiteners(signals, block) {
-		for (const signal of signals) {
-			process.on(signal, () => this.terminate(block));
-		}
-	}
+/**
+ * @typedef NodeTerminatorOptions
+ * @property {number} [timeout] How long to wait in the terminating state before shutting down
+ * @property {string[]} [signals] Which signals to listen for to trigger termination
+ */
 
-	/**
-	 * @param {number} statusCode The code to exit the process with
-	 * @param {Error} error The error that occurred
-	 */
-	_exitProcess(statusCode, error = undefined) {
-		if (error) {
-			console.error("Failed to exit gracefully", error);
-		}
-		process.exit(statusCode);
-	}
+/**
+ * @param {NodeTerminatorOptions} options
+ * @returns {import("./core.js").TerminatorOptions}
+ */
+export function getTerminatorOptions(options) {
+	return {
+		timeout: options.timeout ?? 5_000,
+		signals: options.signals ?? ["SIGINT", "SIGTERM"],
+		startListeners(signals, block) {
+			for (const signal of signals) {
+				process.on(signal, () => block());
+			}
+		},
+		exitProcess(statusCode, error) {
+			if (error) {
+				console.error("Failed to exit gracefully", error);
+			}
+			process.exit(statusCode);
+		},
+		wait(ms) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		},
+	};
+}
 
-	/**
-	 * @param {number} ms
-	 * @returns {Promise<void>}
-	 */
-	_wait(ms) {
-		return new Promise((r) => setTimeout(r, ms));
-	}
+/** @param {NodeTerminatorOptions} options */
+export function getTerminator(options) {
+	return new Terminator(getTerminatorOptions(options));
 }

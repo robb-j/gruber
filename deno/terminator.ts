@@ -1,22 +1,33 @@
-import { CoreTerminator } from "../core/terminator.js";
+import { Terminator, TerminatorOptions } from "../core/terminator.js";
 
-export class Terminator extends CoreTerminator {
-	_startLiteners(signals: string[], block: () => unknown): void {
-		for (const signal of signals) {
-			Deno.addSignalListener(signal as Deno.Signal, () =>
-				this.terminate(block),
-			);
-		}
-	}
+export interface DenoTerminatorOptions {
+	timeout?: number;
+	signals?: Deno.Signal[];
+}
 
-	_exitProcess(statusCode: number, error?: Error): void {
-		if (error) {
-			console.error("Failed to exit gracefully", error);
-		}
-		Deno.exit(statusCode);
-	}
+export function getTerminatorOptions(
+	options: DenoTerminatorOptions,
+): TerminatorOptions {
+	return {
+		timeout: options.timeout ?? 5_000,
+		signals: options.signals ?? ["SIGINT", "SIGTERM"],
+		startListeners(signals, block) {
+			for (const signal of signals) {
+				Deno.addSignalListener(signal as Deno.Signal, () => block);
+			}
+		},
+		exitProcess(statusCode, error) {
+			if (error) {
+				console.error("Failed to exit gracefully", error);
+			}
+			Deno.exit(statusCode);
+		},
+		wait(ms) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		},
+	};
+}
 
-	_wait(ms: number): Promise<void> {
-		return new Promise((r) => setTimeout(r, ms));
-	}
+export function getTerminator(options: DenoTerminatorOptions) {
+	return new Terminator(getTerminatorOptions(options));
 }
