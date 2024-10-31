@@ -4,8 +4,8 @@
 // deno run --allow-net --allow-read=examples/deno/migrations examples/deno/migrate.ts [up|down]
 
 import postgres from "postgres";
-// import { getDenoPostgresMigrator } from "../../deno/mod.ts";
-import { getDenoPostgresMigrator } from "../../bundle/deno/mod.ts";
+// import { getPostgresMigrator } from "../../deno/mod.ts";
+import { getPostgresMigrator } from "../../bundle/deno/mod.ts";
 
 async function runMigration(direction: string) {
 	let exitCode = 0;
@@ -13,7 +13,7 @@ async function runMigration(direction: string) {
 	const sql = postgres("postgres://user:secret@127.0.0.1:/user");
 	const directory = new URL("./migrations/", import.meta.url);
 
-	const migrator = getDenoPostgresMigrator({ sql, directory });
+	const migrator = getPostgresMigrator({ sql, directory });
 
 	try {
 		if (direction === "up") await migrator.up();
