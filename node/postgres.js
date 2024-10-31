@@ -3,50 +3,43 @@ import path from "node:path";
 
 import { Migrator, defineMigration, loadMigration } from "../core/migrator.js";
 import {
-	getPostgresMigratorOptions as getCorePostgresMigratorOptions,
-	bootstrapMigration,
+	executePostgresMigration,
+	getPostgresMigrations,
+	postgresBootstrapMigration,
 } from "../core/postgres.js";
 
 export { Migrator, defineMigration };
 
 /** @typedef {import("postgres").Sql} Sql */
-
-/**
- * @template T
- * @typedef {import("../core/migrator.js").MigratorOptions<T>} MigratorOptions
- */
-
-/**
- * @template T
- * @typedef {import("../core/migrator.js").MigrationOptions<T>} MigrationOptions
- */
+/** @template T @typedef {import("../core/migrator.js").MigratorOptions<T>} MigratorOptions */
+/** @template T @typedef {import("../core/migrator.js").MigrationOptions<T>} MigrationOptions */
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
 /**
- * TODO: this isn't documented
- * @param {MigrationOptions<Sql>} options
- */
-export function definePostgresMigration(options) {
-	return defineMigration(options);
-}
-
-/**
- * @typedef {object} NodePostgresMigratorOptions
+ * @typedef {object} PostgresMigratorOptions
  * @property {Sql} sql
  * @property {URL} directory
  */
 
 /**
- * @param {NodePostgresMigratorOptions} options
- * @returns {MigratorOptions}
+ * @param {PostgresMigratorOptions} options
+ * @returns {MigratorOptions<Sql>}
  */
 export function getPostgresMigratorOptions(options) {
 	return {
-		...getCorePostgresMigratorOptions({ sql: options.sql }),
+		getRecords() {
+			return getPostgresMigrations(options.sql);
+		},
+
+		execute(def, direction) {
+			return executePostgresMigration(def, direction, options.sql);
+		},
 
 		async getDefinitions() {
-			const migrations = [{ name: "000-bootstrap.js", ...bootstrapMigration }];
+			const migrations = [
+				{ name: "000-bootstrap.js", ...postgresBootstrapMigration },
+			];
 
 			const files = await fs.readdir(options.directory, {
 				withFileTypes: true,
@@ -70,7 +63,7 @@ export const getNodePostgresMigratorOptions = getPostgresMigratorOptions;
 /**
  * This is a syntax sugar for `new Migrator(getPostgresMigratorOptions(...))`
  *
- * @param {NodePostgresMigratorOptions} options
+ * @param {PostgresMigratorOptions} options
  */
 export function getPostgresMigrator(options) {
 	if (!options.directory.pathname.endsWith("/")) {

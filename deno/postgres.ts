@@ -1,12 +1,13 @@
 import {
-	MigrationOptions,
 	Migrator,
+	MigratorOptions,
 	defineMigration,
 	loadMigration,
 } from "../core/migrator.js";
 import {
-	getPostgresMigratorOptions as getCorePostgresMigratorOptions,
-	bootstrapMigration,
+	executePostgresMigration,
+	getPostgresMigrations,
+	postgresBootstrapMigration,
 } from "../core/postgres.js";
 import { extname, type Sql } from "./deps.ts";
 
@@ -14,24 +15,27 @@ export { Migrator, defineMigration };
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
-export interface DenoPostgresMigratorOptions {
+export interface PostgresMigratorOptions {
 	sql: unknown;
 	directory: URL;
 }
 
-// TODO: this isn't documented
-export function definePostgresMigration(options: MigrationOptions<Sql>) {
-	return defineMigration(options);
-}
-
 export function getPostgresMigratorOptions(
-	options: DenoPostgresMigratorOptions,
-) {
+	options: PostgresMigratorOptions,
+): MigratorOptions<Sql> {
 	return {
-		...getCorePostgresMigratorOptions({ sql: options.sql as any }),
+		getRecords() {
+			return getPostgresMigrations(options.sql as Sql);
+		},
+
+		execute(def, direction) {
+			return executePostgresMigration(def, direction, options.sql as Sql);
+		},
 
 		async getDefinitions() {
-			const migrations = [{ name: "000-bootstrap.ts", ...bootstrapMigration }];
+			const migrations = [
+				{ name: "000-bootstrap.ts", ...postgresBootstrapMigration },
+			];
 
 			for await (const stat of Deno.readDir(options.directory)) {
 				if (!stat.isFile) continue;
@@ -45,18 +49,18 @@ export function getPostgresMigratorOptions(
 	};
 }
 
-/** @deprecated */
+/** @deprecated use `getPostgresMigratorOptions` */
 export const getDenoPostgresMigratorOptions = getPostgresMigratorOptions;
 
 /**
  * This is a syntax sugar for `new Migrator(getPostgresMigratorOptions(...))`
  */
-export function getPostgresMigrator(options: DenoPostgresMigratorOptions) {
+export function getPostgresMigrator(options: PostgresMigratorOptions) {
 	if (!options.directory.pathname.endsWith("/")) {
 		throw new Error("Postgres migration directory must end with a '/'");
 	}
 	return new Migrator(getPostgresMigratorOptions(options));
 }
 
-/** @deprecated */
+/** @deprecated use `getPostgresMigrator` */
 export const getDenoPostgresMigrator = getPostgresMigrator;

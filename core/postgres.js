@@ -1,15 +1,15 @@
 import { defineMigration } from "./migrator.js";
 
 /** @typedef {import("postgres").Sql} Sql */
-/** @typedef {import("./migrator.js").MigratorOptions} MigratorOptions */
 /** @typedef {import("./migrator.js").MigrationRecord} MigrationRecord */
-/** @typedef {import("./migrator.js").MigrationDefinition} MigrationDefinition */
+/** @template T @typedef {import("./migrator.js").MigrationDefinition<T>} MigrationDefinition */
+/** @template T @typedef {import("./migrator.js").MigrationOptions<T>} MigrationOptions */
 
 /**
 	@param {Sql} sql
 	@returns {Promise<MigrationRecord[]>}
 	*/
-export async function _getMigrationRecords(sql) {
+export async function getPostgresMigrations(sql) {
 	try {
 		const rows = await sql`
       SELECT name, created
@@ -22,43 +22,37 @@ export async function _getMigrationRecords(sql) {
 }
 
 /**
- * @param {MigrationDefinition} def
+ * @param {MigrationDefinition<Sql>} def
  * @param {"up" | "down"} direction
  * @param {Sql} sql
  */
-export function _execute(def, direction, sql) {
-	return sql.begin((sql) => {
+export function executePostgresMigration(def, direction, sql) {
+	return sql.begin(async (sql) => {
 		console.log("migrate %s", direction, def.name);
-		if (direction === "up") return _executeUp(def, sql);
-		if (direction === "down") return _executeDown(def, sql);
+
+		if (direction === "up") {
+			await def.up(sql);
+
+			await sql`
+				INSERT INTO migrations (name) VALUES (${def.name})
+			`;
+		}
+
+		if (direction === "down") {
+			await def.down(sql);
+
+			if (def.down !== postgresBootstrapMigration.down) {
+				await sql`
+					DELETE FROM migrations WHERE name = ${def.name}
+				`;
+			}
+		}
+
+		throw new TypeError(`Invalid direction: ${direction}`);
 	});
 }
 
-/**
- * @param {MigrationDefinition} def
- * @param {Sql} sql
- */
-export async function _executeUp(def, sql) {
-	await def.up(sql);
-
-	await sql`
-		INSERT INTO migrations (name) VALUES (${def.name})
-	`;
-}
-
-/**
- * @param {MigrationDefinition} def
- * @param {Sql} sql
- */
-export async function _executeDown(def, sql) {
-	await def.down(sql);
-
-	if (def.down !== bootstrapMigration.down) {
-		await sql`DELETE FROM migrations WHERE name = ${def.name}`;
-	}
-}
-
-export const bootstrapMigration = defineMigration({
+export const postgresBootstrapMigration = defineMigration({
 	async up(sql) {
 		await sql`
 			CREATE TABLE "migrations" (
@@ -74,20 +68,10 @@ export const bootstrapMigration = defineMigration({
 	},
 });
 
-/**
- * @typedef {object} PostgresMigratorOptions
- * @property {Sql} sql
- */
+/** @deprecated use `postgresBootstrapMigration` */
+export const bootstrapMigration = postgresBootstrapMigration;
 
-/**
- * @param {PostgresMigratorOptions} options
- * @returns {MigratorOptions<Sql>}
- */
-export function getPostgresMigratorOptions(options) {
-	return {
-		getRecords: () => _getMigrationRecords(options.sql),
-		execute: (def, direction) => _execute(def, direction, options.sql),
-		getDefinitions: () =>
-			Promise.resolve([{ name: "000-bootstrap", ...bootstrapMigration }]),
-	};
+/** @param {MigrationOptions<Sql>} options */
+export function definePostgresMigration(options) {
+	return defineMigration(options);
 }
