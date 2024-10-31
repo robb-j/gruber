@@ -70,6 +70,7 @@ export function getFetchRequest(req) {
 		method: req.method,
 		headers: getFetchHeaders(req.headers),
 		body: getIncomingMessageBody(req),
+		duplex: "half",
 	});
 }
 
@@ -83,7 +84,7 @@ export function getFetchHeaders(input) {
 	return result;
 }
 
-const noHttpBody = new Set(['HEAD', 'GET', 'OPTIONS', 'TRACE'])
+const noHttpBody = new Set(["HEAD", "GET", "OPTIONS", "TRACE"]);
 
 /** @param {import("node:http").IncomingMessage} req */
 export function getIncomingMessageBody(req) {
