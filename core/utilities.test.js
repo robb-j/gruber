@@ -3,7 +3,7 @@ import {
 	formatMarkdownTable,
 	reconstructTemplateString,
 	trimIndentation,
-} from "./utilities.js";
+} from "./utilities.ts";
 
 const expected = `
 | name    | type   | argument   | variable | fallback              |

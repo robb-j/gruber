@@ -1,11 +1,10 @@
-/**
- * @template T @param {T} fields
- * @param {(keyof T)[]} columns
- * @param {string} fallback
- */
-export function formatMarkdownTable(fields, columns, fallback) {
+export function formatMarkdownTable<T extends Record<string, string>>(
+	fields: T[],
+	columns: (keyof T)[],
+	fallback: string,
+) {
 	const widths = columns.map((column) => {
-		let largest = column.length;
+		let largest = (column as string).length;
 		for (const field of fields) {
 			if (field[column] && field[column].length > largest) {
 				largest = field[column].length;
@@ -38,26 +37,18 @@ export function formatMarkdownTable(fields, columns, fallback) {
 	return lines.join("\n");
 }
 
-/**
- * @template {() => any} T
- * @param {T} handler
- * @returns {T}
- */
-export function loader(handler) {
-	/** @type {ReturnType<T> | null} */
-	let result = null;
+export function loader<T>(factory: () => T): () => T {
+	let result: T | null = null;
 	return () => {
-		if (result === null) result = handler();
+		if (result === null) result = factory();
 		return result;
 	};
 }
 
-/**
- * @param {string|TemplateStringsArray} input
- * @param {...unknown} args
- * @returns {string}
- */
-export function trimIndentation(input, ...args) {
+export function trimIndentation(
+	input: string | TemplateStringsArray,
+	...args: unknown[]
+): string {
 	if (typeof input !== "string") {
 		return trimIndentation(reconstructTemplateString(input, ...args));
 	}
@@ -82,12 +73,10 @@ export function trimIndentation(input, ...args) {
 		.trim();
 }
 
-/**
- * @param {string|TemplateStringsArray} input
- * @param {...unknown} args
- * @returns {string}
- */
-export function reconstructTemplateString(input, ...args) {
+export function reconstructTemplateString(
+	input: string | TemplateStringsArray,
+	...args: unknown[]
+): string {
 	let output = "";
 	for (let i = 0; i < input.length; i++) {
 		output += input[i];

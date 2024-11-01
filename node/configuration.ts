@@ -2,19 +2,9 @@ import fs from "node:fs";
 import process from "node:process";
 import util from "node:util";
 
-import { Configuration } from "../core/configuration.js";
+import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
 
-export { Configuration };
-
-/**
-	@typedef {object} NodeConfigurationOptions
-*/
-
-/**
- * @param {NodeConfigurationOptions} options
- * @returns {import("./core.js").ConfigurationOptions}
- */
-export function getConfigurationOptions(_options = {}) {
+export function getConfigurationOptions(): ConfigurationOptions {
 	const args = util.parseArgs({
 		args: process.argv,
 		strict: false,
@@ -31,7 +21,7 @@ export function getConfigurationOptions(_options = {}) {
 			return process.env[key];
 		},
 		getCommandArgument(key) {
-			return args.values[key.replace(/^-+/, "")];
+			return args.values[key.replace(/^-+/, "")] as string;
 		},
 		stringify(config) {
 			return JSON.stringify(config, null, 2);
@@ -44,10 +34,9 @@ export function getConfigurationOptions(_options = {}) {
 
 /**
  * This is a syntax sugar for `new Configuration(getConfigurationOptions(options))`
- * @param {NodeConfigurationOptions} options
  */
-export function getConfiguration(options = {}) {
-	return new Configuration(getConfigurationOptions(options));
+export function getConfiguration() {
+	return new Configuration(getConfigurationOptions());
 }
 
 /** @deprecated use `getConfigurationOptions` */

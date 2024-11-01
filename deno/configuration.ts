@@ -1,4 +1,4 @@
-import { Configuration, ConfigurationOptions } from "../core/configuration.js";
+import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
 import { parseArgs } from "./deps.ts";
 
 export { Configuration };

@@ -1,32 +1,24 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Sql } from "postgres";
 
-import { Migrator, defineMigration, loadMigration } from "../core/migrator.js";
+import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-} from "../core/postgres.js";
-
-export { Migrator, defineMigration };
-
-/** @typedef {import("postgres").Sql} Sql */
-/** @template T @typedef {import("../core/migrator.js").MigratorOptions<T>} MigratorOptions */
-/** @template T @typedef {import("../core/migrator.js").MigrationOptions<T>} MigrationOptions */
+} from "../core/postgres.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
-/**
- * @typedef {object} PostgresMigratorOptions
- * @property {Sql} sql
- * @property {URL} directory
- */
+export interface PostgresMigratorOptions {
+	sql: Sql;
+	directory: URL;
+}
 
-/**
- * @param {PostgresMigratorOptions} options
- * @returns {MigratorOptions<Sql>}
- */
-export function getPostgresMigratorOptions(options) {
+export function getPostgresMigratorOptions(
+	options: PostgresMigratorOptions,
+): MigratorOptions<Sql> {
 	return {
 		getRecords() {
 			return getPostgresMigrations(options.sql);
@@ -65,7 +57,7 @@ export const getNodePostgresMigratorOptions = getPostgresMigratorOptions;
  *
  * @param {PostgresMigratorOptions} options
  */
-export function getPostgresMigrator(options) {
+export function getPostgresMigrator(options: PostgresMigratorOptions) {
 	if (!options.directory.pathname.endsWith("/")) {
 		throw new Error("Postgres migration directory must end with a '/'");
 	}

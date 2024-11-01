@@ -1,5 +1,5 @@
-import { Configuration } from "./configuration.js";
-import { Structure } from "./structures.js";
+import { Configuration } from "./configuration.ts";
+import { Structure } from "./structures.ts";
 import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
 
 /** @type {import("./configuration.js").ConfigurationOptions} */

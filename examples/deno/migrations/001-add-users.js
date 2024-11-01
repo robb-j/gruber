@@ -1,7 +1,6 @@
-import { defineMigration } from "../../../deno/mod.ts";
-// import { defineMigration } from "../../../bundle/deno/mod.ts";
+import { definePostgresMigration } from "../../../bundle/deno/mod.ts";
 
-export default defineMigration({
+export default definePostgresMigration({
 	async up(sql) {
 		await sql`
       CREATE TABLE "users" (

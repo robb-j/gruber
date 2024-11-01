@@ -1,33 +1,41 @@
-import { CoreTerminator } from "./terminator.js";
+import { Terminator } from "./terminator.ts";
 import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
 
-class MockTerminator extends CoreTerminator {
-	_startLiteners(signals, block) {
-		this.mockListening = { signals, block };
-	}
-	_exitProcess(statusCode, error) {
-		this.mockExited = { statusCode, error };
-	}
-	_wait(ms) {
-		this.mockWaited = ms;
+class MockTerminator extends Terminator {
+	constructor(options) {
+		const mock = {};
+		super({
+			startListeners(signals, block) {
+				mock.listening = { signals, block };
+			},
+			exitProcess(statusCode, error) {
+				mock.exited = { statusCode, error };
+			},
+			wait(ms) {
+				mock.waited = { ms };
+			},
+			...options,
+		});
+		this.mock = mock;
 	}
 }
 
-describe("CoreTerminator", () => {
+describe("Terminator", () => {
 	describe("constructor", () => {
 		it("sets the state", () => {
-			const arnie = new CoreTerminator();
+			const arnie = new Terminator({});
 			assertEquals(arnie.state, "running");
 		});
 		it("stores options", () => {
-			const arnie = new CoreTerminator({
-				timeout: 1234,
-				signals: ["first", "second"],
-			});
-			assertEquals(arnie.options, {
-				timeout: 1234,
-				signals: ["first", "second"],
-			});
+			const options = {
+				signals: ["signal-a", "signal-b"],
+				timeout: 3_000,
+				startListeners() {},
+				exitProcess() {},
+				wait() {},
+			};
+			const arnie = new Terminator(options);
+			assertEquals(arnie.options, options);
 		});
 	});
 
@@ -36,32 +44,17 @@ describe("CoreTerminator", () => {
 			const arnie = new MockTerminator({
 				signals: ["signal-a", "signal-b"],
 			});
-			const spy = () => {};
+			const blockSpy = () => {};
 
-			arnie.start(spy);
+			arnie.start(blockSpy);
+
+			console.log(arnie);
 
 			assertEquals(
-				arnie.mockListening,
-				{
-					signals: ["signal-a", "signal-b"],
-					block: spy,
-				},
+				arnie.mock.listening.signals,
+				["signal-a", "signal-b"],
 				"should call _startListeners with the block",
 			);
-		});
-	});
-
-	describe("_startLiteners", () => {
-		it("throws", () => {
-			const arnie = new CoreTerminator();
-			assertThrows(() => arnie._startLiteners());
-		});
-	});
-
-	describe("_exitProcess", () => {
-		it("throws", () => {
-			const arnie = new CoreTerminator();
-			assertThrows(() => arnie._exitProcess());
 		});
 	});
 
@@ -74,7 +67,11 @@ describe("CoreTerminator", () => {
 		it("waits", async () => {
 			const arnie = new MockTerminator({ timeout: 1234 });
 			await arnie.terminate(() => {});
-			assertEquals(arnie.mockWaited, 1234, "should wait for the timeout");
+			assertEquals(
+				arnie.mock.waited,
+				{ ms: 1234 },
+				"should wait for the timeout",
+			);
 		});
 		it("runs the block", async () => {
 			const arnie = new MockTerminator();
@@ -91,7 +88,7 @@ describe("CoreTerminator", () => {
 		it("exits", async () => {
 			const arnie = new MockTerminator();
 			await arnie.terminate(() => {});
-			assertEquals(arnie.mockExited.statusCode, 0);
+			assertEquals(arnie.mock.exited.statusCode, 0);
 		});
 		it("handles errors", async () => {
 			const arnie = new MockTerminator();
@@ -100,7 +97,7 @@ describe("CoreTerminator", () => {
 				throw error;
 			});
 			assertEquals(
-				arnie.mockExited,
+				arnie.mock.exited,
 				{ statusCode: 1, error },
 				"should indicate the process ended badly",
 			);

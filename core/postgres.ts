@@ -1,15 +1,15 @@
-import { defineMigration } from "./migrator.js";
+import { Sql } from "postgres";
+import {
+	defineMigration,
+	MigrateDirection,
+	MigrationDefinition,
+	MigrationOptions,
+	MigrationRecord,
+} from "./migrator.ts";
 
-/** @typedef {import("postgres").Sql} Sql */
-/** @typedef {import("./migrator.js").MigrationRecord} MigrationRecord */
-/** @template T @typedef {import("./migrator.js").MigrationDefinition<T>} MigrationDefinition */
-/** @template T @typedef {import("./migrator.js").MigrationOptions<T>} MigrationOptions */
-
-/**
-	@param {Sql} sql
-	@returns {Promise<MigrationRecord[]>}
-	*/
-export async function getPostgresMigrations(sql) {
+export async function getPostgresMigrations(
+	sql: Sql,
+): Promise<MigrationRecord[]> {
 	try {
 		const rows = await sql`
       SELECT name, created
@@ -21,12 +21,11 @@ export async function getPostgresMigrations(sql) {
 	}
 }
 
-/**
- * @param {MigrationDefinition<Sql>} def
- * @param {"up" | "down"} direction
- * @param {Sql} sql
- */
-export function executePostgresMigration(def, direction, sql) {
+export function executePostgresMigration(
+	def: MigrationDefinition<Sql>,
+	direction: MigrateDirection,
+	sql: Sql,
+): Promise<void> {
 	return sql.begin(async (sql) => {
 		console.log("migrate %s", direction, def.name);
 
@@ -36,6 +35,7 @@ export function executePostgresMigration(def, direction, sql) {
 			await sql`
 				INSERT INTO migrations (name) VALUES (${def.name})
 			`;
+			return;
 		}
 
 		if (direction === "down") {
@@ -46,13 +46,14 @@ export function executePostgresMigration(def, direction, sql) {
 					DELETE FROM migrations WHERE name = ${def.name}
 				`;
 			}
+			return;
 		}
 
 		throw new TypeError(`Invalid direction: ${direction}`);
 	});
 }
 
-export const postgresBootstrapMigration = defineMigration({
+export const postgresBootstrapMigration = defineMigration<Sql>({
 	async up(sql) {
 		await sql`
 			CREATE TABLE "migrations" (
@@ -71,7 +72,8 @@ export const postgresBootstrapMigration = defineMigration({
 /** @deprecated use `postgresBootstrapMigration` */
 export const bootstrapMigration = postgresBootstrapMigration;
 
-/** @param {MigrationOptions<Sql>} options */
-export function definePostgresMigration(options) {
+export function definePostgresMigration(
+	options: MigrationOptions<Sql>,
+): MigrationOptions<Sql> {
 	return defineMigration(options);
 }

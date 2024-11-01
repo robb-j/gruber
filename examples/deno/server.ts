@@ -1,10 +1,18 @@
 // Adapted from the README.md
 
 // Usage:
-// deno run --allow-net examples/deno/server.ts
+// deno run --allow-net --allow-env examples/deno/server.ts
 
-import { DenoRouter, HTTPError, defineRoute } from "../../deno/mod.ts";
-// import { DenoRouter, HTTPError, defineRoute } from "../../bundle/deno/mod.ts";
+import {
+	DenoRouter,
+	HTTPError,
+	defineRoute,
+	getTerminator,
+} from "../../bundle/deno/mod.ts";
+
+const terminator = getTerminator({
+	timeout: Deno.env.get("DENO_ENV") === "development" ? 0 : 5_000,
+});
 
 // A route is a first-class thing, it can easily be passed around and used
 const helloRoute = defineRoute({
@@ -21,13 +29,22 @@ const helloRoute = defineRoute({
 	},
 });
 
-const routes = [helloRoute];
+const healthzRoute = defineRoute({
+	method: "GET",
+	pathname: "/healthz",
+	handler: () => terminator.getResponse(),
+});
 
-function runServer(options: { port: number }) {
+const routes = [helloRoute, healthzRoute];
+
+function runServer(options: { port: number; hostname: string }) {
 	const router = new DenoRouter({ routes });
-	Deno.serve({ port: options.port }, router.forDenoServe());
+	const server = Deno.serve(options, router.forDenoServe());
+	terminator.start(async () => {
+		await server.shutdown();
+	});
 }
 
 if (import.meta.main) {
-	runServer({ port: 8000 });
+	runServer({ port: 8000, hostname: "127.0.0.1" });
 }

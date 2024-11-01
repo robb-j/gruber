@@ -1,17 +1,10 @@
-import {
-	Migrator,
-	MigratorOptions,
-	defineMigration,
-	loadMigration,
-} from "../core/migrator.js";
+import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-} from "../core/postgres.js";
+} from "../core/postgres.ts";
 import { extname, type Sql } from "./deps.ts";
-
-export { Migrator, defineMigration };
 
 const migrationExtensions = new Set([".ts", ".js"]);
 

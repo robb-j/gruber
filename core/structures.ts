@@ -1,23 +1,30 @@
-/** @typedef {{ path: string[] }} StructContext */
+export interface StructContext {
+	path: string[];
+}
 
-/**
- * @template Type
- * @template Schema
- * @typedef {object} StructOptions
- * @property {'object' | 'string' | 'url'} type
- * @property {Schema} schema
- * @property {(value: unknown, ctx: StructContext) => Type} fn
- */
+// export interface StructOptions<Type, Schema> {
+// 	type: 'object' | 'string' | 'url'
+// }
 
-const DEFAULT_CONTEXT = { path: [] };
+// /**
+//  * @template Type
+//  * @template Schema
+//  * @typedef {object} StructOptions
+//  * @property {'object' | 'string' | 'url'} type
+//  * @property {Schema} schema
+//  * @property {(value: unknown, ctx: StructContext) => Type} fn
+//  */
+
+const DEFAULT_CONTEXT: StructContext = { path: [] };
 
 export class StructError extends Error {
-	/**
-	 * @param {string} message
-	 * @param {string[]} path
-	 * @param {StructError[]} children
-	 */
-	constructor(message, path = [], children = []) {
+	path: string[];
+	children: StructError[];
+	constructor(
+		message: string,
+		path: string[] = [],
+		children: StructError[] = [],
+	) {
 		super(message);
 		this.path = path;
 		this.children = children;
@@ -25,12 +32,10 @@ export class StructError extends Error {
 		Error.captureStackTrace(this, StructError);
 	}
 
-	/**
-	 * @param {unknown} error
-	 * @param {StructContext} context
-	 * @returns {StructError}
-	 */
-	static chain(error, context = DEFAULT_CONTEXT) {
+	static chain(
+		error: unknown,
+		context: StructContext = DEFAULT_CONTEXT,
+	): StructError {
 		let chained;
 		if (error instanceof StructError) {
 			return error;
@@ -47,8 +52,7 @@ export class StructError extends Error {
 		return (this.path.join(".") || ".") + " — " + this.message;
 	}
 
-	/** @returns {Iterator<StructError>} */
-	*[Symbol.iterator]() {
+	*[Symbol.iterator](): Iterator<StructError> {
 		if (this.children.length === 0) {
 			yield this;
 		} else {
@@ -58,7 +62,7 @@ export class StructError extends Error {
 		}
 	}
 
-	toFriendlyString() {
+	toFriendlyString(): string {
 		const messages = [];
 		for (const child of this) {
 			messages.push("  " + child.getOneLiner());
@@ -71,43 +75,33 @@ export class StructError extends Error {
 	}
 }
 
-/**
- * @typedef {Record<string,unknown>} Schema
- */
+export { StructError as StructureError };
 
-/**
- * @template T
- * @typedef {(input?: unknown, context?: StructContext) => T} StructExec
- */
+export type Schema = Record<string, unknown>;
 
-/**
- * @template T
- * @typedef {T extends Structure<infer U> ? U : never} Infer
- */
+export type StructExec<T> = (input?: unknown, context?: StructContext) => T;
 
-function _additionalProperties(fields, input) {
+export type Infer<T> = T extends Structure<infer U> ? U : never;
+
+export type InferObject<T> = { [K in keyof T]: Infer<T[K]> };
+
+function _additionalProperties(
+	fields: Record<string, unknown>,
+	input: Record<string, unknown>,
+) {
 	const allowed = new Set(Object.keys(fields));
 	return Array.from(Object.keys(input)).filter((key) => !allowed.has(key));
 }
 
-/**
- * @template T
- */
-export class Structure {
-	/**
-	 * @param {Schema} schema
-	 * @param {StructExec<T>} process
-	 */
-	constructor(schema, process) {
+export class Structure<T> {
+	schema: Schema;
+	_process: StructExec<T>;
+	constructor(schema: Schema, process: StructExec<T>) {
 		this.schema = schema;
 		this._process = process;
 	}
 
-	/**
-	 * @param {unknown} input
-	 * @param {StructContext} [context]
-	 */
-	process(input, context) {
+	process(input: unknown, context: StructContext = DEFAULT_CONTEXT) {
 		try {
 			return this._process(input, context);
 		} catch (error) {
@@ -115,19 +109,15 @@ export class Structure {
 		}
 	}
 
-	getSchema() {
+	getSchema(): Schema {
 		return {
 			$schema: "https://json-schema.org/draft/2020-12/schema",
 			...this.schema,
 		};
 	}
 
-	/**
-	 * @param {string} [fallback]
-	 * @returns {Structure<string>}
-	 */
-	static string(fallback = undefined) {
-		const schema = { type: "string" };
+	static string(fallback?: string | undefined): Structure<string> {
+		const schema: Schema = { type: "string" };
 		if (fallback !== undefined) schema.default = fallback;
 
 		return new Structure(schema, (input = fallback, context = undefined) => {
@@ -141,12 +131,8 @@ export class Structure {
 		});
 	}
 
-	/**
-	 * @param {number} [fallback]
-	 * @returns {Structure<number>}
-	 */
-	static number(fallback) {
-		const schema = { type: "number" };
+	static number(fallback?: number | undefined): Structure<number> {
+		const schema: Schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
 
 		return new Structure(schema, (input = fallback, context = undefined) => {
@@ -164,16 +150,14 @@ export class Structure {
 		});
 	}
 
-	/**
-	 * @param {boolean} [fallback]
-	 * @returns {Structure<boolean>}
-	 */
-	static boolean(fallback) {
-		const schema = { type: "boolean" };
+	static boolean(fallback?: boolean | undefined): Structure<boolean> {
+		const schema: Schema = { type: "boolean" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure(schema, (input, context) => {
-			if (input === undefined) return fallback;
+		return new Structure<boolean>(schema, (input = fallback, context) => {
+			if (input === undefined) {
+				throw new StructError("Missing value", context?.path);
+			}
 			if (typeof input !== "boolean") {
 				throw new StructError("Not a boolean", context?.path);
 			}
@@ -181,12 +165,8 @@ export class Structure {
 		});
 	}
 
-	/**
-	 * @param {string | URL} [fallback]
-	 * @returns {Structure<URL>}
-	 */
-	static url(fallback) {
-		const schema = { type: "string", format: "uri" };
+	static url(fallback?: string | URL | undefined): Structure<URL> {
+		const schema: Schema = { type: "string", format: "uri" };
 		if (fallback !== undefined) schema.default = fallback.toString();
 
 		// ~ make sure the fallback is valid ~
@@ -203,22 +183,19 @@ export class Structure {
 		});
 	}
 
-	/**
-	 * @template {Record<string, Structure<any>>} U
-	 * @param {U} fields
-	 * @returns {Structure<{ [K in keyof U]: Infer<U[K]> }>}
-	 */
-	static object(fields) {
+	static object<T extends Record<string, Structure<unknown>>>(
+		fields: T,
+	): Structure<InferObject<T>> {
 		const schema = {
 			type: "object",
-			properties: {},
+			properties: {} as Record<string, unknown>,
 			default: {},
 			additionalProperties: false,
 		};
 		for (const [key, struct] of Object.entries(fields)) {
 			schema.properties[key] = struct.schema;
 		}
-		return new Structure(schema, (input = {}, context = undefined) => {
+		return new Structure(schema, (input: any = {}, context = undefined) => {
 			const path = context?.path ?? [];
 			if (input && typeof input !== "object") {
 				throw new StructError("Expected an object", path);
@@ -226,7 +203,7 @@ export class Structure {
 			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
 				throw new StructError("Should not have a prototype", path);
 			}
-			const output = {};
+			const output: any = {};
 			const errors = [];
 			for (const key in fields) {
 				const ctx = { path: [...path, key] };
@@ -246,19 +223,14 @@ export class Structure {
 			if (errors.length > 0) {
 				throw new StructError("Object does not match schema", path, errors);
 			}
-			return output;
+			return output as InferObject<T>;
 		});
 	}
 
-	/**
-	 * **UNSTABLE** use at your own risk
-	 *
-	 * @template {Structure<any>} U
-	 * @param {U} struct
-	 * @returns {Structure<Array<Infer<U>>>}
-	 */
-	static array(struct) {
-		const schema = {
+	static array<T extends Structure<unknown>>(
+		struct: T,
+	): Structure<Array<Infer<T>>> {
+		const schema: Schema = {
 			type: "array",
 			items: struct.schema,
 			default: [],
@@ -281,18 +253,14 @@ export class Structure {
 			if (errors.length > 0) {
 				throw new StructError("Array item does not match schema", path, errors);
 			}
-			return output;
+			return output as Array<Infer<T>>;
 		});
 	}
 
 	/**
 	 * **UNSTABLE** use at your own risk
-	 *
-	 * @template {string|number|boolean} T
-	 * @param {T} value
-	 * @returns {Structure<T>}
 	 */
-	static literal(value) {
+	static literal<T extends string | number | boolean>(value: T): Structure<T> {
 		const schema = { type: typeof value, const: value };
 
 		return new Structure(schema, (input, context = undefined) => {
@@ -311,19 +279,17 @@ export class Structure {
 
 	/**
 	 * **UNSTABLE** use at your own risk
-	 *
-	 * @template {Structure<unknown>[]} T
-	 * @param {T} types
-	 * @returns {Structure<Infer<T[number]>>}
 	 */
-	static union(types) {
+	static union<T extends Structure<unknown>[]>(
+		types: T,
+	): Structure<Infer<T[number]>> {
 		const schema = {
 			oneOf: types.map((s) => s.schema),
 		};
 		return new Structure(schema, (value, context = undefined) => {
 			for (const type of types) {
 				try {
-					return type.process(value);
+					return type.process(value) as Infer<T[number]>;
 				} catch {
 					// ...
 				}

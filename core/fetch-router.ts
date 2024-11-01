@@ -1,40 +1,33 @@
-import { HTTPError } from "./http.js";
+import { HTTPError, RouteDefinition } from "./http.ts";
 
-/** @typedef {import("./types.ts").RouteDefinition<any>} RouteDefinition */
+export type RouteErrorHandler = (error: unknown, request: Request) => unknown;
 
-/** @typedef {(error: unknown, request: Request) => unknown} RouteErrorHandler */
+export interface MatchedRoute {
+	route: RouteDefinition;
+	url: URL;
+	result: URLPatternResult;
+}
 
-/**
- * @typedef {object} MatchedRoute
- * @property {RouteDefinition} route
- * @property {URL} url
- * @property {URLPatternResult} result
- */
-
-/**
- * @typedef {object} FetchRouterOptions
- * @property {RouteDefinition[]} [routes]
- * @property {RouteErrorHandler} [errorHandler]
- */
+export interface FetchRouterOptions {
+	routes?: RouteDefinition[];
+	errorHandler?: RouteErrorHandler;
+}
 
 /** A rudimentary HTTP router using fetch Request & Responses with RouteDefinitions based on URLPattern */
 export class FetchRouter {
-	/** @type {RouteDefinition} */ routes;
-	/** @type {RouteErrorHandler | null} */ errorHandler;
+	routes: RouteDefinition[];
+	errorHandler: RouteErrorHandler | undefined;
 
-	/** @param {FetchRouterOptions} [options] */
-	constructor(options = {}) {
+	constructor(options: FetchRouterOptions = {}) {
 		this.routes = options.routes ?? [];
-		this.errorHandler = options.errorHandler ?? null;
+		this.errorHandler = options.errorHandler ?? undefined;
 	}
 
 	/**
 	 * Finds routes that match the request method and URLPattern
 	 * and get's the matched parameters and parsed URL
-	 * @param {Request} request
-	 * @returns {Iterator<MatchedRoute>}
 	 */
-	*findMatchingRoutes(request) {
+	*findMatchingRoutes(request: Request): Iterable<MatchedRoute> {
 		const url = new URL(request.url);
 
 		for (const route of this.routes) {
@@ -49,10 +42,11 @@ export class FetchRouter {
 
 	/**
 	 * Go through each route match and try to get a Response
-	 * @param {Request} request
-	 * @param {Iterator<MatchedRoute>} matches
 	 */
-	async processMatches(request, matches) {
+	async processMatches(
+		request: Request,
+		matches: Iterable<MatchedRoute>,
+	): Promise<Response> {
 		for (const { route, result, url } of matches) {
 			const response = await route.handler({
 				request,
@@ -67,11 +61,7 @@ export class FetchRouter {
 		throw HTTPError.notFound();
 	}
 
-	/**
-	 * @param {Request} request
-	 * @param {unknown} error
-	 */
-	handleError(request, error) {
+	handleError(request: Request, error: unknown): Response {
 		// Get or create a HTTP error based on the one thrown
 		const httpError =
 			error instanceof HTTPError ? error : HTTPError.internalServerError();
@@ -81,8 +71,7 @@ export class FetchRouter {
 		return httpError.toResponse();
 	}
 
-	/** @param {Request} request */
-	async getResponse(request) {
+	async getResponse(request: Request) {
 		try {
 			return await this.processMatches(
 				request,

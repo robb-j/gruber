@@ -1,5 +1,5 @@
-import { FetchRouter } from "./fetch-router.js";
-import { HTTPError, defineRoute } from "./http.js";
+import { FetchRouter } from "./fetch-router.ts";
+import { HTTPError, defineRoute } from "./http.ts";
 import { assertEquals, assertInstanceOf } from "./test-deps.js";
 
 Deno.test("FetchRouter", async (t) => {

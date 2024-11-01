@@ -1,4 +1,4 @@
-import { Migrator, defineMigration } from "./migrator.js";
+import { Migrator, defineMigration } from "./migrator.ts";
 import { assertEquals } from "./test-deps.js";
 
 const bareOptions = {

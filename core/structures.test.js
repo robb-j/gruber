@@ -1,4 +1,4 @@
-import { StructError, Structure } from "./structures.js";
+import { StructError, Structure } from "./structures.ts";
 import {
 	assertEquals,
 	assertThrows,

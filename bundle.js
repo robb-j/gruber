@@ -6,11 +6,17 @@ import childProcess from "node:child_process";
 const exec = childProcess.execSync;
 const mkdir = (d) => fs.mkdirSync(d, { recursive: true });
 const cp = (a, b) => fs.cpSync(a, b, { recursive: true });
+const read = (f) => fs.readFileSync(f, "utf8");
 const write = (f, d) => fs.writeFileSync(f, d);
 const nuke = (d) => fs.rmSync(d, { recursive: true, force: true });
 const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
+
+/** @param {(file: string) => string} exec */
+function rewrite(glob, exec) {
+	for (const path of fs.globSync(glob)) write(path, exec(read(path)));
+}
 
 async function node() {
 	// Setup directory
@@ -46,20 +52,27 @@ async function node() {
 	lock.packages[""].version = project.version;
 	writeJson("bundle/node/package-lock.json", lock);
 
+	// I think this is (bady) doing what typescript@beta rewriteRelativeImportExtensions does
+	// https://devblogs.microsoft.com/typescript/announcing-typescript-5-7-beta/#path-rewriting-for-relative-paths
+	rewrite("bundle/node/**/*.ts", (file) =>
+		file.replace(/(import|export) [\s\S]*?".*?\.ts"/g, (str) =>
+			str.replace('.ts"', '.js"'),
+		),
+	);
+
 	writeJson("bundle/node/tsconfig.json", {
 		include: ["source/**/*", "core/**/*"],
 		compilerOptions: {
 			target: "ESNext",
-			module: "Node16",
-			moduleResolution: "Node16",
-			allowJs: true,
+			module: "NodeNext",
 			declaration: true,
-			emitDeclarationOnly: true,
-			// declarationMap: true,
+			declarationMap: true,
 			skipLibCheck: true,
+			strict: true,
+			// rewriteRelativeImportExtensions: true,
 		},
 	});
-	childProcess.execSync("npx tsc", {
+	exec("npx tsc", {
 		cwd: new URL("./bundle/node", import.meta.url),
 		stdio: "inherit",
 	});
