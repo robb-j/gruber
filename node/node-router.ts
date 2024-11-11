@@ -138,6 +138,7 @@ export function serveHTTP(
 	);
 
 	// NOTE: AbortSignal?
+	// NOTE: maybe embed/depend on stoppable ~ https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
 
 	return server;
 }
