@@ -35,7 +35,10 @@ export interface AuthnResult {
 }
 
 export interface AbstractAuthenticationService {
-	check(token: string, code: number): Promise<AuthnRequest | null>;
+	check(
+		token: string | undefined | null,
+		code: string | number | undefined | null,
+	): Promise<AuthnRequest | null>;
 	start(userId: number, redirectUrl: string | URL): Promise<AuthnCheck>;
 	finish(request: AuthnRequest): Promise<AuthnResult>;
 }
