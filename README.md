@@ -1063,6 +1063,34 @@ const redis: RedisClientType;
 const store = new RedisStore(redis, { prefix: "/v2" });
 ```
 
+### JWT
+
+An abstraction around signing a JWT for a user with an access scope.
+There is currently one implementation using [jose](https://github.com/panva/jose).
+
+```ts
+import { JoseJwtService } from "gruber";
+import * as jose from "jose";
+
+const jwt = new JoseJwtService(
+	{
+		secret: "top_secret",
+		issuer: "myapp.io",
+		audience: "myapp.io",
+	},
+	jose,
+);
+
+// string
+const token = await jwt.sign("user:books:read", {
+	userId: 1,
+	expiresAfter: 30 * 24 * 60 * 60 * 1_000, // 30 days
+});
+
+// { userId, scope } or null
+const parsed = await jwt.verify(token);
+```
+
 ### Authorization
 
 > UNSTABLE
