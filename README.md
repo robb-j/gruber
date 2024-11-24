@@ -1477,6 +1477,7 @@ export function loader<T>(handler: Loader<T>): Loader<T> {
 
 ```js
 async function retryWithBackoff({
+	timers = window,
 	maxRetries = 20,
 	interval = 1_000,
 	handler,
@@ -1486,7 +1487,7 @@ async function retryWithBackoff({
 			const result = await handler();
 			return result;
 		} catch {
-			await new Promise((r) => setTimeout(r, i * interval));
+			await new Promise((r) => timers.setTimeout(r, i * interval));
 		}
 	}
 	console.error("Could not connect to database");
