@@ -1,0 +1,147 @@
+import { HTTPError } from "./http.ts";
+import { RandomService } from "./random.ts";
+import { Store } from "./store.ts";
+import { JWTService } from "./jwt.ts";
+
+/**
+ * An in-progress authentication, being stored while the client completes their challenge
+ */
+export interface AuthnRequest {
+	userId: number;
+	// expiresAfter: number;
+	redirect: string;
+	code: number;
+}
+
+// IDEA: for tracking uses could check with a redis DECR
+// export type CachedAuthnAttempts = [`/authn/attempts/${string}`, number]
+
+/**
+ * Intermediary parameters to present to the user to complete their authentication
+ */
+export interface AuthnCheck {
+	token: string;
+	code: number;
+}
+
+/**
+ * Completed credentials after completing an authentication,
+ * including cookie+redirected headers and the redirect itself
+ */
+export interface AuthnResult {
+	token: string;
+	headers: Headers;
+	redirect: string;
+}
+
+export interface AbstractAuthenticationService {
+	check(token: string, code: number): Promise<AuthnRequest | null>;
+	start(userId: number, redirectUrl: string | URL): Promise<AuthnCheck>;
+	finish(request: AuthnRequest): Promise<AuthnResult>;
+}
+
+export function formatCode(code: number) {
+	return [
+		code.toString().padStart(6, "0").slice(0, 3),
+		code.toString().padStart(6, "0").slice(3, 6),
+	].join(" ");
+}
+
+export interface AuthenticationServiceOptions {
+	allowedHosts: () => URL[] | Promise<URL[]>;
+	cookieName: string;
+	/** milliseconds */ loginDuration: number;
+	/** milliseconds */ sessionDuration: number;
+}
+
+export class AuthenticationService implements AbstractAuthenticationService {
+	constructor(
+		public options: AuthenticationServiceOptions,
+		public store: Store,
+		public random: RandomService,
+		public jwt: JWTService,
+	) {}
+
+	//
+	// Internal
+	//
+
+	_canRedirect(input: string | URL, hosts: URL[]) {
+		const url = new URL(input);
+		for (const allowed of hosts) {
+			if (url.protocol !== allowed.protocol) continue;
+			if (url.host !== allowed.host) continue;
+			if (url.pathname.startsWith(allowed.pathname)) return true;
+		}
+		return false;
+	}
+
+	//
+	// Public
+	//
+
+	async check(
+		token: string | undefined | null,
+		code: string | number | undefined | null,
+	): Promise<AuthnRequest | null> {
+		if (typeof code === "string") code = parseInt(code);
+		if (
+			typeof token !== "string" ||
+			typeof code !== "number" ||
+			Number.isNaN(code)
+		) {
+			return null;
+		}
+
+		const loginRequest = await this.store.get<AuthnRequest>(
+			`/authn/request/${token}`,
+		);
+
+		if (!loginRequest || code !== loginRequest.code) return null;
+		return loginRequest;
+	}
+
+	async start(userId: number, redirectUrl: string | URL): Promise<AuthnCheck> {
+		const allowedHosts = await this.options.allowedHosts();
+		if (!this._canRedirect(redirectUrl, allowedHosts)) {
+			throw HTTPError.badRequest("invalid redirect_uri");
+		}
+
+		const token = this.random.uuid();
+		const request: AuthnRequest = {
+			userId,
+			redirect: new URL(redirectUrl).toString(),
+			code: this.random.number(0, 999_999),
+		};
+
+		await this.store.set<AuthnRequest>(`/authn/request/${token}`, request, {
+			expireAfter: this.options.loginDuration,
+		});
+
+		return { token, code: request.code };
+	}
+
+	async finish(request: AuthnRequest): Promise<AuthnResult> {
+		const headers = new Headers();
+		headers.set("Location", request.redirect);
+
+		const token = await this.jwt.sign("user", {
+			userId: request.userId,
+			expireAfter: this.options.sessionDuration,
+		});
+
+		const duration = Math.floor(this.options.sessionDuration / 1000);
+
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+		headers.append(
+			"Set-Cookie",
+			`${this.options.cookieName}=${token}; Max-Age=${duration}; Path=/; HttpOnly`,
+		);
+
+		// TODO: Microsoft "safe links" opens URLs, generates auth then throws it away
+		// Maybe it should be a counter? like 3 you get uses
+		// await cache.delete(`/authn/request/${token}`)
+
+		return { token, headers, redirect: request.redirect };
+	}
+}

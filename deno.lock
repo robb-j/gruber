@@ -7,8 +7,10 @@
       "npm:@types/express@^5.0.0": "npm:@types/express@5.0.0",
       "npm:@types/koa@^2.15.0": "npm:@types/koa@2.15.0",
       "npm:@types/node@^22.8.6": "npm:@types/node@22.8.6",
+      "npm:jose@^5.9.6": "npm:jose@5.9.6",
       "npm:postgres@^3.4.5": "npm:postgres@3.4.5",
       "npm:prettier@^3.3.3": "npm:prettier@3.3.3",
+      "npm:redis@^4.7.0": "npm:redis@4.7.0_@redis+client@1.6.0",
       "npm:tsx@^4.19.2": "npm:tsx@4.19.2",
       "npm:typescript@^5.6.3": "npm:typescript@5.6.3",
       "npm:urlpattern-polyfill@^10.0.0": "npm:urlpattern-polyfill@10.0.0"
@@ -117,6 +119,44 @@
       "@esbuild/win32-x64@0.23.1": {
         "integrity": "sha512-BHpFFeslkWrXWyUPnbKm+xYYVYruCinGcftSBaa8zoF9hZO4BcSCFUvHVTtzpIY6YzUnYtuEhZ+C9iEXjxnasg==",
         "dependencies": {}
+      },
+      "@redis/bloom@1.2.0_@redis+client@1.6.0": {
+        "integrity": "sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==",
+        "dependencies": {
+          "@redis/client": "@redis/client@1.6.0"
+        }
+      },
+      "@redis/client@1.6.0": {
+        "integrity": "sha512-aR0uffYI700OEEH4gYnitAnv3vzVGXCFvYfdpu/CJKvk4pHfLPEy/JSZyrpQ+15WhXe1yJRXLtfQ84s4mEXnPg==",
+        "dependencies": {
+          "cluster-key-slot": "cluster-key-slot@1.1.2",
+          "generic-pool": "generic-pool@3.9.0",
+          "yallist": "yallist@4.0.0"
+        }
+      },
+      "@redis/graph@1.1.1_@redis+client@1.6.0": {
+        "integrity": "sha512-FEMTcTHZozZciLRl6GiiIB4zGm5z5F3F6a6FZCyrfxdKOhFlGkiAqlexWMBzCi4DcRoyiOsuLfW+cjlGWyExOw==",
+        "dependencies": {
+          "@redis/client": "@redis/client@1.6.0"
+        }
+      },
+      "@redis/json@1.0.7_@redis+client@1.6.0": {
+        "integrity": "sha512-6UyXfjVaTBTJtKNG4/9Z8PSpKE6XgSyEb8iwaqDcy+uKrd/DGYHTWkUdnQDyzm727V7p21WUMhsqz5oy65kPcQ==",
+        "dependencies": {
+          "@redis/client": "@redis/client@1.6.0"
+        }
+      },
+      "@redis/search@1.2.0_@redis+client@1.6.0": {
+        "integrity": "sha512-tYoDBbtqOVigEDMAcTGsRlMycIIjwMCgD8eR2t0NANeQmgK/lvxNAvYyb6bZDD4frHRhIHkJu2TBRvB0ERkOmw==",
+        "dependencies": {
+          "@redis/client": "@redis/client@1.6.0"
+        }
+      },
+      "@redis/time-series@1.1.0_@redis+client@1.6.0": {
+        "integrity": "sha512-c1Q99M5ljsIuc4YdaCwfUEXsofakb9c8+Zse2qxTadu8TalLXuAESzLvFAvNVbkmSlvlzIQOLpBCmWI9wTOt+g==",
+        "dependencies": {
+          "@redis/client": "@redis/client@1.6.0"
+        }
       },
       "@types/accepts@1.3.7": {
         "integrity": "sha512-Pay9fq2lM2wXPWbteBsRAGiWH2hig4ZE2asK+mm7kUzlxRTfL961rj89I6zV/E3PcIkDqyuBEcMxFT7rccugeQ==",
@@ -236,6 +276,10 @@
           "@types/send": "@types/send@0.17.4"
         }
       },
+      "cluster-key-slot@1.1.2": {
+        "integrity": "sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==",
+        "dependencies": {}
+      },
       "esbuild@0.23.1": {
         "integrity": "sha512-VVNz/9Sa0bs5SELtn3f7qhJCDPCF5oMEl5cO9/SSinpE9hbPVvxbd572HH5AKiP7WD8INO53GgfDDhRjkylHEg==",
         "dependencies": {
@@ -269,11 +313,19 @@
         "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
         "dependencies": {}
       },
+      "generic-pool@3.9.0": {
+        "integrity": "sha512-hymDOu5B53XvN4QT9dBmZxPX4CWhBPPLguTZ9MMFeFa/Kg0xWVfylOVNlJji/E7yTZWFd/q9GO5TxDLq156D7g==",
+        "dependencies": {}
+      },
       "get-tsconfig@4.8.1": {
         "integrity": "sha512-k9PN+cFBmaLWtVz29SkUoqU5O0slLuHJXt/2P+tMVFT+phsSGXGkp9t3rQIqdz0e+06EHNGs3oM6ZX1s2zHxRg==",
         "dependencies": {
           "resolve-pkg-maps": "resolve-pkg-maps@1.0.0"
         }
+      },
+      "jose@5.9.6": {
+        "integrity": "sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==",
+        "dependencies": {}
       },
       "postgres@3.4.5": {
         "integrity": "sha512-cDWgoah1Gez9rN3H4165peY9qfpEo+SA61oQv65O3cRUE1pOEoJWwddwcqKE8XZYjbblOJlYDlLV4h67HrEVDg==",
@@ -282,6 +334,17 @@
       "prettier@3.3.3": {
         "integrity": "sha512-i2tDNA0O5IrMO757lfrdQZCc2jPNDVntV0m/+4whiDfWaTKfMNgR7Qz0NAeGz/nRqF4m5/6CLzbP4/liHt12Ew==",
         "dependencies": {}
+      },
+      "redis@4.7.0_@redis+client@1.6.0": {
+        "integrity": "sha512-zvmkHEAdGMn+hMRXuMBtu4Vo5P6rHQjLoHftu+lBqq8ZTA3RCVC/WzD790bkKKiNFp7d5/9PcSD19fJyyRvOdQ==",
+        "dependencies": {
+          "@redis/bloom": "@redis/bloom@1.2.0_@redis+client@1.6.0",
+          "@redis/client": "@redis/client@1.6.0",
+          "@redis/graph": "@redis/graph@1.1.1_@redis+client@1.6.0",
+          "@redis/json": "@redis/json@1.0.7_@redis+client@1.6.0",
+          "@redis/search": "@redis/search@1.2.0_@redis+client@1.6.0",
+          "@redis/time-series": "@redis/time-series@1.1.0_@redis+client@1.6.0"
+        }
       },
       "resolve-pkg-maps@1.0.0": {
         "integrity": "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==",
@@ -305,6 +368,10 @@
       },
       "urlpattern-polyfill@10.0.0": {
         "integrity": "sha512-H/A06tKD7sS1O1X2SshBVeA5FLycRpjqiBeqGKmBwBDBy28EnRjORxTNe269KSSr5un5qyWi1iL61wLxpd+ZOg==",
+        "dependencies": {}
+      },
+      "yallist@4.0.0": {
+        "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==",
         "dependencies": {}
       }
     }
@@ -363,8 +430,10 @@
         "npm:@types/express@^5.0.0",
         "npm:@types/koa@^2.15.0",
         "npm:@types/node@^22.8.6",
+        "npm:jose@^5.9.6",
         "npm:postgres@^3.4.5",
         "npm:prettier@^3.3.3",
+        "npm:redis@^4.7.0",
         "npm:tsx@^4.19.2",
         "npm:typescript@^5.6.3",
         "npm:urlpattern-polyfill@^10.0.0"

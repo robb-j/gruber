@@ -48,8 +48,6 @@ describe("Terminator", () => {
 
 			arnie.start(blockSpy);
 
-			console.log(arnie);
-
 			assertEquals(
 				arnie.mock.listening.signals,
 				["signal-a", "signal-b"],

@@ -1,6 +1,8 @@
 import type { Sql } from "postgres";
 import type { RedisClientType, SetOptions } from "redis";
+
 import { MigrationDefinition } from "./migrator.ts";
+import { TimerService } from "./timers.ts";
 
 /** @unstable */
 export interface StoreSetOptions {
@@ -22,16 +24,10 @@ export interface Store {
 }
 
 /** @unstable */
-export interface TimersImpl {
-	setTimeout(fn: () => unknown, ms: number): number;
-	clearTimeout(timerId: number): void;
-}
-
-/** @unstable */
 export class MemoryStore implements Store {
 	values = new Map<string, any>();
 	timeouts = new Map<string, number>();
-	timers: TimersImpl;
+	timers: TimerService;
 
 	constructor(timers = window) {
 		this.timers = timers;
