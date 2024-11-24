@@ -12,7 +12,7 @@
       "npm:prettier@^3.3.3": "npm:prettier@3.3.3",
       "npm:redis@^4.7.0": "npm:redis@4.7.0_@redis+client@1.6.0",
       "npm:tsx@^4.19.2": "npm:tsx@4.19.2",
-      "npm:typescript@^5.6.3": "npm:typescript@5.6.3",
+      "npm:typescript@^5.7.2": "npm:typescript@5.7.2",
       "npm:urlpattern-polyfill@^10.0.0": "npm:urlpattern-polyfill@10.0.0"
     },
     "jsr": {
@@ -358,8 +358,8 @@
           "get-tsconfig": "get-tsconfig@4.8.1"
         }
       },
-      "typescript@5.6.3": {
-        "integrity": "sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==",
+      "typescript@5.7.2": {
+        "integrity": "sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==",
         "dependencies": {}
       },
       "undici-types@6.19.8": {
@@ -435,7 +435,7 @@
         "npm:prettier@^3.3.3",
         "npm:redis@^4.7.0",
         "npm:tsx@^4.19.2",
-        "npm:typescript@^5.6.3",
+        "npm:typescript@^5.7.2",
         "npm:urlpattern-polyfill@^10.0.0"
       ]
     }
