@@ -1088,10 +1088,10 @@ const { userId, scope } = await authz.getAuthorization(
 );
 
 const { userId, scope } = await authz.assertUser(
-	"user:books:read",
 	new Request("https://example.com", {
 		headers: { Authorization: "Bearer some-long-secure-token" },
 	}),
+	"user:books:read",
 );
 ```
 
