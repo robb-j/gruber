@@ -74,15 +74,11 @@ export interface PostgresValue {
 
 /** @unstable */
 export interface PostgresStoreOptions {
-	sql: Sql;
 	tableName?: string;
 }
 
 /** @unstable */
 export class PostgresStore implements Store {
-	get sql() {
-		return this.options.sql;
-	}
 	get tableName() {
 		return this.options.tableName;
 	}
@@ -107,10 +103,11 @@ export class PostgresStore implements Store {
 		};
 	}
 
+	sql: Sql;
 	options: Required<PostgresStoreOptions>;
-	constructor(options: PostgresStoreOptions) {
+	constructor(sql: Sql, options: PostgresStoreOptions = {}) {
+		this.sql = sql;
 		this.options = {
-			sql: options.sql,
 			tableName: options.tableName ?? "cache",
 		};
 	}
@@ -156,7 +153,6 @@ export class PostgresStore implements Store {
 
 /** @unstable */
 export interface RedisStoreOptions {
-	redis: RedisClientType;
 	prefix?: string;
 }
 
@@ -164,8 +160,8 @@ export interface RedisStoreOptions {
 export class RedisStore implements Store {
 	redis: RedisClientType;
 	prefix: string;
-	constructor(options: RedisStoreOptions) {
-		this.redis = options.redis;
+	constructor(redis: RedisClientType, options: RedisStoreOptions = {}) {
+		this.redis = redis;
 		this.prefix = options.prefix ?? "";
 	}
 

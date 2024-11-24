@@ -21,9 +21,6 @@ An isomorphic JavaScript library for creating web apps.
 This is very much a WIP library, it started out as a documentation-driven-development project and I've slowly been building it.
 The various ideas it's composed of have been floating around in my mind for a year or so and writing this has helped explore those ideas.
 
-I quite like this documentation-driven-design.
-It really helps to think through the concepts and ideas of something before spending lots of time building it.
-
 ## About
 
 Gruber is a library of composable utilities for creating isomorphic JavaScript applications,
@@ -100,12 +97,22 @@ npm install gruber
 
 **Deno**
 
-Gruber is available at `esm.r0b.io/gruber@VERSION/mod.ts`.
+Gruber is available at `esm.r0b.io/gruber@VERSION/mod.ts`, add it to your _deno.json_:
 
 > Replace `VERSION` with the one you want to use, maybe see [Releases](https://github.com/robb-j/gruber/releases).
 
+```json
+{
+	"imports": {
+		"gruber/": "https://esm.r0b.io/gruber@VERSION/"
+	}
+}
+```
+
+Then use it like this:
+
 ```js
-import { defineRoute } from "https://esm.r0b.io/gruber@VERSION/mod.ts";
+import { defineRoute } from "gruber/mod.ts";
 ```
 
 ## HTTP server
@@ -130,14 +137,14 @@ export default defineRoute({
 });
 ```
 
-A route is a definition to handle a specific HTTP request by returning a response.
+A route is a definition to handle a specific HTTP request with a response.
 It defines which method and path it is responding to and an asynchronous function to handle the request.
 
 Both the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 are from the web Fetch API.
 
-It also has a `url` (as a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)) of the request and `params`.
+There is also a `url` (as a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)) of the request and `params`.
 The parameters, `params`, are matched from the pathname, part of the result of [URLPattern.exec](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/exec).
 In this example `name` is matched in the request URL and is used to process the request.
 
@@ -719,7 +726,9 @@ TODO: I'm not happy with this, will need to come back to it.
 
 ## Core library
 
-### defineRoute
+### http
+
+#### defineRoute
 
 `defineRoute` is the way of creating route primatives to be passed to your router to handle web traffic.
 
@@ -738,7 +747,7 @@ export const helloRoute = defineRoute({
 });
 ```
 
-### HTTPError
+#### HTTPError
 
 `HTTPError` is an Error subclass with specific information about HTTP errors.
 Gruber catches these errors and converts them into HTTP Responses.
@@ -821,7 +830,7 @@ class BadJSONRequest extends HTTPError {
 throw new BadJSONRequest({ message: "Something went wrong..." });
 ```
 
-### FetchRouter
+#### FetchRouter
 
 `FetchRouter` is a web-native router for routes defined with `defineRoute`.
 
@@ -858,11 +867,15 @@ Use it to get a `Response` from the provided request, based on the router's rout
 const response = await router.getResponse(new Request("http://localhost"));
 ```
 
+#### unstable http
+
 There are some unstable internal methods too:
 
 - `findMatchingRoutes(request)` is a generator function to get the first route definition that matches the supplied request. It's a generator so as few routes are matched as possible and execution can be stopped if you like.
 - `processMatches(request, matches)` attempts to get a `Response` from a request and an Iterator of route definitions.
 - `handleError(error, request)` converts a error into a Response and triggers the `errorHandler`
+- `getRequestBody(request)` Get the JSON of FormData body of a request
+- `assertRequestBody(struct, body)` Assert the body matches a structure and return the parsed value
 
 ### Postgres
 
@@ -995,6 +1008,143 @@ arnie.start(async () => {
 ```
 
 The block passed to `start` can be async and it handles errors by logging them and exiting with a non-zero status code.
+
+### Store
+
+> UNSTABLE
+
+The Store is for when you have values that you want to remember under certain keys.
+It is an abstract interface over that so there can be multiple implementations
+for different storage methods and so it can be inter-operated between different services.
+
+While some implementations may be sync, the interface is based on async so both can co-exist.
+
+There is a rough idea of using absolute paths, e.g. `/some/absolute/path`
+and some stores may offer a "prefix" option to allow multi-tennancy
+so the store internally could put it at `/v1/some/absolute/path`.
+
+```ts
+import { MemoryStore } from "gruber";
+
+const store = new MemoryStore();
+
+// Put geoff in the store
+await store.set("/some/key", { name: "Geoff Testington", age: 42 });
+
+// Put something in the store, just for a bit
+await store.set(
+	"/login/55",
+	{ token: "abcdef" },
+	{ expireAfter: 30 * 1_000 /* 30 seconds */ },
+);
+
+// Retrieve geoff, types optional
+const geoff = await store.get<GeoffRecord>("/some/key");
+
+// Ok, time for geoff to go
+await store.delete("/some/key");
+```
+
+The store is meant for temporary resources, so its mostly meant to be called with the `expireAfter` option
+
+> The `MemoryStore` is also useful for testing, you can provide a TimerService to mock time
+
+There are these experimental stores too:
+
+```ts
+import { PostgresStore, RedisStore } from "gruber";
+import { Sql } from "postgres";
+import { RedisClientType } from "redis";
+
+const sql: Sql;
+const store = new PostgresStore(sql, { tableName: "cache" });
+
+const redis: RedisClientType;
+const store = new RedisStore(redis, { prefix: "/v2" });
+```
+
+### Authorization
+
+> UNSTABLE
+
+A module for checking Request objects have authorization to perform actions on the server
+
+```ts
+import { JWTService, AuthorizationService } from "gruber";
+
+const jwt: JWTService;
+const authz = new AuthorizationService({ cookieName: "my_session" }, jwt);
+
+const { userId, scope } = await authz.getAuthorization(
+	new Request("https://example.com", {
+		headers: { Authorization: "Bearer some-long-secure-token" },
+	}),
+);
+
+const { userId, scope } = await authz.getAuthorization(
+	new Request("https://example.com", {
+		headers: { Cookie: "my_session=some-long-secure-token" },
+	}),
+);
+
+const { userId, scope } = await authz.assertUser(
+	"user:books:read",
+	new Request("https://example.com", {
+		headers: { Authorization: "Bearer some-long-secure-token" },
+	}),
+);
+```
+
+Any of these methods will throw a `HTTPError.unauthorized` (a 401) if the authorization is not present or invalid.
+
+**scopes**
+
+Scopes are abstract hierarchical access to things in your application.
+They are checked from left to right, so if the request has the top-level it allows access to scopes beneath it.
+There is also the special `admin` scope which has access to all resources.
+
+The idea is you might check for `user:books:write` inside a request handler against the scope the request is authorized with. When the user signed in or created that access token, it might only have `user:bookes:read` so now we know they cannot perform this request.
+
+### Authentication
+
+> UNSTABLE
+
+Authentication provides a service to help users get authorization to use the application.
+
+```ts
+import {
+	AuthenticationService,
+	Store,
+	RandomService,
+	JWTService,
+} from "gruber";
+
+const store: Store;
+const jwt: JWTService;
+const random: RandomService; // OR // = useRandom()
+const options = {
+	allowedHosts: () => [new URL("https://example.com")],
+	cookieName: "my_session",
+	sessionDuration: 30 * 24 * 60 * 60 * 1_000, // 30 days
+	loginDuration: 15 * 60 * 1_000, // 15 minutes
+};
+
+const authn = new AuthenticationService(options, store, random, jwt);
+
+// Get the token and code the user must match to complete the authentication
+// These could be sent in a magic link perhaps
+const { token, code } = await authn.start(userId, redirectUrl);
+
+// Use a user-provided token & code to check if they are a valid log in
+const login = await authn.check(token, code);
+
+// If valid, complete the authentication and get back their redirect,
+// headers to set the authz cookie and their raw token too
+const { token, headers, redirect } = await authn.finish(login);
+```
+
+These would obviously be spread accross multiple endpoints and you transfer
+the token / code combination to the user in a way that proves they are who they claim to be.
 
 ### Utilities
 

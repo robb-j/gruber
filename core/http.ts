@@ -1,3 +1,5 @@
+import { StructError, Structure } from "./structures.ts";
+
 export type HTTPMethod =
 	| "GET"
 	| "HEAD"
@@ -117,5 +119,25 @@ export class HTTPError extends Error {
 			statusText: this.statusText,
 			headers: this.headers,
 		});
+	}
+}
+
+/** @unstable */
+export function getRequestBody(request: Request) {
+	const ct = request.headers.get("Content-Type");
+	if (ct === "application/x-www-form-urlencoded") return request.formData();
+	return request.json();
+}
+
+/** @unstable */
+export function assertRequestBody<T>(struct: Structure<T>, input: unknown): T {
+	if (input instanceof FormData) input = Object.fromEntries(input.entries());
+	try {
+		return struct.process(input);
+	} catch (error) {
+		if (error instanceof StructError) {
+			throw HTTPError.badRequest(error.toFriendlyString());
+		}
+		throw Error;
 	}
 }
