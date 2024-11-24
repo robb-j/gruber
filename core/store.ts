@@ -29,7 +29,7 @@ export class MemoryStore implements Store {
 	timeouts = new Map<string, number>();
 	timers: TimerService;
 
-	constructor(timers = window) {
+	constructor(timers = globalThis) {
 		this.timers = timers;
 	}
 
