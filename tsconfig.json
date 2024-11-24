@@ -1,11 +1,12 @@
 {
-	"$comment": "This is for node-based TypeScript",
+	"$comment": "This is for node-based TypeScript checking only",
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "NodeNext",
+		"module": "Preserve",
 		"moduleResolution": "Bundler",
 		"allowImportingTsExtensions": true,
-		"strict": true
+		"strict": true,
+		"noEmit": true
 	},
 	"include": ["core", "node", "bundle/node", "examples/node"]
 }

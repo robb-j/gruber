@@ -54,11 +54,11 @@ async function node() {
 
 	// I think this is (bady) doing what typescript@beta rewriteRelativeImportExtensions does
 	// https://devblogs.microsoft.com/typescript/announcing-typescript-5-7-beta/#path-rewriting-for-relative-paths
-	rewrite("bundle/node/**/*.ts", (file) =>
-		file.replace(/(import|export) [\s\S]*?".*?\.ts"/g, (str) =>
-			str.replace('.ts"', '.js"'),
-		),
-	);
+	// rewrite("bundle/node/**/*.ts", (file) =>
+	// 	file.replace(/(import|export) [\s\S]*?".*?\.ts"/g, (str) =>
+	// 		str.replace('.ts"', '.js"'),
+	// 	),
+	// );
 
 	writeJson("bundle/node/tsconfig.json", {
 		include: ["source/**/*", "core/**/*"],
@@ -69,7 +69,7 @@ async function node() {
 			declarationMap: true,
 			skipLibCheck: true,
 			strict: true,
-			// rewriteRelativeImportExtensions: true,
+			rewriteRelativeImportExtensions: true,
 		},
 	});
 	exec("npx tsc", {
