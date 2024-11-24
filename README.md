@@ -172,7 +172,7 @@ export async function runServer(options) {
 If you were using Deno, the same server would look like:
 
 ```js
-import { DenoRouter } from "@gruber/mod.js";
+import { DenoRouter } from "gruber/mod.js";
 
 import helloRoute from "./hello-route.js";
 
@@ -229,13 +229,13 @@ or if it is terminating existing connections ready to be descheduled.
 Terminator is here to help with this use-case.
 
 ```js
-import { DenoRouter, Terminator } from "@gruber/mod.js";
+import { DenoRouter, getTerminator } from "gruber";
 
 import { appConfig } from "./config.js";
 import helloRoute from "./hello-route.js";
 
 // 1. Create your Terminator, maybe call them arnie
-export const terminator = new Terminator({
+export const terminator = getTerminator({
 	timeout: appConfig.env === "development" ? 0 : 5_000,
 });
 
@@ -989,9 +989,9 @@ Terminator helps you gracefully deploy servers with zero downtime when using a l
 import { Terminator } from "gruber/terminator.js";
 
 // All options are optional, these are also the defaults
-const arnie = new Terminator({
+const arnie = getTerminator({
 	signals: ["SIGINT", "SIGTERM"],
-	timeout: 5_000,
+	timeout: 5_000, // perhaps: appConfig.env === 'development' ? 0 : 5_000
 });
 
 // Generate a HTTP response based on the current state of the Terminator
