@@ -4,9 +4,16 @@ This file documents notable changes to the project
 
 ## next
 
+...
+
+## 0.6.0
+
 **new**
 
 - Create the Terminator, an API like [@godaddy/terminus](https://github.com/godaddy/terminus) for cross-platform graceful HTTP shutdown.
+- (unstable) Authorize & Authenticate requests
+- (unstable) Store things in key-value pairs
+- (unstable) `serveHTTP` for Node.js a la `Deno.serve`
 
 **changed**
 
@@ -15,6 +22,15 @@ This file documents notable changes to the project
   - `get{Node,Deno}Configuration` → `getConfiguration`
   - `get{Node,Deno}PostgresMigratorOptions` → `getPostgresMigratorOptions`
   - `get{Node,Deno}PostgresMigrator` → `getPostgresMigrator`
+
+**fixes**
+
+- NodeRouter sets the correct `duplex` option
+- FetchRouter ignores the body for `OPTIONS` & `TRACE` methods
+
+**internal**
+
+- Gruber is now primarily TypeScript, with JavaScript tests
 
 ## 0.5.0
 
