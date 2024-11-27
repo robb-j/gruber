@@ -143,7 +143,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 
 		// TODO: Microsoft "safe links" opens URLs, generates auth then throws it away
 		// Maybe it should be a counter? like 3 you get uses
-		// await cache.delete(`/authn/request/${token}`)
+		// await cache.delete(`/authn/request/${request.token}`)
 
 		return { token, headers, redirect: request.redirect };
 	}
