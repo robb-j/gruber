@@ -7,6 +7,7 @@ This file documents notable changes to the project
 **fixes**
 
 - Node & Express handle streams properly, they write the head then stream the response.
+- Log HTTP errors in `ExpressRouter` and `KoaRoater`
 
 ## 0.6.0
 

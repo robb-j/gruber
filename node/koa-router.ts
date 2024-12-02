@@ -23,7 +23,10 @@ import {
 export class KoaRouter {
 	router: FetchRouter;
 	constructor(options: NodeRouterOptions = {}) {
-		this.router = new FetchRouter({ routes: options.routes ?? [] });
+		this.router = new FetchRouter({
+			routes: options.routes ?? [],
+			errorHandler: (error, request) => this.onRouteError(error, request),
+		});
 	}
 
 	middleware(): Middleware {
@@ -37,6 +40,10 @@ export class KoaRouter {
 
 	getResponse(request: Request): Promise<Response> {
 		return this.router.getResponse(request);
+	}
+
+	onRouteError(error: unknown, request: Request): void {
+		console.error("Fatal Route Error", error);
 	}
 
 	respond(ctx: Context, response: Response): void {
