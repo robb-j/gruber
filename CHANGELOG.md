@@ -4,7 +4,9 @@ This file documents notable changes to the project
 
 ## next
 
-...
+**fixes**
+
+- Node & Express handle streams properly, they write the head then stream the response.
 
 ## 0.6.0
 

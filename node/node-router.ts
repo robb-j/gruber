@@ -57,13 +57,12 @@ export class NodeRouter {
 }
 
 export function applyResponse(response: Response, res: ServerResponse): void {
-	res.statusCode = response.status;
-	res.statusMessage = response.statusText;
-
 	for (const [key, value] of response.headers) {
 		const values = value.split(",");
 		res.setHeader(key, values.length === 1 ? value : values);
 	}
+
+	res.writeHead(response.status, response.statusText);
 
 	if (response.body) getResponseReadable(response).pipe(res);
 	else res.end();

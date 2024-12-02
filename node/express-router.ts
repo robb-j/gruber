@@ -1,12 +1,12 @@
 import {
 	RequestHandler as ExpressRequestHandler,
-	Response as ExporessResponse,
+	Response as ExpressResponse,
 } from "express";
 
 import { FetchRouter } from "../core/fetch-router.ts";
 import {
+	applyResponse,
 	getFetchRequest,
-	getResponseReadable,
 	NodeRouterOptions,
 } from "./node-router.ts";
 
@@ -41,16 +41,7 @@ export class ExpressRouter {
 		return this.router.getResponse(request);
 	}
 
-	respond(res: ExporessResponse, response: Response): void {
-		res.statusCode = response.status;
-		res.statusMessage = response.statusText;
-
-		for (const [key, value] of response.headers) {
-			const values = value.split(",");
-			res.set(key, values.length === 1 ? value : values);
-		}
-
-		if (response.body) getResponseReadable(response).pipe(res);
-		else res.end();
+	respond(res: ExpressResponse, response: Response): void {
+		applyResponse(response, res);
 	}
 }
