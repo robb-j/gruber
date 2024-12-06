@@ -1,4 +1,4 @@
-import type { jwtVerify, SignJWT } from "jose";
+import { type JoseDependency } from "./types.ts";
 
 export interface AuthzToken {
 	userId?: number;
@@ -13,11 +13,6 @@ export interface SignTokenOptions {
 export interface JWTService {
 	verify(token: string): Promise<AuthzToken | null>;
 	sign(scope: string, options?: SignTokenOptions): Promise<string>;
-}
-
-export interface JoseDependency {
-	jwtVerify: typeof jwtVerify;
-	SignJWT: typeof SignJWT;
 }
 
 export interface JwtServiceOptions {

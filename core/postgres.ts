@@ -1,4 +1,4 @@
-import type { Sql } from "postgres";
+import type { SqlDependency } from "./types.ts";
 import {
 	defineMigration,
 	MigrateDirection,
@@ -7,11 +7,16 @@ import {
 	MigrationRecord,
 } from "./migrator.ts";
 
+export interface PostgresMigrationRecord {
+	name: string;
+	created: Date;
+}
+
 export async function getPostgresMigrations(
-	sql: Sql,
+	sql: SqlDependency,
 ): Promise<MigrationRecord[]> {
 	try {
-		const rows = await sql`
+		const rows = await sql<PostgresMigrationRecord[]>`
       SELECT name, created
       FROM migrations
     `;
@@ -22,9 +27,9 @@ export async function getPostgresMigrations(
 }
 
 export function executePostgresMigration(
-	def: MigrationDefinition<Sql>,
+	def: MigrationDefinition<SqlDependency>,
 	direction: MigrateDirection,
-	sql: Sql,
+	sql: SqlDependency,
 ): Promise<void> {
 	return sql.begin(async (sql) => {
 		console.log("migrate %s", direction, def.name);
@@ -53,7 +58,7 @@ export function executePostgresMigration(
 	});
 }
 
-export const postgresBootstrapMigration = defineMigration<Sql>({
+export const postgresBootstrapMigration = defineMigration<SqlDependency>({
 	async up(sql) {
 		await sql`
 			CREATE TABLE "migrations" (
@@ -73,7 +78,7 @@ export const postgresBootstrapMigration = defineMigration<Sql>({
 export const bootstrapMigration = postgresBootstrapMigration;
 
 export function definePostgresMigration(
-	options: MigrationOptions<Sql>,
-): MigrationOptions<Sql> {
+	options: MigrationOptions<SqlDependency>,
+): MigrationOptions<SqlDependency> {
 	return defineMigration(options);
 }

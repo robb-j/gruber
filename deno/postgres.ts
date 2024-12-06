@@ -1,28 +1,29 @@
+import { type SqlDependency } from "../core/types.ts";
 import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
 } from "../core/postgres.ts";
-import { extname, type Sql } from "./deps.ts";
+import { extname } from "./deps.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: unknown;
+	sql: SqlDependency;
 	directory: URL;
 }
 
 export function getPostgresMigratorOptions(
 	options: PostgresMigratorOptions,
-): MigratorOptions<Sql> {
+): MigratorOptions<SqlDependency> {
 	return {
 		getRecords() {
-			return getPostgresMigrations(options.sql as Sql);
+			return getPostgresMigrations(options.sql);
 		},
 
 		execute(def, direction) {
-			return executePostgresMigration(def, direction, options.sql as Sql);
+			return executePostgresMigration(def, direction, options.sql);
 		},
 
 		async getDefinitions() {

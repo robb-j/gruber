@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Sql } from "postgres";
+import type { SqlDependency } from "../core/types.ts";
 
 import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
 import {
@@ -12,13 +12,13 @@ import {
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: Sql;
+	sql: SqlDependency;
 	directory: URL;
 }
 
 export function getPostgresMigratorOptions(
 	options: PostgresMigratorOptions,
-): MigratorOptions<Sql> {
+): MigratorOptions<SqlDependency> {
 	return {
 		getRecords() {
 			return getPostgresMigrations(options.sql);
