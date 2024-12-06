@@ -53,6 +53,10 @@ export function _checkScope(actual: string, expected: string[]) {
 	return false;
 }
 
+export function includesScope(actual: string, expected: string) {
+	return _checkScope(actual, _expandScopes(expected));
+}
+
 export interface AssertUserOptions {
 	scope?: string;
 }
@@ -103,7 +107,7 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		const { userId, scope } = verified;
 		if (userId === undefined) throw HTTPError.unauthorized("not a user");
 
-		if (options.scope && !_checkScope(scope, _expandScopes(options.scope))) {
+		if (options.scope && !includesScope(scope, options.scope)) {
 			throw HTTPError.unauthorized("missing required scope: " + options.scope);
 		}
 

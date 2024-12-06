@@ -1098,7 +1098,7 @@ const parsed = await jwt.verify(token);
 A module for checking Request objects have authorization to perform actions on the server
 
 ```ts
-import { JWTService, AuthorizationService } from "gruber";
+import { JWTService, AuthorizationService, includesScope } from "gruber";
 
 const jwt: JWTService;
 const authz = new AuthorizationService({ cookieName: "my_session" }, jwt);
@@ -1121,6 +1121,12 @@ const { userId, scope } = await authz.assertUser(
 	}),
 	"user:books:read",
 );
+
+includesScope("user:books:read", "user:books:read"); // true
+includesScope("user:books", "user:books:read"); // true
+includesScope("user", "user:books:read"); // true
+includesScope("user", "user:podcasts"); // true
+includesScope("user:books", "user:podcasts"); // false
 ```
 
 Any of these methods will throw a `HTTPError.unauthorized` (a 401) if the authorization is not present or invalid.

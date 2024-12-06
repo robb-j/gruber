@@ -4,6 +4,10 @@ This file documents notable changes to the project
 
 ## next
 
+**new**
+
+- Expose `includesScope` to check scopes
+
 **fixes**
 
 - Node & Express handle streams properly, they write the head then stream the response.
