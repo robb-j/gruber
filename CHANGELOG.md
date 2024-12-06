@@ -2,7 +2,7 @@
 
 This file documents notable changes to the project
 
-## next
+## 0.6.1
 
 **new**
 
