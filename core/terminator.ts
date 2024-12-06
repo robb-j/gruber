@@ -1,10 +1,11 @@
+import { TimerService } from "./timers.ts";
+
 export interface TerminatorOptions {
 	timeout: number;
 	signals: string[];
 
 	startListeners: (signals: string[], block: TerminatorAction) => void;
 	exitProcess: (statusCode: number, error?: unknown) => void;
-	wait: (ms: number) => Promise<void>;
 }
 
 export type TerminatorState = "running" | "terminating";
@@ -18,9 +19,11 @@ export type TerminatorAction = () => unknown;
 export class Terminator {
 	state: TerminatorState = "running";
 	options: TerminatorOptions;
+	timers: TimerService;
 
-	constructor(options: TerminatorOptions) {
+	constructor(options: TerminatorOptions, timers: TimerService) {
 		this.options = options;
+		this.timers = timers;
 	}
 
 	start(block: TerminatorAction) {
@@ -32,7 +35,9 @@ export class Terminator {
 	async terminate(block: TerminatorAction) {
 		this.state = "terminating";
 
-		await this.options.wait(this.options.timeout);
+		await new Promise<void>((resolve) => {
+			this.timers.setTimeout(resolve, this.options.timeout);
+		});
 
 		try {
 			await block();

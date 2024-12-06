@@ -1,21 +1,23 @@
 import { Terminator } from "./terminator.ts";
-import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
+import { assertEquals, describe, it } from "./test-deps.js";
 
 class MockTerminator extends Terminator {
-	constructor(options) {
+	constructor(options = {}) {
 		const mock = {};
-		super({
-			startListeners(signals, block) {
-				mock.listening = { signals, block };
-			},
-			exitProcess(statusCode, error) {
-				mock.exited = { statusCode, error };
-			},
-			wait(ms) {
+		options.startListeners = (signals, block) => {
+			mock.listening = { signals, block };
+		};
+		options.exitProcess = (statusCode, error) => {
+			mock.exited = { statusCode, error };
+		};
+		const timers = {
+			setTimeout(block, ms) {
 				mock.waited = { ms };
+				block();
 			},
-			...options,
-		});
+		};
+
+		super(options, timers);
 		this.mock = mock;
 	}
 }
@@ -32,7 +34,6 @@ describe("Terminator", () => {
 				timeout: 3_000,
 				startListeners() {},
 				exitProcess() {},
-				wait() {},
 			};
 			const arnie = new Terminator(options);
 			assertEquals(arnie.options, options);

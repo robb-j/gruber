@@ -22,12 +22,9 @@ export function getTerminatorOptions(
 			}
 			Deno.exit(statusCode);
 		},
-		wait(ms) {
-			return new Promise((resolve) => setTimeout(resolve, ms));
-		},
 	};
 }
 
 export function getTerminator(options: DenoTerminatorOptions = {}) {
-	return new Terminator(getTerminatorOptions(options));
+	return new Terminator(getTerminatorOptions(options), globalThis);
 }

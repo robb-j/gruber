@@ -23,12 +23,9 @@ export function getTerminatorOptions(
 			}
 			process.exit(statusCode);
 		},
-		wait(ms) {
-			return new Promise((resolve) => setTimeout(resolve, ms));
-		},
 	};
 }
 
 export function getTerminator(options: NodeTerminatorOptions = {}): Terminator {
-	return new Terminator(getTerminatorOptions(options));
+	return new Terminator(getTerminatorOptions(options), globalThis);
 }
