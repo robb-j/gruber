@@ -18,9 +18,14 @@ This file documents notable changes to the project
 **changed**
 
 - Renamed `formatCode` to `formatAuthenticationCode`
+
+**unstable**
+
 - Renamed unstable `expireAfter` to `maxAge`
 - Renamed unstable `JWTService` to `TokenService`
 - Renamed unstable `JoseJwtService` to `JoseTokens`
+- Renamed unstable `Authorization#getAuthorization` to `Authorization#assert`
+- Added unstable `Authorization#getAuthorization`
 
 ## 0.6.0
 

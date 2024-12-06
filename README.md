@@ -1098,28 +1098,31 @@ const parsed = await jwt.verify(token);
 A module for checking Request objects have authorization to perform actions on the server
 
 ```ts
-import { JWTService, AuthorizationService, includesScope } from "gruber";
+import { TokenService, AuthorizationService, includesScope } from "gruber";
 
-const jwt: JWTService;
-const authz = new AuthorizationService({ cookieName: "my_session" }, jwt);
+const tokens: TokenService;
+const authz = new AuthorizationService({ cookieName: "my_session" }, tokens);
 
-const { userId, scope } = await authz.getAuthorization(
+// string | null
+const token = authz.getAuthorization(
 	new Request("https://example.com", {
 		headers: { Authorization: "Bearer some-long-secure-token" },
 	}),
 );
 
-const { userId, scope } = await authz.getAuthorization(
+// { userId: number | undefined, scope: string }
+const { userId, scope } = await authz.assert(
+	new Request("https://example.com", {
+		headers: { Authorization: "Bearer some-long-secure-token" },
+	}),
+);
+
+// { userId: number, scope: string }
+const { userId, scope } = await authz.assertUser(
 	new Request("https://example.com", {
 		headers: { Cookie: "my_session=some-long-secure-token" },
 	}),
-);
-
-const { userId, scope } = await authz.assertUser(
-	new Request("https://example.com", {
-		headers: { Authorization: "Bearer some-long-secure-token" },
-	}),
-	"user:books:read",
+	{ scope: "user:books:read" },
 );
 
 includesScope("user:books:read", "user:books:read"); // true

@@ -68,7 +68,8 @@ export interface AssertUserResult {
 }
 
 export interface AbstractAuthorizationService {
-	getAuthorization(request: Request): Promise<AuthzToken>;
+	getAuthorization(request: Request): string | null;
+	assert(request: Request): Promise<AuthzToken>;
 	assertUser(
 		request: Request,
 		options?: AssertUserOptions,
@@ -86,10 +87,15 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		public tokens: TokenService,
 	) {}
 
-	async getAuthorization(request: Request) {
-		const authz =
+	getAuthorization(request: Request) {
+		return (
 			_getRequestBearer(request) ??
-			_getRequestCookie(request, this.options.cookieName);
+			_getRequestCookie(request, this.options.cookieName)
+		);
+	}
+
+	async assert(request: Request) {
+		const authz = this.getAuthorization(request);
 
 		if (!authz) throw HTTPError.unauthorized("no authorization present");
 
@@ -102,7 +108,7 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		request: Request,
 		options: AssertUserOptions = {},
 	): Promise<AssertUserResult> {
-		const verified = await this.getAuthorization(request);
+		const verified = await this.assert(request);
 
 		const { userId, scope } = verified;
 		if (userId === undefined) throw HTTPError.unauthorized("not a user");
