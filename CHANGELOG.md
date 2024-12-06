@@ -8,6 +8,11 @@ This file documents notable changes to the project
 
 - Node & Express handle streams properly, they write the head then stream the response.
 - Log HTTP errors in `ExpressRouter` and `KoaRoater`
+- Took out type dependencies
+
+**changed**
+
+- Renamed `formatCode` to `formatAuthenticationCode`
 
 ## 0.6.0
 

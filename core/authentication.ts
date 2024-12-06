@@ -43,7 +43,7 @@ export interface AbstractAuthenticationService {
 	finish(request: AuthnRequest): Promise<AuthnResult>;
 }
 
-export function formatCode(code: number) {
+export function formatAuthenticationCode(code: number) {
 	return [
 		code.toString().padStart(6, "0").slice(0, 3),
 		code.toString().padStart(6, "0").slice(3, 6),

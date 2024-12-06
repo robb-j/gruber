@@ -6,12 +6,15 @@ import {
 	fakeTimers,
 	it,
 } from "./test-deps.js";
-import { AuthenticationService, formatCode } from "./authentication.ts";
+import {
+	AuthenticationService,
+	formatAuthenticationCode,
+} from "./authentication.ts";
 import { MemoryStore } from "./store.ts";
 
-describe("formatCode", () => {
+describe("formatAuthenticationCode", () => {
 	it("pads and seperates", () => {
-		assertEquals(formatCode(12345), "012 345");
+		assertEquals(formatAuthenticationCode(12345), "012 345");
 	});
 });
 
