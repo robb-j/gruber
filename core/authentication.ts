@@ -1,7 +1,7 @@
 import { HTTPError } from "./http.ts";
 import { RandomService } from "./random.ts";
 import { Store } from "./store.ts";
-import { JWTService } from "./jwt.ts";
+import { TokenService } from "./tokens.ts";
 
 /**
  * An in-progress authentication, being stored while the client completes their challenge
@@ -62,7 +62,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 		public options: AuthenticationServiceOptions,
 		public store: Store,
 		public random: RandomService,
-		public jwt: JWTService,
+		public tokens: TokenService,
 	) {}
 
 	//
@@ -128,7 +128,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 		const headers = new Headers();
 		headers.set("Location", request.redirect);
 
-		const token = await this.jwt.sign("user", {
+		const token = await this.tokens.sign("user", {
 			userId: request.userId,
 			maxAge: this.options.sessionDuration,
 		});

@@ -1,5 +1,5 @@
 import { HTTPError } from "./http.ts";
-import { AuthzToken, JWTService } from "./jwt.ts";
+import { AuthzToken, TokenService } from "./tokens.ts";
 
 /**
  * Based on deno std
@@ -77,13 +77,10 @@ export interface AuthorizationServiceOptions {
 
 /** @unstable */
 export class AuthorizationService implements AbstractAuthorizationService {
-	options: AuthorizationServiceOptions;
-	jwt: JWTService;
-
-	constructor(options: AuthorizationServiceOptions, jwt: JWTService) {
-		this.options = options;
-		this.jwt = jwt;
-	}
+	constructor(
+		public options: AuthorizationServiceOptions,
+		public tokens: TokenService,
+	) {}
 
 	async getAuthorization(request: Request) {
 		const authz =
@@ -92,7 +89,7 @@ export class AuthorizationService implements AbstractAuthorizationService {
 
 		if (!authz) throw HTTPError.unauthorized("no authorization present");
 
-		const verified = await this.jwt.verify(authz);
+		const verified = await this.tokens.verify(authz);
 		if (!verified) throw HTTPError.unauthorized("no valid authorization");
 		return verified;
 	}

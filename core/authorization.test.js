@@ -2,7 +2,7 @@ import {
 	assertEquals,
 	assertThrows,
 	describe,
-	fakeJwt,
+	fakeTokens,
 	it,
 } from "./test-deps.js";
 import {
@@ -118,9 +118,9 @@ describe("_checkScope", () => {
 describe("AuthorizationService", () => {
 	function setup() {
 		const options = { cookieName: "testing_session" };
-		const jwt = fakeJwt();
-		const authz = new AuthorizationService(options, jwt);
-		return { options, jwt, authz };
+		const tokens = fakeTokens();
+		const authz = new AuthorizationService(options, tokens);
+		return { options, tokens, authz };
 	}
 
 	describe("getAuthorization", () => {

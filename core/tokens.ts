@@ -10,30 +10,24 @@ export interface SignTokenOptions {
 	/** milliseconds */ maxAge?: number;
 }
 
-export interface JWTService {
+/** A service for signing and verifying access tokens */
+export interface TokenService {
 	verify(token: string): Promise<AuthzToken | null>;
 	sign(scope: string, options?: SignTokenOptions): Promise<string>;
 }
 
-export interface JwtServiceOptions {
+export interface JoseTokensOptions {
 	secret: string;
 	issuer: string;
 	audience: string;
 }
 
-export class JoseJwtService implements JWTService {
-	options: JwtServiceOptions;
+export class JoseTokens implements TokenService {
+	options: JoseTokensOptions;
 	jose: JoseDependency;
 	#secret: Uint8Array;
 
-	get jwtVerify() {
-		return this.jose.jwtVerify;
-	}
-	get SignJWT() {
-		return this.jose.SignJWT;
-	}
-
-	constructor(options: JwtServiceOptions, jose: JoseDependency) {
+	constructor(options: JoseTokensOptions, jose: JoseDependency) {
 		this.options = options;
 		this.jose = jose;
 		this.#secret = new TextEncoder().encode(options.secret);
@@ -41,7 +35,7 @@ export class JoseJwtService implements JWTService {
 
 	async verify(input: string): Promise<AuthzToken | null> {
 		try {
-			const token = await this.jwtVerify(input, this.#secret, {
+			const token = await this.jose.jwtVerify(input, this.#secret, {
 				issuer: this.options.issuer,
 				audience: this.options.audience,
 			});
@@ -56,7 +50,7 @@ export class JoseJwtService implements JWTService {
 	}
 
 	sign(scope: string, options: SignTokenOptions = {}) {
-		const jwt = new this.SignJWT({ scope })
+		const jwt = new this.jose.SignJWT({ scope })
 			.setProtectedHeader({ alg: "HS256", typ: "JWT" })
 			.setIssuedAt()
 			.setIssuer(this.options.issuer)

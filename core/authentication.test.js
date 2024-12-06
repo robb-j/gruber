@@ -1,7 +1,7 @@
 import {
 	assertEquals,
 	describe,
-	fakeJwt,
+	fakeTokens,
 	fakeRandom,
 	fakeTimers,
 	it,
@@ -28,9 +28,9 @@ describe("AuthenticationService", () => {
 		};
 		const random = fakeRandom();
 		const store = new MemoryStore(fakeTimers());
-		const jwt = fakeJwt();
-		const authn = new AuthenticationService(options, store, random, jwt);
-		return { options, random, store, jwt, authn };
+		const tokens = fakeTokens();
+		const authn = new AuthenticationService(options, store, random, tokens);
+		return { options, random, store, tokens, authn };
 	}
 
 	describe("_canRedirect", () => {

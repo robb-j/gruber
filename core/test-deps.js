@@ -30,8 +30,8 @@ export function fakeTimers() {
 	};
 }
 
-/** @returns {import("./jwt.ts").JWTService} */
-export function fakeJwt() {
+/** @returns {import("./tokens.ts").TokenService} */
+export function fakeTokens() {
 	return {
 		sign(scope, options) {
 			return JSON.stringify({ scope, ...options });
