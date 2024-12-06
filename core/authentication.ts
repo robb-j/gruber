@@ -118,7 +118,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 		};
 
 		await this.store.set<AuthnRequest>(`/authn/request/${token}`, request, {
-			expireAfter: this.options.loginDuration,
+			maxAge: this.options.loginDuration,
 		});
 
 		return { token, code: request.code };
@@ -130,7 +130,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 
 		const token = await this.jwt.sign("user", {
 			userId: request.userId,
-			expireAfter: this.options.sessionDuration,
+			maxAge: this.options.sessionDuration,
 		});
 
 		const duration = Math.floor(this.options.sessionDuration / 1000);

@@ -9,10 +9,12 @@ This file documents notable changes to the project
 - Node & Express handle streams properly, they write the head then stream the response.
 - Log HTTP errors in `ExpressRouter` and `KoaRoater`
 - Took out type dependencies
+- JWTs have the correct expiration time
 
 **changed**
 
 - Renamed `formatCode` to `formatAuthenticationCode`
+- Renamed unstable `expireAfter` to `maxAge`
 
 ## 0.6.0
 

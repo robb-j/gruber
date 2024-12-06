@@ -129,7 +129,7 @@ describe("AuthenticationService", () => {
 			const token = JSON.stringify({
 				scope: "user",
 				userId: 1,
-				expireAfter: 20_000,
+				maxAge: 20_000,
 			});
 
 			assertEquals(result.token, token);

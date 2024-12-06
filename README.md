@@ -1035,7 +1035,7 @@ await store.set("/some/key", { name: "Geoff Testington", age: 42 });
 await store.set(
 	"/login/55",
 	{ token: "abcdef" },
-	{ expireAfter: 30 * 1_000 /* 30 seconds */ },
+	{ maxAge: 30 * 1_000 /* 30 seconds */ },
 );
 
 // Retrieve geoff, types optional
@@ -1045,7 +1045,7 @@ const geoff = await store.get<GeoffRecord>("/some/key");
 await store.delete("/some/key");
 ```
 
-The store is meant for temporary resources, so its mostly meant to be called with the `expireAfter` option
+The store is meant for temporary resources, so its mostly meant to be called with the `maxAge` option
 
 > The `MemoryStore` is also useful for testing, you can provide a TimerService to mock time
 
@@ -1084,7 +1084,7 @@ const jwt = new JoseJwtService(
 // string
 const token = await jwt.sign("user:books:read", {
 	userId: 1,
-	expiresAfter: 30 * 24 * 60 * 60 * 1_000, // 30 days
+	maxAge: 30 * 24 * 60 * 60 * 1_000, // 30 days
 });
 
 // { userId, scope } or null

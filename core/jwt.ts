@@ -7,7 +7,7 @@ export interface AuthzToken {
 
 export interface SignTokenOptions {
 	userId?: number;
-	/** milliseconds */ expireAfter?: number | Date;
+	/** milliseconds */ maxAge?: number;
 }
 
 export interface JWTService {
@@ -65,8 +65,8 @@ export class JoseJwtService implements JWTService {
 		if (options.userId !== undefined) {
 			jwt.setSubject(options.userId.toString());
 		}
-		if (options.expireAfter !== undefined) {
-			jwt.setExpirationTime(options.expireAfter);
+		if (options.maxAge !== undefined) {
+			jwt.setExpirationTime((Date.now() + options.maxAge) / 1_000);
 		}
 
 		return jwt.sign(this.#secret);

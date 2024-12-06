@@ -7,7 +7,7 @@ import { TimerService } from "./timers.ts";
 /** @unstable */
 export interface StoreSetOptions {
 	/** milliseconds */
-	expireAfter?: number;
+	maxAge?: number;
 }
 
 /** @unstable */
@@ -39,13 +39,13 @@ export class MemoryStore implements Store {
 		options: StoreSetOptions = {},
 	): Promise<void> {
 		this.values.set(key, value);
-		if (typeof options.expireAfter === "number") {
+		if (typeof options.maxAge === "number") {
 			let timer = this.timeouts.get(key);
 			if (timer) this.timers.clearTimeout(timer);
 
 			timer = this.timers.setTimeout(() => {
 				this.delete(key);
-			}, options.expireAfter);
+			}, options.maxAge);
 
 			this.timeouts.set(key, timer);
 		}
@@ -85,9 +85,9 @@ export class PostgresStore implements Store {
 			up: async (sql) => {
 				await sql`
 					CREATE TABLE ${tableName} {
-						"key" varchar(255) PRIMARY KEY,
+						"key" VARCHAR(255) PRIMARY KEY,
 						"value" JSONB NOT NULL,
-						"expiry" timestamp DEFAULT NULL
+						"expiry" TIMESTAMP DEFAULT NULL
 					}
 				`;
 			},
@@ -127,8 +127,8 @@ export class PostgresStore implements Store {
 	): Promise<void> {
 		const record: PostgresValue = { key, value, expiry: null };
 
-		if (options.expireAfter) {
-			record.expiry = new Date(Date.now() + options.expireAfter);
+		if (options.maxAge) {
+			record.expiry = new Date(Date.now() + options.maxAge);
 		}
 
 		await this.sql`
@@ -172,7 +172,7 @@ export class RedisStore implements Store {
 		options: StoreSetOptions = {},
 	): Promise<void> {
 		const opts: SetOptions = {};
-		if (options.expireAfter) opts.PX = options.expireAfter;
+		if (options.maxAge) opts.PX = options.maxAge;
 		await this.redis.set(this.prefix + key, JSON.stringify(value), opts);
 	}
 
