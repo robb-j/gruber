@@ -124,13 +124,32 @@ describe("AuthorizationService", () => {
 	}
 
 	describe("getAuthorization", () => {
+		it("parses bearer", () => {
+			const { authz } = setup();
+
+			const request = new Request("https://example.com", {
+				headers: { Authorization: "Bearer test_bearer_token" },
+			});
+			assertEquals(authz.getAuthorization(request), "test_bearer_token");
+		});
+		it("parses cookies", () => {
+			const { authz } = setup();
+
+			const request = new Request("https://example.com", {
+				headers: { Cookie: "testing_session=test_cookie_value" },
+			});
+			assertEquals(authz.getAuthorization(request), "test_cookie_value");
+		});
+	});
+
+	describe("assert", () => {
 		it("parses bearer", async () => {
 			const { authz } = setup();
 
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.getAuthorization(request), {
+			assertEquals(await authz.assert(request), {
 				scope: "user",
 				userId: 1,
 			});
@@ -141,7 +160,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Cookie: 'testing_session={"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.getAuthorization(request), {
+			assertEquals(await authz.assert(request), {
 				scope: "user",
 				userId: 1,
 			});
