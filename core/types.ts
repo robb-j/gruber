@@ -1,7 +1,3 @@
-/// <reference types="urlpattern-polyfill" />
-
-// import { SignJWT } from "jose";
-
 export type MaybePromise<T> = T | Promise<T>;
 
 export type ResolvePromise<T> =
@@ -41,4 +37,10 @@ export interface JoseDependency {
 	): Promise<{ payload: any }>;
 
 	SignJWT: _SignJWT;
+}
+
+export interface RedisDependency {
+	get(key: string): Promise<string | undefined>;
+	set(key: string, value: string, options?: { PX?: number }): Promise<unknown>;
+	del(key: string): Promise<unknown>;
 }

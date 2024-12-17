@@ -1,8 +1,6 @@
-import type { Sql } from "postgres";
-import type { RedisClientType, SetOptions } from "redis";
-
 import { MigrationDefinition } from "./migrator.ts";
 import { TimerService } from "./timers.ts";
+import { RedisDependency, SqlDependency } from "./types.ts";
 
 /** @unstable */
 export interface StoreSetOptions {
@@ -79,7 +77,7 @@ export class PostgresStore implements Store {
 		return this.options.tableName;
 	}
 
-	static getMigration(tableName: string): MigrationDefinition<Sql> {
+	static getMigration(tableName: string): MigrationDefinition<any> {
 		return {
 			name: "00-postgres-store",
 			up: async (sql) => {
@@ -99,10 +97,10 @@ export class PostgresStore implements Store {
 		};
 	}
 
-	sql: Sql;
+	sql: SqlDependency;
 	options: Required<PostgresStoreOptions>;
-	constructor(sql: Sql, options: PostgresStoreOptions = {}) {
-		this.sql = sql;
+	constructor(sql: unknown, options: PostgresStoreOptions = {}) {
+		this.sql = sql as SqlDependency;
 		this.options = {
 			tableName: options.tableName ?? "cache",
 		};
@@ -154,10 +152,10 @@ export interface RedisStoreOptions {
 
 /** @unstable */
 export class RedisStore implements Store {
-	redis: RedisClientType;
+	redis: RedisDependency;
 	prefix: string;
-	constructor(redis: RedisClientType, options: RedisStoreOptions = {}) {
-		this.redis = redis;
+	constructor(redis: unknown, options: RedisStoreOptions = {}) {
+		this.redis = redis as RedisDependency;
 		this.prefix = options.prefix ?? "";
 	}
 
@@ -171,7 +169,7 @@ export class RedisStore implements Store {
 		value: T,
 		options: StoreSetOptions = {},
 	): Promise<void> {
-		const opts: SetOptions = {};
+		const opts: Record<string, any> = {};
 		if (options.maxAge) opts.PX = options.maxAge;
 		await this.redis.set(this.prefix + key, JSON.stringify(value), opts);
 	}

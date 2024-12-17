@@ -2,6 +2,13 @@
 
 This file documents notable changes to the project
 
+## 0.6.2
+
+**fixes**
+
+- Use `unknown` type when expecting a dependency, its now on the consumer to make sure they pass the correct thing. TypeScript-ing this is too hard.
+- Experimental stores use dependency types too
+
 ## 0.6.1
 
 **new**

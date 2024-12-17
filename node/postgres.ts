@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { SqlDependency } from "../core/types.ts";
 
-import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
+import { loadMigration, Migrator, MigratorOptions } from "../core/migrator.ts";
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
@@ -12,20 +12,21 @@ import {
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: SqlDependency;
+	sql: unknown;
 	directory: URL;
 }
 
 export function getPostgresMigratorOptions(
 	options: PostgresMigratorOptions,
 ): MigratorOptions<SqlDependency> {
+	const sql = options.sql as SqlDependency;
 	return {
 		getRecords() {
-			return getPostgresMigrations(options.sql);
+			return getPostgresMigrations(sql);
 		},
 
 		execute(def, direction) {
-			return executePostgresMigration(def, direction, options.sql);
+			return executePostgresMigration(def, direction, sql);
 		},
 
 		async getDefinitions() {
