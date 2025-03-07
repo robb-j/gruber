@@ -11,16 +11,31 @@ export interface MatchedRoute {
 export interface FetchRouterOptions {
 	routes?: RouteDefinition[];
 	errorHandler?: RouteErrorHandler;
+
+	/** @unstable */
+	log?: boolean | _RouteMiddleware;
+}
+
+/** @unstable */
+export interface _RouteMiddleware {
+	(request: Request, response: Response): void;
+}
+
+function _defaultLogger(request: Request, response: Response) {
+	console.debug(response.status, request.method.padEnd(5), request.url);
 }
 
 /** A rudimentary HTTP router using fetch Request & Responses with RouteDefinitions based on URLPattern */
 export class FetchRouter {
 	routes: RouteDefinition[];
 	errorHandler: RouteErrorHandler | undefined;
+	_middleware: _RouteMiddleware[] = [];
 
 	constructor(options: FetchRouterOptions = {}) {
 		this.routes = options.routes ?? [];
 		this.errorHandler = options.errorHandler ?? undefined;
+		if (options.log === true) this._middleware.push(_defaultLogger);
+		if (typeof options.log === "function") this._middleware.push(options.log);
 	}
 
 	/**
@@ -73,10 +88,12 @@ export class FetchRouter {
 
 	async getResponse(request: Request) {
 		try {
-			return await this.processMatches(
+			const response = await this.processMatches(
 				request,
 				this.findMatchingRoutes(request),
 			);
+			this._middleware.forEach((fn) => fn(request, response));
+			return response;
 		} catch (error) {
 			return this.handleError(request, error);
 		}

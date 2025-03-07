@@ -7,6 +7,7 @@ This file documents notable changes to the project
 **new**
 
 - Add Server-sent events utilities
+- Add experimental `log` option to `FetchRouter`
 
 **fixes**
 
