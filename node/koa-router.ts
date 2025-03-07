@@ -60,3 +60,10 @@ export class KoaRouter {
 		}
 	}
 }
+
+/** @unstable */
+export function koaMiddleware(router: FetchRouter): Middleware {
+	const koa = new KoaRouter();
+	koa.router = router;
+	return koa.middleware();
+}

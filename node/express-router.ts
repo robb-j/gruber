@@ -52,3 +52,10 @@ export class ExpressRouter {
 		applyResponse(response, res);
 	}
 }
+
+/** @unstable */
+export function expressMiddleware(router: FetchRouter): ExpressRequestHandler {
+	const express = new ExpressRouter();
+	express.router = router;
+	return express.middleware();
+}
