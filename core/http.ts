@@ -125,7 +125,13 @@ export class HTTPError extends Error {
 /** @unstable */
 export function getRequestBody(request: Request) {
 	const ct = request.headers.get("Content-Type");
-	if (ct === "application/x-www-form-urlencoded") return request.formData();
+	if (
+		ct?.startsWith("application/x-www-form-urlencoded") ||
+		ct?.startsWith("multipart/form-data")
+	) {
+		return request.formData();
+	}
+
 	return request.json();
 }
 

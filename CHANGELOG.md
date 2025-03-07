@@ -8,6 +8,7 @@ This file documents notable changes to the project
 
 - Fix malformed node HTTP headers when they contain a comma
 - Ignore invalid cookies rather than throw an error
+- `getRequestBody` also checks for `multipart/form-data`
 
 ## 0.6.2
 
