@@ -29,7 +29,11 @@ export function _getRequestBearer(request: Request) {
 }
 
 export function _getRequestCookie(request: Request, cookieName: string) {
-	return _getCookies(request.headers)[cookieName] ?? null;
+	try {
+		return _getCookies(request.headers)[cookieName] ?? null;
+	} catch {
+		return null;
+	}
 }
 
 /**

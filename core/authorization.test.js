@@ -72,6 +72,17 @@ describe("_getRequestCookie", () => {
 			"abcdef",
 		);
 	});
+	it("does not throw", () => {
+		assertEquals(
+			_getRequestCookie(
+				new Request("https://example.com", {
+					headers: { Cookie: "not_;a-cookie" },
+				}),
+				"my_cookie",
+			),
+			null,
+		);
+	});
 });
 
 describe("_expandScopes", () => {

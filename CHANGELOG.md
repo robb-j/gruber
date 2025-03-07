@@ -7,6 +7,7 @@ This file documents notable changes to the project
 **fixes**
 
 - Fix malformed node HTTP headers when they contain a comma
+- Ignore invalid cookies rather than throw an error
 
 ## 0.6.2
 
