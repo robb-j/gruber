@@ -726,7 +726,7 @@ TODO: I'm not happy with this, will need to come back to it.
 
 ## Core library
 
-### http
+### HTTP
 
 #### defineRoute
 
@@ -1144,7 +1144,7 @@ The idea is you might check for `user:books:write` inside a request handler agai
 
 ### Authentication
 
-> UNSTABLE
+> VERY UNSTABLE
 
 Authentication provides a service to help users get authorization to use the application.
 
@@ -1182,6 +1182,56 @@ const { token, headers, redirect } = await authn.finish(login);
 
 These would obviously be spread accross multiple endpoints and you transfer
 the token / code combination to the user in a way that proves they are who they claim to be.
+
+### Server Sent Events
+
+Gruber includes utilities for sending [Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) from regular route definitions.
+
+```ts
+import { defineRoute, ServerSentEventStream, sseHeaders } from "gruber";
+
+const stream = defineRoute({
+	method: "GET",
+	pathname: "/stream",
+	async handler({ request }) {
+		let counter = 0;
+		let timerId = null;
+
+		// Create a stream to pipe data to the response,
+		// it sends an incrementing counter every second
+		const stream = new ReadableStream({
+			start(controller) {
+				timerId = setInterval(() => {
+					counter++;
+					controller.enqueue({ data: JSON.stringify({ counter }) });
+				}, 1_000);
+			},
+			cancel() {
+				if (timerId) clearInterval(timerId);
+			},
+		});
+
+		// Create a response that transforms the stream into an SSE body
+		return new Response(stream.pipeThrough(new ServerSentEventStream()), {
+			headers: {
+				"content-type": "text/event-stream",
+				"cache-control": "no-cache",
+				connection: "keep-alive",
+			},
+		});
+	},
+});
+```
+
+> You might want to use [ReadableStream.from](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/from_static) to create the stream
+
+#### ServerSentEventMessage
+
+`ServerSentEventMessage` is an interface for the payload to be delivered to the client.
+
+#### ServerSentEventStream
+
+`ServerSentEventStream` is a [TransformStream]() that converts `ServerSentEventMessage` into the raw bytes to send to a client.
 
 ### Utilities
 

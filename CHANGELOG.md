@@ -4,6 +4,10 @@ This file documents notable changes to the project
 
 ## next
 
+**new**
+
+- Add Server-sent events utilities
+
 **fixes**
 
 - Fix malformed node HTTP headers when they contain a comma
