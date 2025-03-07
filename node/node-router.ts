@@ -58,8 +58,7 @@ export class NodeRouter {
 
 export function applyResponse(response: Response, res: ServerResponse): void {
 	for (const [key, value] of response.headers) {
-		const values = value.split(",");
-		res.setHeader(key, values.length === 1 ? value : values);
+		res.appendHeader(key, value);
 	}
 
 	res.writeHead(response.status, response.statusText);

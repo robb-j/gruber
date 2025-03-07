@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**fixes**
+
+- Fix malformed node HTTP headers when they contain a comma
+
 ## 0.6.2
 
 **fixes**
