@@ -9,6 +9,7 @@ This file documents notable changes to the project
 - Fix malformed node HTTP headers when they contain a comma
 - Ignore invalid cookies rather than throw an error
 - `getRequestBody` also checks for `multipart/form-data`
+- node: `request.signal` is now triggered if the request is cancelled
 
 ## 0.6.2
 

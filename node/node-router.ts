@@ -69,12 +69,15 @@ export function applyResponse(response: Response, res: ServerResponse): void {
 
 export function getFetchRequest(req: IncomingMessage) {
 	const url = "http://" + (req.headers.host ?? "localhost") + req.url;
+	const ac = new AbortController();
+	req.once("error", (e) => ac.abort(e));
 	return new Request(url, {
 		method: req.method,
 		headers: getFetchHeaders(req.headers),
 		body: getIncomingMessageBody(req),
 		// @ts-ignore
 		duplex: "half",
+		signal: ac.signal,
 	});
 }
 
