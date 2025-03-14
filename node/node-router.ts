@@ -100,9 +100,16 @@ export function getIncomingMessageBody(
 	return Readable.toWeb(req) as ReadableStream;
 }
 
-export function getResponseReadable(response: Response) {
-	// TODO: check this...
-	return Readable.fromWeb(response.body as any);
+export function getResponseReadable(response: Response, res?: ServerResponse) {
+	const ac = new AbortController();
+
+	// Abort controller if the response is aborted (ie the user cancelled streaming)
+	res?.once("close", () => {
+		console.log("@gruber res close");
+		ac.abort();
+	});
+
+	return Readable.fromWeb(response.body as any, { signal: ac.signal });
 }
 
 /** @unstable */

@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**fixes**
+
+- Add optional `res` parameter to `getResponseReadable` to propagate stream cancellations
+
 ## 0.7.0
 
 **new**

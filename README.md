@@ -1520,10 +1520,17 @@ const server = http.createServer((req) => {
 `getResponseReadable` creates a [streams:Readable](https://nodejs.org/api/stream.html#class-streamreadable) from the body of a fetch Response.
 
 ```js
+import http from "node:http";
 import { getResponseReadable } from "gruber/node-router.js";
 
-const readable = getResponseReadable(new Response("some body"));
+const server = http.createServer((req, res) => {
+	const readable = getResponseReadable(new Response("some body"), res);
+});
 ```
+
+Pass in `res` if you want the readable to be cancelled if reading the response is aborted.
+
+> NOTE: This relies on the **experimental** [Readable.fromWeb](https://nodejs.org/api/stream.html#streamreadablefromwebreadablestream-options)
 
 ## Development
 
