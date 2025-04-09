@@ -4,6 +4,12 @@ This file documents notable changes to the project
 
 ## next
 
+**features**
+
+- Add optional `options` parameter to `authz.assert` to check the scope
+- Add experimental `authz.from` method to parse the authenticated user
+- Add experimental `CompositeTokens` to combine multiple TokenServices together
+
 **fixes**
 
 - Add optional `res` parameter to `getResponseReadable` to propagate stream cancellations

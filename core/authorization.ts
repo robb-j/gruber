@@ -61,15 +61,27 @@ export function includesScope(actual: string, expected: string) {
 	return _checkScope(actual, _expandScopes(expected));
 }
 
+export interface AssertOptions {
+	scope?: string;
+}
+
 export interface AssertUserOptions {
 	scope?: string;
 }
 
 // NOTE: should userId be a string for future-proofing / to align to JWTs?
 export interface AssertUserResult {
+	kind: "user";
 	userId: number;
 	scope: string;
 }
+
+export interface AssertServiceResult {
+	kind: "service";
+	scope: string;
+}
+
+export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 
 export interface AbstractAuthorizationService {
 	getAuthorization(request: Request): string | null;
@@ -98,29 +110,49 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		);
 	}
 
-	async assert(request: Request) {
+	_processToken(verified: AuthzToken): AuthorizationResult {
+		return typeof verified.userId === "number"
+			? { kind: "user", userId: verified.userId, scope: verified.scope }
+			: { kind: "service", scope: verified.scope };
+	}
+
+	/** @unstable use at your own risk */
+	async from(request: Request): Promise<AuthorizationResult | null> {
+		const authz = this.getAuthorization(request);
+		if (!authz) return null;
+
+		const verified = await this.tokens.verify(authz);
+		return verified ? this._processToken(verified) : null;
+	}
+
+	async assert(
+		request: Request,
+		options: AssertOptions = {},
+	): Promise<AuthorizationResult> {
 		const authz = this.getAuthorization(request);
 
 		if (!authz) throw HTTPError.unauthorized("no authorization present");
 
 		const verified = await this.tokens.verify(authz);
 		if (!verified) throw HTTPError.unauthorized("no valid authorization");
-		return verified;
+
+		if (options.scope && !includesScope(verified.scope, options.scope)) {
+			throw HTTPError.unauthorized("missing required scope: " + options.scope);
+		}
+
+		return this._processToken(verified);
 	}
 
 	async assertUser(
 		request: Request,
 		options: AssertUserOptions = {},
 	): Promise<AssertUserResult> {
-		const verified = await this.assert(request);
+		const verified = await this.assert(request, {
+			scope: options.scope,
+		});
 
-		const { userId, scope } = verified;
-		if (userId === undefined) throw HTTPError.unauthorized("not a user");
+		if (verified.kind !== "user") throw HTTPError.unauthorized("not a user");
 
-		if (options.scope && !includesScope(scope, options.scope)) {
-			throw HTTPError.unauthorized("missing required scope: " + options.scope);
-		}
-
-		return { userId, scope };
+		return verified;
 	}
 }

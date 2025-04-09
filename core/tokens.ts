@@ -66,3 +66,27 @@ export class JoseTokens implements TokenService {
 		return jwt.sign(this.#secret);
 	}
 }
+
+/**
+ * @unstable
+ * A TokenService with multiple verification methods and a single signer
+ */
+export class CompositeTokens implements TokenService {
+	signer: TokenService;
+	verifiers: TokenService[];
+	constructor(signer: TokenService, verifiers: TokenService[]) {
+		this.signer = signer;
+		this.verifiers = verifiers;
+	}
+
+	async verify(token: string): Promise<AuthzToken | null> {
+		for (const verifier of this.verifiers) {
+			const result = await verifier.verify(token);
+			if (result) return result;
+		}
+		return null;
+	}
+	sign(scope: string, options: SignTokenOptions = {}): Promise<string> {
+		return this.signer.sign(scope, options);
+	}
+}

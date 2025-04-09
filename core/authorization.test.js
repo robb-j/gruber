@@ -153,6 +153,32 @@ describe("AuthorizationService", () => {
 		});
 	});
 
+	describe("from", () => {
+		it("parses users", async () => {
+			const { authz } = setup();
+
+			const request = new Request("https://example.com", {
+				headers: { Authorization: 'Bearer {"scope":"statuses","userId":1}' },
+			});
+			assertEquals(await authz.from(request), {
+				kind: "user",
+				userId: 1,
+				scope: "statuses",
+			});
+		});
+		it("parses services", async () => {
+			const { authz } = setup();
+
+			const request = new Request("https://example.com", {
+				headers: { Authorization: 'Bearer {"scope":"coffee-club"}' },
+			});
+			assertEquals(await authz.from(request), {
+				kind: "service",
+				scope: "coffee-club",
+			});
+		});
+	});
+
 	describe("assert", () => {
 		it("parses bearer", async () => {
 			const { authz } = setup();
@@ -161,6 +187,7 @@ describe("AuthorizationService", () => {
 				headers: { Authorization: 'Bearer {"scope":"user","userId":1}' },
 			});
 			assertEquals(await authz.assert(request), {
+				kind: "user",
 				scope: "user",
 				userId: 1,
 			});
@@ -172,8 +199,20 @@ describe("AuthorizationService", () => {
 				headers: { Cookie: 'testing_session={"scope":"user","userId":1}' },
 			});
 			assertEquals(await authz.assert(request), {
+				kind: "user",
 				scope: "user",
 				userId: 1,
+			});
+		});
+		it("parses services", async () => {
+			const { authz } = setup();
+
+			const request = new Request("https://example.com", {
+				headers: { Authorization: 'Bearer {"scope":"coffee-club"}' },
+			});
+			assertEquals(await authz.assert(request), {
+				kind: "service",
+				scope: "coffee-club",
 			});
 		});
 	});
@@ -185,6 +224,7 @@ describe("AuthorizationService", () => {
 				headers: { Authorization: 'Bearer {"scope":"user","userId":1}' },
 			});
 			assertEquals(await authz.assertUser(request, { scope: "user" }), {
+				kind: "user",
 				userId: 1,
 				scope: "user",
 			});
@@ -195,6 +235,7 @@ describe("AuthorizationService", () => {
 				headers: { Cookie: 'testing_session={"scope":"user","userId":1}' },
 			});
 			assertEquals(await authz.assertUser(request, { scope: "user" }), {
+				kind: "user",
 				userId: 1,
 				scope: "user",
 			});

@@ -1063,16 +1063,16 @@ const redis: RedisClientType;
 const store = new RedisStore(redis, { prefix: "/v2" });
 ```
 
-### JWT
+### Tokens
 
-An abstraction around signing a JWT for a user with an access scope.
+An abstraction around signing or storing a token for a user with an access scope.
 There is currently one implementation using [jose](https://github.com/panva/jose).
 
 ```ts
-import { JoseJwtService } from "gruber";
+import { JoseTokens } from "gruber";
 import * as jose from "jose";
 
-const jwt = new JoseJwtService(
+const jwt = new JoseTokens(
 	{
 		secret: "top_secret",
 		issuer: "myapp.io",
@@ -1089,6 +1089,22 @@ const token = await jwt.sign("user:books:read", {
 
 // { userId, scope } or null
 const parsed = await jwt.verify(token);
+```
+
+There is also `CompositeTokens` which lets you combine multiple verifiers with one signer.
+For example, if your app has several methods a client might authenticate and one way it itself signs things,
+like a user token, or a static service or database app-token.
+
+> UNSTABLE
+
+```ts
+import { CompositeTokens, JoseTokens } from "gruber";
+import * as jose from "jose";
+
+const tokens = new CompositeTokens(new JoseTokens("..."), [
+	new JoseTokens("..."),
+	// Different token formats your app accepts
+]);
 ```
 
 ### Authorization
@@ -1110,19 +1126,27 @@ const token = authz.getAuthorization(
 	}),
 );
 
-// { userId: number | undefined, scope: string }
-const { userId, scope } = await authz.assert(
+// { kind: 'user', userId: number , scope: string } | { kind: 'service', scope: string }
+const result = await authz.from(
 	new Request("https://example.com", {
 		headers: { Authorization: "Bearer some-long-secure-token" },
 	}),
 );
 
-// { userId: number, scope: string }
+// { kind: 'user', userId: number , scope: string } | { kind: 'service', scope: string }
+const { userId, scope } = await authz.assert(
+	new Request("https://example.com", {
+		headers: { Authorization: "Bearer some-long-secure-token" },
+	}),
+	{ scope: "repo:coffee-club" }, // optional
+);
+
+// { kind: 'user', userId: number, scope: string }
 const { userId, scope } = await authz.assertUser(
 	new Request("https://example.com", {
 		headers: { Cookie: "my_session=some-long-secure-token" },
 	}),
-	{ scope: "user:books:read" },
+	{ scope: "user:books:read" }, // optional
 );
 
 includesScope("user:books:read", "user:books:read"); // true
