@@ -85,7 +85,7 @@ export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 
 export interface AbstractAuthorizationService {
 	getAuthorization(request: Request): string | null;
-	assert(request: Request): Promise<AuthzToken>;
+	assert(request: Request, options?: AssertOptions): Promise<AuthzToken>;
 	assertUser(
 		request: Request,
 		options?: AssertUserOptions,

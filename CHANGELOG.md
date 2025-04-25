@@ -2,6 +2,12 @@
 
 This file documents notable changes to the project
 
+## next
+
+**fixes**
+
+- Fix `AbstractAuthorizationService` to include assert's `options` parameter
+
 ## 0.8.0
 
 **features**
