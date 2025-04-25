@@ -1598,6 +1598,7 @@ WIP stuff
    1. `cd bundle/node`
    2. `npm publish`
 4. Copy the deno source to the S3 bucket — `bundle/deno` → `esm.r0b.io/gruber@VERSION/`
+5. Push to GitHub and create a [release](https://github.com/robb-j/gruber/releases/new)
 
 ### nice snippets
 
