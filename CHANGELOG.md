@@ -2,13 +2,15 @@
 
 This file documents notable changes to the project
 
-## next
+## 0.8.0
 
 **features**
 
 - Add optional `options` parameter to `authz.assert` to check the scope
 - Add experimental `authz.from` method to parse the authenticated user
 - Add experimental `CompositeTokens` to combine multiple TokenServices together
+- Add experimental `Cors` utility for addings CORS headers to responses
+- Add experimental `cors` option to `FetchRouter`
 
 **fixes**
 

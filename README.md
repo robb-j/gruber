@@ -867,6 +867,11 @@ Use it to get a `Response` from the provided request, based on the router's rout
 const response = await router.getResponse(new Request("http://localhost"));
 ```
 
+**experimental**
+
+- `options.log` turn on HTTP logging with `true` or a custom
+- `options.cors` apply CORS headers with a [Cors](#cors) instance
+
 #### unstable http
 
 There are some unstable internal methods too:
@@ -876,6 +881,31 @@ There are some unstable internal methods too:
 - `handleError(error, request)` converts a error into a Response and triggers the `errorHandler`
 - `getRequestBody(request)` Get the JSON of FormData body of a request
 - `assertRequestBody(struct, body)` Assert the body matches a structure and return the parsed value
+
+#### Cors
+
+There is an unstable API for applying [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) headers to responses.
+
+```ts
+import { Cors } from "gruber";
+
+const cors = new Cors({
+	credentials: true,
+	origins: ["http://localhost:8080"],
+});
+
+const response = cors.apply(
+	new Request("http://localhsot:8000"),
+	new Response("ok"),
+);
+```
+
+It returns a clone of the response passed to it with CORS headers applied. You should no longer use the response passed into it. The headers it applies are:
+
+- `Access-Control-Allow-Methods` set to `GET, HEAD, PUT, PATCH, POST, DELETE`
+- `Access-Control-Allow-Headers` mirrors what is set on `Access-Control-Request-Headers` and adds that to `Vary`
+- `Access-Control-Allow-Origin` allows the `Origin` if it matches the `origins` parameter
+- `Access-Control-Allow-Credentials` is set to `true` if the `credentials` parameter is
 
 ### Postgres
 

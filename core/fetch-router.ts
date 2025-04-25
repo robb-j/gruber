@@ -1,3 +1,4 @@
+import { Cors } from "./cors.ts";
 import { HTTPError, RouteDefinition } from "./http.ts";
 
 export type RouteErrorHandler = (error: unknown, request: Request) => unknown;
@@ -14,15 +15,19 @@ export interface FetchRouterOptions {
 
 	/** @unstable */
 	log?: boolean | _RouteMiddleware;
+
+	/** @unstable */
+	cors?: Cors;
 }
 
 /** @unstable */
 export interface _RouteMiddleware {
-	(request: Request, response: Response): void;
+	(request: Request, response: Response): Promise<Response> | Response;
 }
 
 function _defaultLogger(request: Request, response: Response) {
 	console.debug(response.status, request.method.padEnd(5), request.url);
+	return response;
 }
 
 /** A rudimentary HTTP router using fetch Request & Responses with RouteDefinitions based on URLPattern */
@@ -36,6 +41,9 @@ export class FetchRouter {
 		this.errorHandler = options.errorHandler ?? undefined;
 		if (options.log === true) this._middleware.push(_defaultLogger);
 		if (typeof options.log === "function") this._middleware.push(options.log);
+		if (options.cors) {
+			this._middleware.push((req, res) => options.cors!.apply(req, res));
+		}
 	}
 
 	/**
@@ -88,11 +96,13 @@ export class FetchRouter {
 
 	async getResponse(request: Request) {
 		try {
-			const response = await this.processMatches(
+			let response = await this.processMatches(
 				request,
 				this.findMatchingRoutes(request),
 			);
-			this._middleware.forEach((fn) => fn(request, response));
+			for (const fn of this._middleware) {
+				response = await fn(request, response);
+			}
 			return response;
 		} catch (error) {
 			return this.handleError(request, error);

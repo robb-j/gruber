@@ -1,4 +1,6 @@
 {
 	"deno.enable": true,
-	"deno.enablePaths": ["./deno", "./examples/deno", "./bundle/deno"]
+	"deno.enablePaths": ["./deno", "./examples/deno", "./bundle/deno"],
+	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.preferences.importModuleSpecifierEnding": "js"
 }
