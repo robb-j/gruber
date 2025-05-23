@@ -84,3 +84,19 @@ export function reconstructTemplateString(
 	}
 	return output;
 }
+
+export class PromiseChain {
+	#promise = Promise.resolve();
+
+	get promise() {
+		return this.#promise;
+	}
+
+	append(fn: () => Promise<void>) {
+		this.#promise = this.#promise.then(() => fn());
+	}
+
+	get then() {
+		return this.#promise.then;
+	}
+}

@@ -1,5 +1,5 @@
-import { formatMarkdownTable } from "./utilities.ts";
-import { Structure, StructError, Infer } from "./structures.ts";
+import { formatMarkdownTable, PromiseChain } from "./utilities.ts";
+import { Structure, StructError, Infer, StructContext } from "./structures.ts";
 
 // NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
 
@@ -214,6 +214,47 @@ export class Configuration {
 		return struct;
 	}
 
+	external<T extends Record<string, unknown>>(
+		path: string | URL,
+		struct: Structure<T>,
+	) {
+		// ...
+
+		return new Structure(struct.schema, (value, context) => {
+			if (context.type !== "async") {
+				throw new Error("config.external must be used async");
+			}
+
+			let result: T = {} as any;
+
+			context.promise.append(async () => {
+				Object.assign(result, await this._loadObject(path, struct, context));
+			});
+
+			return result;
+		});
+	}
+
+	async _loadObject<T>(
+		path: string | URL,
+		structure: Structure<T>,
+		context: StructContext,
+	): Promise<T> {
+		const text = await this.options.readTextFile(path);
+
+		// Catch missing files and create a default configuration
+		if (!text) return structure.process({}, context);
+
+		// Parse the text file
+		const value = this.options.parse(text);
+
+		// Remove the JSON schema field if it is set
+		delete value.$schema;
+
+		// Process the contents
+		return structure.process(value, context);
+	}
+
 	_getValue<T>(options: SpecOptions<T>): ConfigurationResult<T> {
 		const argument = options.flag
 			? this.options.getCommandArgument(options.flag)
@@ -255,23 +296,21 @@ export class Configuration {
 	}
 
 	async load<T>(url: URL | string, spec: Structure<T>): Promise<T> {
-		const file = await this.options.readTextFile(url);
-
-		// Catch missing files and create a default configuration
-		if (!file) {
-			return spec.process({});
-		}
+		const context: StructContext = {
+			type: "async",
+			path: [],
+			promise: new PromiseChain(),
+		};
 
 		// Fail outside the try-catch to surface structure errors
 		try {
-			const value = await this.options.parse(file);
-			delete value.$schema;
-			return spec.process(value);
+			const obj = await this._loadObject(url, spec, context);
+
+			await context.promise;
+
+			return obj;
 		} catch (error) {
 			console.error("Configuration failed to parse");
-			if (error instanceof StructError) {
-				error.message = error.toFriendlyString();
-			}
 			throw error;
 		}
 	}
