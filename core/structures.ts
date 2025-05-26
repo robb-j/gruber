@@ -76,6 +76,7 @@ export class StructError extends Error {
 }
 
 export { StructError as StructureError };
+export { StructError as StructuralError };
 
 export type Schema = Record<string, unknown>;
 

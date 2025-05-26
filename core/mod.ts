@@ -1,6 +1,7 @@
 export * from "./authentication.ts";
 export * from "./authorization.ts";
 export * from "./configuration.ts";
+export * from "./container.ts";
 export * from "./cors.ts";
 export * from "./fetch-router.ts";
 export * from "./http.ts";
