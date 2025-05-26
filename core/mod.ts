@@ -13,4 +13,5 @@ export * from "./structures.ts";
 export * from "./terminator.ts";
 export * from "./timers.ts";
 export * from "./tokens.ts";
+export * from "./types.ts";
 export * from "./utilities.ts";
