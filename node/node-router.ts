@@ -105,7 +105,6 @@ export function getResponseReadable(response: Response, res?: ServerResponse) {
 
 	// Abort controller if the response is aborted (ie the user cancelled streaming)
 	res?.once("close", () => {
-		console.log("@gruber res close");
 		ac.abort();
 	});
 
