@@ -70,6 +70,9 @@ export class Structure<T> {
 			if (typeof input !== "number") {
 				throw new StructuralError("Expected a number", context?.path);
 			}
+			if (Number.isNaN(input)) {
+				throw new StructuralError("Not a number", context?.path);
+			}
 			return input;
 		});
 	}

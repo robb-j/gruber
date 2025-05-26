@@ -161,6 +161,14 @@ describe("Structure", () => {
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
+		it("validates NaN", () => {
+			const struct = Structure.number();
+			const error = assertThrows(
+				() => struct.process(Number.NaN),
+				StructuralError,
+			);
+			assertEquals(error.message, "Not a number");
+		});
 		it("generates JSON schema", () => {
 			const struct = Structure.number(42);
 			assertEquals(struct.schema, { type: "number", default: 42 });
