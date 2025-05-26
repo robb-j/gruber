@@ -1,6 +1,6 @@
 import { describe, it, assertEquals } from "../core/test-deps.js";
 import { getRequestBody, assertRequestBody } from "./request-body.ts";
-import { Structure } from "../core/structures.ts";
+import { Structure } from "../config/mod.ts";
 
 describe("getRequestBody", () => {
 	it("parses FormData", async () => {

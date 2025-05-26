@@ -1,4 +1,4 @@
-import { StructError, Structure } from "../core/mod.ts";
+import { StructuralError, Structure } from "../config/mod.ts";
 import { HTTPError } from "./http-error.ts";
 
 /** @unstable */
@@ -40,7 +40,7 @@ export function assertRequestBody<T>(
 	try {
 		return struct.process(input);
 	} catch (error) {
-		if (error instanceof StructError) {
+		if (error instanceof StructuralError) {
 			throw HTTPError.badRequest(error.toFriendlyString());
 		}
 		throw Error;
