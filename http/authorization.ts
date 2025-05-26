@@ -98,10 +98,12 @@ export interface AuthorizationServiceOptions {
 
 /** @unstable */
 export class AuthorizationService implements AbstractAuthorizationService {
-	constructor(
-		public options: AuthorizationServiceOptions,
-		public tokens: TokenService,
-	) {}
+	options: AuthorizationServiceOptions;
+	tokens: TokenService;
+	constructor(options: AuthorizationServiceOptions, tokens: TokenService) {
+		this.options = options;
+		this.tokens = tokens;
+	}
 
 	getAuthorization(request: Request) {
 		return (
