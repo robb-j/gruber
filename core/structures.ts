@@ -300,4 +300,15 @@ export class Structure<T> {
 			);
 		});
 	}
+
+	static null() {
+		return new Structure({ type: "null" }, (value) => {
+			if (value !== null) throw new Error("value is not null");
+			return value;
+		});
+	}
+
+	static any() {
+		return new Structure<any>({}, (value) => value);
+	}
 }

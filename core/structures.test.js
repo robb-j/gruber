@@ -632,4 +632,38 @@ describe("Structure", () => {
 			assertThrows(exec, StructError);
 		});
 	});
+
+	describe("null", () => {
+		const struct = Structure.null();
+
+		it("allows null", () => {
+			assertEquals(struct.process(null), null);
+		});
+		it("blocks not-null", () => {
+			assertThrows(
+				() => struct.process("a string"),
+				(error) => error instanceof StructError,
+			);
+		});
+	});
+
+	describe("any", () => {
+		const struct = Structure.any();
+
+		it("allows strings", () => {
+			assertEquals(struct.process("a string"), "a string");
+		});
+		it("allows numbers", () => {
+			assertEquals(struct.process(42), 42);
+		});
+		it("allows booleans", () => {
+			assertEquals(struct.process(false), false);
+		});
+		it("allows objects", () => {
+			assertEquals(struct.process({ name: "Geoff" }), { name: "Geoff" });
+		});
+		it("allows arrays", () => {
+			assertEquals(struct.process([1, 2, 3]), [1, 2, 3]);
+		});
+	});
 });
