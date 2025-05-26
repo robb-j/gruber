@@ -136,8 +136,28 @@ export function getRequestBody(request: Request) {
 }
 
 /** @unstable */
-export function assertRequestBody<T>(struct: Structure<T>, input: unknown): T {
-	if (input instanceof FormData) input = Object.fromEntries(input.entries());
+export function assertRequestBody<T>(
+	struct: Structure<T>,
+	input: Request,
+): Promise<T>;
+export function assertRequestBody<T>(struct: Structure<T>, input: unknown): T;
+export function assertRequestBody<T>(
+	struct: Structure<T>,
+	input: any,
+): T | Promise<T> {
+	// If passed a request, return a promise to resolve the body and validate it
+	if (input instanceof Request) {
+		return new Promise((resolve) => {
+			resolve(getRequestBody(input).then((v) => assertRequestBody(struct, v)));
+		});
+	}
+
+	// If passed form data, turn it into an object
+	if (input instanceof FormData) {
+		input = Object.fromEntries(input.entries());
+	}
+
+	// Attempt to validate the input, or throw a useful HTTPError
 	try {
 		return struct.process(input);
 	} catch (error) {
