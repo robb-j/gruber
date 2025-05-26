@@ -21,12 +21,11 @@ function rewrite(glob, exec) {
 async function node() {
 	// Setup directory
 	nuke("bundle/node");
-	mkdir("bundle/node/source");
-	mkdir("bundle/node/core");
 
 	// Copy in source and clear out node_modules
 	cp("node/", "bundle/node/source");
 	cp("core/", "bundle/node/core");
+	cp("http/", "bundle/node/http");
 	nuke("bundle/node/source/node_modules");
 
 	// Setup the bundle's package.json
@@ -39,6 +38,9 @@ async function node() {
 		},
 		"./core/*.js": {
 			import: "./core/*.js",
+		},
+		"./http/*.js": {
+			import: "./http/*.js",
 		},
 		"./*.js": {
 			import: "./source/*.js",
@@ -85,12 +87,11 @@ async function node() {
 async function deno() {
 	// Setup directory
 	nuke("bundle/deno");
-	mkdir("bundle/deno/source");
-	mkdir("bundle/deno/core");
 
 	// Copy in source files
 	cp("deno/", "bundle/deno/source");
 	cp("core/", "bundle/deno/core");
+	cp("http/", "bundle/deno/http");
 
 	// Create the meta file
 	const project = readJson("package.json");

@@ -1,4 +1,4 @@
-import { HTTPError } from "./http.ts";
+import { HTTPError } from "../http/http-error.ts";
 import { RandomService } from "./random.ts";
 import { Store } from "./store.ts";
 import { TokenService } from "./tokens.ts";

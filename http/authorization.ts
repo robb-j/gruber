@@ -1,5 +1,5 @@
-import { HTTPError } from "./http.ts";
-import { AuthzToken, TokenService } from "./tokens.ts";
+import { HTTPError } from "./http-error.ts";
+import { AuthzToken, TokenService } from "../core/tokens.ts";
 
 /**
  * Based on deno std
