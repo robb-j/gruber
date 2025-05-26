@@ -8,5 +8,5 @@
 		"strict": true,
 		"noEmit": true
 	},
-	"include": ["core", "node", "bundle/node", "examples/node", "http"]
+	"include": ["core", "node", "bundle/node", "examples/node", "http", "testing"]
 }
