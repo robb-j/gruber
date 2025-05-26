@@ -27,6 +27,7 @@ async function node() {
 	cp("core/", "bundle/node/core");
 	cp("http/", "bundle/node/http");
 	cp("testing/", "bundle/node/testing");
+	cp("config/", "bundle/node/config");
 	nuke("bundle/node/source/node_modules");
 
 	// Setup the bundle's package.json
@@ -83,6 +84,7 @@ async function deno() {
 	cp("core/", "bundle/deno/core");
 	cp("http/", "bundle/deno/http");
 	cp("testing/", "bundle/deno/testing");
+	cp("config/", "bundle/deno/config");
 
 	// Create the meta file
 	const project = readJson("package.json");
