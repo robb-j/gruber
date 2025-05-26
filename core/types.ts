@@ -1,10 +1,7 @@
 export type MaybePromise<T> = T | Promise<T>;
 
-export type ResolvePromise<T> =
-	T extends Promise<infer U> ? ResolvePromise<U> : T;
-
 export interface SqlDependency {
-	begin<T>(block: (sql: SqlDependency) => T): Promise<ResolvePromise<T>>;
+	begin<T>(block: (sql: SqlDependency) => T): Promise<Awaited<T>>;
 
 	/** Run an SQL query from a template string with auto-escaped arguments */
 	<T = any[]>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>;
