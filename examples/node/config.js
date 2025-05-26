@@ -3,7 +3,7 @@
 // Usage:
 // NODE_ENV=staging node examples/node/config.js --database-url=mysql://database
 
-import { getConfiguration } from "gruber/configuration.js";
+import { getConfiguration, Structure } from "gruber/mod.js";
 
 const config = getConfiguration();
 const pkg = { name: "gruber-app", version: "1.2.3" };
@@ -35,10 +35,22 @@ const struct = config.object({
 			fallback: "postgres://user:secret@localhost:5432/database",
 		}),
 	}),
+
+	auth: config.external(
+		new URL("../auth.json", import.meta.url),
+		config.object({
+			users: Structure.array(Structure.string()),
+		}),
+	),
+
+	apiKeys: config.external(
+		new URL("../keys.json", import.meta.url),
+		Structure.array(Structure.string()),
+	),
 });
 
 const appConfig = await config.load(
-	new URL("./config.json", import.meta.url),
+	new URL("../config.json", import.meta.url),
 	struct,
 );
 

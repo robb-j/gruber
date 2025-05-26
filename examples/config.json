@@ -1,0 +1,6 @@
+{
+	"meta": {
+		"name": "gruber-app"
+	},
+	"apiKeys": ["top_secret"]
+}

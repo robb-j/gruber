@@ -85,18 +85,20 @@ export function reconstructTemplateString(
 	return output;
 }
 
-export class PromiseChain {
-	#promise = Promise.resolve();
+// A dynamic list of promises that are automatically removed when they resolve
+export class PromiseList {
+	#promises: Promise<unknown>[] = [];
 
-	get promise() {
-		return this.#promise;
+	push(fn: () => Promise<void>) {
+		const prom = fn().then(() => {
+			this.#promises = this.#promises.filter((p) => p !== prom);
+		});
+		this.#promises.push(prom);
 	}
 
-	append(fn: () => Promise<void>) {
-		this.#promise = this.#promise.then(() => fn());
-	}
-
-	get then() {
-		return this.#promise.then;
+	async all() {
+		while (this.#promises.length > 0) {
+			await Promise.all(this.#promises);
+		}
 	}
 }

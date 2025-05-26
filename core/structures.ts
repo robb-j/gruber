@@ -4,15 +4,14 @@
 // 	promises?: Promise<unknown>[];
 // }
 
-import { PromiseChain } from "./utilities.ts";
+import { PromiseList } from "./utilities.ts";
 
 export type StructContext =
 	| { type: "sync"; path: string[] }
 	| {
 			type: "async";
 			path: string[];
-			// promises: Promise<unknown>[];
-			promise: PromiseChain;
+			promise: PromiseList;
 	  };
 
 function _nestContext(input: StructContext, key: string): StructContext {

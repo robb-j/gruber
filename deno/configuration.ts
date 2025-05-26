@@ -1,5 +1,5 @@
 import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
-import { parseArgs } from "./deps.ts";
+import { parseArgs, toFileUrl } from "./deps.ts";
 
 export { Configuration };
 
@@ -30,6 +30,9 @@ export function getConfigurationOptions(
 		},
 		parse(data) {
 			return JSON.parse(data);
+		},
+		getWorkingDirectory() {
+			return toFileUrl(Deno.cwd());
 		},
 	};
 }

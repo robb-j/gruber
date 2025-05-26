@@ -1,5 +1,5 @@
-import { formatMarkdownTable, PromiseChain } from "./utilities.ts";
-import { Structure, StructError, Infer, StructContext } from "./structures.ts";
+import { formatMarkdownTable, PromiseList } from "./utilities.ts";
+import { Infer, StructContext, StructError, Structure } from "./structures.ts";
 
 // NOTE: it would be nice to reverse the object/string/url methods around so they return the "spec" value, then the "struct" is stored under a string. This could mean the underlying architecture could change in the future. I'm not sure if that is possible with the structure nesting in play.
 
@@ -119,6 +119,7 @@ export interface ConfigurationOptions {
 	getCommandArgument(key: string): string | undefined;
 	stringify(value: any): string | Promise<string>;
 	parse(value: string): any;
+	getWorkingDirectory(): URL;
 }
 
 export class Configuration {
@@ -214,36 +215,51 @@ export class Configuration {
 		return struct;
 	}
 
-	external<T extends Record<string, unknown>>(
+	external<T extends Record<string, unknown> | Array<unknown>>(
 		path: string | URL,
 		struct: Structure<T>,
 	) {
-		// ...
-
 		return new Structure(struct.schema, (value, context) => {
 			if (context.type !== "async") {
 				throw new Error("config.external must be used async");
 			}
 
-			let result: T = {} as any;
+			// Create a dummy value to return for now
+			let internal: any = struct.schema.type === "array" ? [] : {};
 
-			context.promise.append(async () => {
-				Object.assign(result, await this._loadObject(path, struct, context));
+			// Register a promise to load the actual value
+			context.promise.push(async () => {
+				// Try loading the external value
+				let loaded = await this._loadValue(path, struct, context);
+
+				// If not found, try the inline value
+				if (loaded === null) {
+					loaded = struct.process(value, context);
+				}
+
+				// Apply the value depending if its an array or not
+				// being carful to modifiy the existing reference
+				if (struct.schema.type === "array") {
+					internal.push(...(loaded as any[]));
+				} else {
+					Object.assign(internal, loaded);
+				}
 			});
 
-			return result;
+			return internal;
 		});
 	}
 
-	async _loadObject<T>(
+	async _loadValue<T>(
 		path: string | URL,
 		structure: Structure<T>,
 		context: StructContext,
-	): Promise<T> {
+	): Promise<T | null> {
 		const text = await this.options.readTextFile(path);
 
 		// Catch missing files and create a default configuration
-		if (!text) return structure.process({}, context);
+		// if (!text) return structure.process(defaultValue, context);
+		if (!text) return null;
 
 		// Parse the text file
 		const value = this.options.parse(text);
@@ -299,18 +315,24 @@ export class Configuration {
 		const context: StructContext = {
 			type: "async",
 			path: [],
-			promise: new PromiseChain(),
+			promise: new PromiseList(),
 		};
 
 		// Fail outside the try-catch to surface structure errors
 		try {
-			const obj = await this._loadObject(url, spec, context);
+			let obj: T | null = await this._loadValue(url, spec, context);
+			if (!obj) obj = spec.process({}, context);
 
-			await context.promise;
+			await context.promise.all();
 
 			return obj;
 		} catch (error) {
-			console.error("Configuration failed to parse");
+			if (error instanceof StructError) {
+				console.error(error.toFriendlyString());
+			} else {
+				console.error("Configuration failed to parse");
+			}
+			console.error();
 			throw error;
 		}
 	}

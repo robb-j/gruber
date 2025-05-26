@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import process from "node:process";
 import util from "node:util";
+import { pathToFileURL } from "node:url";
 
 import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
 
@@ -28,6 +29,9 @@ export function getConfigurationOptions(): ConfigurationOptions {
 		},
 		parse(data) {
 			return JSON.parse(data);
+		},
+		getWorkingDirectory() {
+			return pathToFileURL(process.cwd());
 		},
 	};
 }
