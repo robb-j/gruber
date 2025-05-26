@@ -1,6 +1,6 @@
 import { Context, Middleware } from "koa";
 
-import { FetchRouter } from "../core/fetch-router.ts";
+import { FetchRouter } from "../http/fetch-router.ts";
 import {
 	getFetchRequest,
 	getResponseReadable,

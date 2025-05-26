@@ -1,5 +1,5 @@
-import { FetchRouter } from "../core/fetch-router.ts";
-import { RouteDefinition } from "../core/http.ts";
+import { FetchRouter } from "../http/fetch-router.ts";
+import { RouteDefinition } from "../http/define-route.ts";
 
 export interface DenoRouterOptions {
 	routes?: RouteDefinition[];
@@ -8,7 +8,7 @@ export interface DenoRouterOptions {
 export class DenoRouter {
 	router: FetchRouter;
 
-	constructor(options: DenoRouterOptions) {
+	constructor(options: DenoRouterOptions = {}) {
 		this.router = new FetchRouter({
 			routes: options.routes,
 			errorHandler: (error, request) => this.onRouteError(error, request),
@@ -26,4 +26,9 @@ export class DenoRouter {
 	onRouteError(error: unknown, _request: Request) {
 		console.error("Fatal Route Error", error);
 	}
+}
+
+/** @unstable */
+export function serveRouter(router: DenoRouter) {
+	return (request: Request) => router.getResponse(request);
 }

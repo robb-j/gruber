@@ -7,8 +7,8 @@ import {
 	ServerResponse,
 } from "node:http";
 
-import { FetchRouter } from "../core/fetch-router.ts";
-import { RouteDefinition } from "../core/http.ts";
+import { FetchRouter } from "../http/fetch-router.ts";
+import { RouteDefinition } from "../http/define-route.ts";
 import { MaybePromise } from "../core/types.ts";
 
 export interface NodeRouterOptions {

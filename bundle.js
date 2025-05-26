@@ -21,12 +21,13 @@ function rewrite(glob, exec) {
 async function node() {
 	// Setup directory
 	nuke("bundle/node");
-	mkdir("bundle/node/source");
-	mkdir("bundle/node/core");
 
 	// Copy in source and clear out node_modules
 	cp("node/", "bundle/node/source");
 	cp("core/", "bundle/node/core");
+	cp("http/", "bundle/node/http");
+	cp("testing/", "bundle/node/testing");
+	cp("config/", "bundle/node/config");
 	nuke("bundle/node/source/node_modules");
 
 	// Setup the bundle's package.json
@@ -35,30 +36,21 @@ async function node() {
 	pkg.version = project.version;
 	pkg.exports = {
 		".": {
-			import: "./source/mod.js",
-		},
-		"./core/*.js": {
-			import: "./core/*.js",
+			import: "./mod.js",
 		},
 		"./*.js": {
-			import: "./source/*.js",
+			import: "./*.js",
 		},
 	};
 	writeJson("bundle/node/package.json", pkg);
+
+	await addEntrypoints("node", "bundle/node", ".ts", ".js");
 
 	// Setup the bundle's package-lock.json
 	const lock = readJson("node/package-lock.json");
 	lock.version = project.version;
 	lock.packages[""].version = project.version;
 	writeJson("bundle/node/package-lock.json", lock);
-
-	// I think this is (bady) doing what typescript@beta rewriteRelativeImportExtensions does
-	// https://devblogs.microsoft.com/typescript/announcing-typescript-5-7-beta/#path-rewriting-for-relative-paths
-	// rewrite("bundle/node/**/*.ts", (file) =>
-	// 	file.replace(/(import|export) [\s\S]*?".*?\.ts"/g, (str) =>
-	// 		str.replace('.ts"', '.js"'),
-	// 	),
-	// );
 
 	writeJson("bundle/node/tsconfig.json", {
 		include: ["source/**/*", "core/**/*"],
@@ -70,6 +62,7 @@ async function node() {
 			skipLibCheck: true,
 			strict: true,
 			rewriteRelativeImportExtensions: true,
+			erasableSyntaxOnly: true,
 		},
 	});
 	exec("npx tsc", {
@@ -85,12 +78,13 @@ async function node() {
 async function deno() {
 	// Setup directory
 	nuke("bundle/deno");
-	mkdir("bundle/deno/source");
-	mkdir("bundle/deno/core");
 
 	// Copy in source files
 	cp("deno/", "bundle/deno/source");
 	cp("core/", "bundle/deno/core");
+	cp("http/", "bundle/deno/http");
+	cp("testing/", "bundle/deno/testing");
+	cp("config/", "bundle/deno/config");
 
 	// Create the meta file
 	const project = readJson("package.json");
@@ -100,15 +94,30 @@ async function deno() {
 	});
 
 	// Recreate the entry-point scripts (they re-export their target file in source/)
-	const source = list("deno").filter((f) => f.name.endsWith(".ts"));
-	for (const stat of source) {
-		if (!stat.name.endsWith(".ts")) continue;
-		write(`bundle/deno/${stat.name}`, `export * from "./source/${stat.name}"`);
-	}
+	// const source = list("deno").filter((f) => f.name.endsWith(".ts"));
+	// for (const stat of source) {
+	// 	if (!stat.name.endsWith(".ts")) continue;
+	// 	write(`bundle/deno/${stat.name}`, `export * from "./source/${stat.name}"`);
+	// }
+	await addEntrypoints("deno", "bundle/deno", ".ts", ".ts");
 
 	// Copy static files
 	cp("README.md", "bundle/deno/README.md");
 	cp("CHANGELOG.md", "bundle/deno/CHANGELOG.md");
+}
+
+async function addEntrypoints(
+	inputDir,
+	outputDir,
+	inputExtension,
+	outputExtension,
+) {
+	// Recreate the entry-point scripts (they re-export their target file in source/)
+	const source = list(inputDir).filter((f) => f.name.endsWith(inputExtension));
+	for (const stat of source) {
+		const newName = stat.name.replace(inputExtension, outputExtension);
+		write(`${outputDir}/${newName}`, `export * from "./source/${newName}"`);
+	}
 }
 
 async function main() {

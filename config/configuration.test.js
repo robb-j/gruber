@@ -1,9 +1,9 @@
+import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
 import { Configuration } from "./configuration.ts";
-import { Structure } from "./structures.ts";
-import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
+import { Structure } from "./structure.ts";
 
-/** @type {import("./configuration.js").ConfigurationOptions} */
-const bareOptions = {
+/** @type {import("./configuration.ts").ConfigurationOptions} */
+const stubOptions = {
 	readTextFile() {},
 	getEnvironmentVariable(_key) {},
 	getCommandArgument(_key) {},
@@ -25,21 +25,15 @@ describe("Configuration", () => {
 	});
 
 	describe("object", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
-		it("stores the options", () => {
-			const name = new Structure({}, () => {});
-			const result = config.object({ name });
-
-			assertEquals(result[Configuration.spec].options, { name });
-		});
 		it("describes itself", () => {
 			const spec = config.object({
 				fullName: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 				age: config.number({ flag: "--age", fallback: 42 }),
 			});
 
-			const result = spec[Configuration.spec].describe("person");
+			const result = spec[Configuration.spec]("person");
 
 			assertEquals(result, {
 				fallback: { fullName: "Geoff T", age: 42 },
@@ -65,7 +59,7 @@ describe("Configuration", () => {
 				pet: Structure.string(),
 			});
 
-			const result = spec[Configuration.spec].describe("person");
+			const result = spec[Configuration.spec]("person");
 
 			assertEquals(result, {
 				fallback: { fullName: "Geoff T" },
@@ -82,20 +76,14 @@ describe("Configuration", () => {
 	});
 
 	describe("array", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
-		it("stores the options", () => {
-			const name = new Structure({}, () => {});
-			const result = config.array(name);
-
-			assertEquals(result[Configuration.spec].options, name);
-		});
 		it("describes literals", () => {
 			const spec = config.array(
 				config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 			);
 
-			const result = spec[Configuration.spec].describe("names");
+			const result = spec[Configuration.spec]("names");
 
 			assertEquals(result, {
 				fallback: [],
@@ -117,7 +105,7 @@ describe("Configuration", () => {
 				}),
 			);
 
-			const result = spec[Configuration.spec].describe("people");
+			const result = spec[Configuration.spec]("people");
 
 			assertEquals(result, {
 				fallback: [],
@@ -140,7 +128,7 @@ describe("Configuration", () => {
 		it("ignores non-specified", () => {
 			const spec = config.array(new Structure({}, () => {}));
 
-			const result = spec[Configuration.spec].describe("names");
+			const result = spec[Configuration.spec]("names");
 
 			assertEquals(result, {
 				fallback: [],
@@ -150,7 +138,7 @@ describe("Configuration", () => {
 	});
 
 	describe("string", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
 			assertThrows(() => config.string({}), TypeError);
@@ -160,26 +148,13 @@ describe("Configuration", () => {
 			const result = struct.process(undefined);
 			assertEquals(result, "Geoff Testington");
 		});
-		it("stores the options", () => {
-			const result = config.string({
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: "value",
-			});
-			assertEquals(result[Configuration.spec].type, "string");
-			assertEquals(result[Configuration.spec].options, {
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: "value",
-			});
-		});
 		it("describes itself", () => {
 			const spec = config.string({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: "value",
 			});
-			const result = spec[Configuration.spec].describe("fullName");
+			const result = spec[Configuration.spec]("fullName");
 			assertEquals(result, {
 				fallback: "value",
 				fields: [
@@ -196,7 +171,7 @@ describe("Configuration", () => {
 	});
 
 	describe("number", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
 			assertThrows(() => config.number({}), TypeError);
@@ -206,23 +181,10 @@ describe("Configuration", () => {
 			const result = struct.process(undefined);
 			assertEquals(result, 42);
 		});
-		it("stores the options", () => {
-			const result = config.number({
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: 42,
-			});
-			assertEquals(result[Configuration.spec].type, "number");
-			assertEquals(result[Configuration.spec].options, {
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: 42,
-			});
-		});
 		it("parses strings", () => {
 			const vars = { SOME_VAR: "12.34" };
 			const config = new Configuration({
-				...bareOptions,
+				...stubOptions,
 				getEnvironmentVariable: (key) => vars[key],
 			});
 
@@ -233,10 +195,30 @@ describe("Configuration", () => {
 
 			assertEquals(result.process(undefined), 12.34);
 		});
+		it("describes itself", () => {
+			const spec = config.number({
+				variable: "SOME_VAR",
+				flag: "--some-flag",
+				fallback: 12.34,
+			});
+			const result = spec[Configuration.spec]("age");
+			assertEquals(result, {
+				fallback: 12.34,
+				fields: [
+					{
+						name: "age",
+						type: "number",
+						variable: "SOME_VAR",
+						flag: "--some-flag",
+						fallback: "12.34",
+					},
+				],
+			});
+		});
 	});
 
 	describe("boolean", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
 			assertThrows(() => config.boolean({}), TypeError);
@@ -246,23 +228,10 @@ describe("Configuration", () => {
 			const result = struct.process(undefined);
 			assertEquals(result, false);
 		});
-		it("stores the options", () => {
-			const result = config.boolean({
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: false,
-			});
-			assertEquals(result[Configuration.spec].type, "boolean");
-			assertEquals(result[Configuration.spec].options, {
-				variable: "SOME_VAR",
-				flag: "--some-flag",
-				fallback: false,
-			});
-		});
 		it("parses strings", () => {
 			const vars = { SOME_VAR: "true" };
 			const config = new Configuration({
-				...bareOptions,
+				...stubOptions,
 				getEnvironmentVariable: (key) => vars[key],
 			});
 
@@ -273,10 +242,30 @@ describe("Configuration", () => {
 
 			assertEquals(result.process(undefined), true);
 		});
+		it("describes itself", () => {
+			const spec = config.boolean({
+				variable: "SOME_VAR",
+				flag: "--some-flag",
+				fallback: false,
+			});
+			const result = spec[Configuration.spec]("hasPets");
+			assertEquals(result, {
+				fallback: false,
+				fields: [
+					{
+						name: "hasPets",
+						type: "boolean",
+						variable: "SOME_VAR",
+						flag: "--some-flag",
+						fallback: "false",
+					},
+				],
+			});
+		});
 	});
 
 	describe("url", () => {
-		const config = new Configuration(bareOptions);
+		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
 			assertThrows(() => config.url({}), TypeError);
@@ -291,115 +280,29 @@ describe("Configuration", () => {
 			const result = struct.process(undefined);
 			assertEquals(result, new URL("https://fallback.example.com"));
 		});
-		it("stores the options", () => {
-			const result = config.url({
+		it("describes itself", () => {
+			const spec = config.url({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: "https://example.com",
 			});
-			assertEquals(result[Configuration.spec].type, "url");
-			assertEquals(result[Configuration.spec].options, {
-				variable: "SOME_VAR",
-				flag: "--some-flag",
+			const result = spec[Configuration.spec]("hasPets");
+			assertEquals(result, {
 				fallback: new URL("https://example.com"),
+				fields: [
+					{
+						name: "hasPets",
+						type: "url",
+						variable: "SOME_VAR",
+						flag: "--some-flag",
+						fallback: "https://example.com/",
+					},
+				],
 			});
 		});
 	});
 
-	describe("_getValue", () => {
-		it("uses arguments", () => {
-			const args = { "--option": "value-from-arg" };
-			const config = new Configuration({
-				...bareOptions,
-				getCommandArgument: (key) => args[key],
-			});
-			const result = config._getValue({
-				flag: "--option",
-			});
-			assertEquals(result, {
-				source: "argument",
-				value: "value-from-arg",
-			});
-		});
-		it("uses environment variables", () => {
-			const env = { MY_VAR: "value-from-env" };
-			const config = new Configuration({
-				...bareOptions,
-				getEnvironmentVariable: (key) => env[key],
-			});
-			const result = config._getValue({
-				variable: "MY_VAR",
-			});
-			assertEquals(result, {
-				source: "variable",
-				value: "value-from-env",
-			});
-		});
-		it("uses the fallback", () => {
-			const config = new Configuration(bareOptions);
-			const result = config._getValue({ fallback: "value-from-fallback" });
-			assertEquals(result, {
-				source: "fallback",
-				value: "value-from-fallback",
-			});
-		});
-	});
-
-	describe("_parseFloat", () => {
-		it("parses strings", () => {
-			const config = new Configuration(bareOptions);
-			assertEquals(
-				config._parseFloat({ source: "argument", value: "12.34" }),
-				12.34,
-				"should parse the float from the result",
-			);
-		});
-		it("passes numbers through", () => {
-			const config = new Configuration(bareOptions);
-			assertEquals(
-				config._parseFloat({ source: "fallback", value: 98.76 }),
-				98.76,
-				"should preserve number literals",
-			);
-		});
-	});
-
-	describe("_parseBoolean", () => {
-		it("parses strings", () => {
-			const config = new Configuration(bareOptions);
-			assertEquals(
-				config._parseBoolean({ source: "argument", value: "1" }),
-				true,
-			);
-			assertEquals(
-				config._parseBoolean({ source: "argument", value: "true" }),
-				true,
-			);
-			assertEquals(
-				config._parseBoolean({ source: "argument", value: "0" }),
-				false,
-			);
-			assertEquals(
-				config._parseBoolean({ source: "argument", value: "false" }),
-				false,
-			);
-		});
-		it("passes booleans through", () => {
-			const config = new Configuration(bareOptions);
-			assertEquals(
-				config._parseBoolean({ source: "fallback", value: true }),
-				true,
-				"should preserve boolean literals",
-			);
-		});
-		it("allows empty-string for arguments", () => {
-			const config = new Configuration(bareOptions);
-			assertEquals(
-				config._parseBoolean({ source: "argument", value: "" }),
-				true,
-			);
-		});
-	});
+	describe("_getValue", () => {});
 
 	describe("load", () => {
 		const files = {
@@ -409,7 +312,7 @@ describe("Configuration", () => {
 		};
 
 		const config = new Configuration({
-			...bareOptions,
+			...stubOptions,
 			readTextFile: (url) => files[url],
 			parse: (v) => JSON.parse(v),
 		});
@@ -447,7 +350,7 @@ describe("Configuration", () => {
 
 	describe("describe", () => {
 		it("processes strings", () => {
-			const config = new Configuration(bareOptions);
+			const config = new Configuration(stubOptions);
 			const result = config.describe(
 				config.string({
 					fallback: "test-app",
@@ -469,7 +372,7 @@ describe("Configuration", () => {
 		});
 
 		it("processes urls", () => {
-			const config = new Configuration(bareOptions);
+			const config = new Configuration(stubOptions);
 			const result = config.describe(
 				config.url({
 					fallback: "https://example.com/",
@@ -491,7 +394,7 @@ describe("Configuration", () => {
 		});
 
 		it("processes objects", () => {
-			const config = new Configuration(bareOptions);
+			const config = new Configuration(stubOptions);
 			const result = config.describe(
 				config.object({
 					name: config.string({

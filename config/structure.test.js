@@ -1,132 +1,11 @@
-import { StructError, Structure } from "./structures.ts";
 import {
 	assertEquals,
+	assertInstanceOf,
 	assertThrows,
 	describe,
 	it,
-	assertInstanceOf,
-} from "./test-deps.js";
-
-describe("StructError", () => {
-	describe("constructor", () => {
-		it("stores values", () => {
-			const err = new StructError("error message", "some.path");
-			assertEquals(err.path, "some.path");
-			assertEquals(err.message, "error message");
-			assertEquals(err.name, "StructError");
-		});
-		it("stores children", () => {
-			const child = new StructError("child message", "path");
-			const parent = new StructError("parent message", "path", [child]);
-			assertEquals(parent.children, [child]);
-		});
-	});
-
-	describe("chain", () => {
-		it("returns StructErrors", () => {
-			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain(
-				new StructError("error message", ["another", "path"]),
-				ctx,
-			);
-			assertEquals(
-				result,
-				new StructError("error message", ["another", "path"]),
-				"returns the StructError without modifying the path",
-			);
-		});
-		it("wraps Errors", () => {
-			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain(new Error("error message"), ctx);
-			assertEquals(
-				result,
-				new StructError("error message", ["some", "path"]),
-				"creates a StructError and sets the path from the context",
-			);
-		});
-		it("wraps non-Errors", () => {
-			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain("unknown", ctx);
-			assertEquals(
-				result,
-				new StructError("Unknown error", ["some", "path"]),
-				"creates a generic StructError",
-			);
-		});
-	});
-
-	describe("getOneLiner", () => {
-		it("formats the error", () => {
-			const error = new StructError("error message", ["some", "path"]);
-			assertEquals(error.getOneLiner(), "some.path — error message");
-		});
-	});
-
-	describe("[Symbol.iterator]", () => {
-		it("yields children", () => {
-			const error = new StructError(
-				"error message",
-				["some", "path"],
-				[
-					new StructError("child a"),
-					new StructError("child b"),
-					new StructError("child c"),
-				],
-			);
-			assertEquals(
-				Array.from(error, (i) => i.message),
-				["child a", "child b", "child c"],
-				"should yield each child",
-			);
-		});
-		it("yields nested children", () => {
-			const error = new StructError(
-				"parent a",
-				["some"],
-				[
-					new StructError(
-						"parent b",
-						["path"],
-						[
-							new StructError("child a"),
-							new StructError("child b"),
-							new StructError("child c"),
-						],
-					),
-				],
-			);
-			assertEquals(
-				Array.from(error, (i) => i.message),
-				["child a", "child b", "child c"],
-				"should yield all nested children which have no children of their own",
-			);
-		});
-	});
-
-	describe("toFriendlyString", () => {
-		it("formats a message", () => {
-			const error = new StructError(
-				"parent message",
-				["some", "path"],
-				[
-					new StructError("child a", ["some", "path", "a"]),
-					new StructError("child b", ["some", "path", "b"]),
-					new StructError("child c", ["some", "path", "c"]),
-				],
-			);
-
-			assertEquals(
-				error.toFriendlyString(),
-				[
-					"parent message",
-					"  some.path.a — child a",
-					"  some.path.b — child b",
-					"  some.path.c — child c",
-				].join("\n"),
-			);
-		});
-	});
-});
+} from "../core/test-deps.js";
+import { StructuralError, Structure } from "./mod.ts";
 
 describe("Structure", () => {
 	describe("constructor", () => {
@@ -150,21 +29,21 @@ describe("Structure", () => {
 		});
 		it("passes context through", () => {
 			const struct = new Structure({}, (_value, context) => context);
-			const result = struct.process(42, { path: "/some/path" });
+			const result = struct.process(42, { path: ["some", "path"] });
 			assertEquals(
 				result,
-				{ path: "/some/path" },
+				{ path: ["some", "path"] },
 				"should pass through the context",
 			);
 		});
-		it("wraps errors in StructError", () => {
+		it("wraps errors in StructuralError", () => {
 			const struct = new Structure({}, () => {
 				throw new Error("input error");
 			});
-			const exec = () => struct.process(42, { path: "/some/path" });
-			const error = assertThrows(exec, StructError);
+			const exec = () => struct.process(42, { path: ["some", "path"] });
+			const error = assertThrows(exec, StructuralError);
 			assertEquals(error.message, "input error");
-			assertEquals(error.path, "/some/path");
+			assertEquals(error.path, ["some", "path"]);
 		});
 	});
 
@@ -210,7 +89,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(error.message, "Expected a string");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -220,7 +99,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -266,7 +145,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process("a string", { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Expected a number");
@@ -277,7 +156,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -314,12 +193,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process("a string", { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(
 				error,
-				new StructError("Expected a boolean", ["some", "path"]),
-				"should throw a StructError and capture the context",
+				new StructuralError("Expected a boolean", ["some", "path"]),
+				"should throw a StructuralError and capture the context",
 			);
 		});
 		it("generates JSON schema", () => {
@@ -365,7 +244,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Not a string or URL");
@@ -376,7 +255,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -400,7 +279,7 @@ describe("Structure", () => {
 		it("catches URL errors", () => {
 			const struct = Structure.url("https://example.com");
 			const exec = () => struct.process("not a url");
-			assertThrows(exec, StructError);
+			assertThrows(exec, StructuralError);
 		});
 	});
 
@@ -433,7 +312,7 @@ describe("Structure", () => {
 			});
 			const error = assertThrows(
 				() => struct.process("not an object", { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Expected an object");
@@ -452,7 +331,7 @@ describe("Structure", () => {
 			});
 			const error = assertThrows(
 				() => struct.process({ key: 42 }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Object does not match schema");
@@ -471,7 +350,7 @@ describe("Structure", () => {
 						{ key: "value", something: "else" },
 						{ path: ["some", "path"] },
 					),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Object does not match schema");
@@ -493,7 +372,7 @@ describe("Structure", () => {
 			}
 			const error = assertThrows(
 				() => struct.process(new Injector(), { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Should not have a prototype");
@@ -520,7 +399,7 @@ describe("Structure", () => {
 			const struct = Structure.array(Structure.string());
 			const error = assertThrows(
 				() => struct.process("not an object", { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Expected an array");
@@ -535,7 +414,7 @@ describe("Structure", () => {
 			const struct = Structure.array(Structure.string());
 			const error = assertThrows(
 				() => struct.process(["a", 2, "c"]),
-				StructError,
+				StructuralError,
 			);
 
 			assertEquals(error.message, "Array item does not match schema");
@@ -560,12 +439,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(69, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(
 				error,
-				new StructError("Expected number literal: 42", ["some", "path"]),
-				"should throw a StructError and capture the context",
+				new StructuralError("Expected number literal: 42", ["some", "path"]),
+				"should throw a StructuralError and capture the context",
 			);
 		});
 		it("throws for different types", () => {
@@ -573,12 +452,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process("nice", { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(
 				error,
-				new StructError("Expected number literal: 42", ["some", "path"]),
-				"should throw a StructError and capture the context",
+				new StructuralError("Expected number literal: 42", ["some", "path"]),
+				"should throw a StructuralError and capture the context",
 			);
 		});
 		it("throws for missing values", () => {
@@ -586,12 +465,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructError,
+				StructuralError,
 			);
 			assertEquals(
 				error,
-				new StructError("Missing value", ["some", "path"]),
-				"should throw a StructError and capture the context",
+				new StructuralError("Missing value", ["some", "path"]),
+				"should throw a StructuralError and capture the context",
 			);
 		});
 	});
@@ -629,7 +508,7 @@ describe("Structure", () => {
 		it("fails when no matches", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
 			const exec = () => struct.process(true);
-			assertThrows(exec, StructError);
+			assertThrows(exec, StructuralError);
 		});
 	});
 
@@ -642,7 +521,7 @@ describe("Structure", () => {
 		it("blocks not-null", () => {
 			assertThrows(
 				() => struct.process("a string"),
-				(error) => error instanceof StructError,
+				(error) => error instanceof StructuralError,
 			);
 		});
 	});

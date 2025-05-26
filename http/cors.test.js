@@ -1,5 +1,5 @@
 import { Cors } from "./cors.ts";
-import { assertEquals, assertMatch, describe, it } from "./test-deps.js";
+import { assertEquals, assertMatch, describe, it } from "../core/test-deps.js";
 
 describe("Cors", () => {
 	describe("constructor", () => {

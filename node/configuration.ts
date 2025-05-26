@@ -2,7 +2,7 @@ import fs from "node:fs";
 import process from "node:process";
 import util from "node:util";
 
-import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
+import { Configuration, ConfigurationOptions } from "../config/mod.ts";
 
 export function getConfigurationOptions(): ConfigurationOptions {
 	const args = util.parseArgs({
