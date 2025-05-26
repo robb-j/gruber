@@ -13,8 +13,7 @@ export interface ConfigurationSpecification {
 export function getSpecification(
 	value: any,
 ): ConfigurationSpecification | undefined {
-	return typeof value[Configuration.spec] === "object" &&
-		typeof value[Configuration.spec] === "function"
+	return typeof value[Configuration.spec] === "function"
 		? value[Configuration.spec]
 		: undefined;
 }

@@ -9,21 +9,13 @@ import {
 	PrimativeOptions,
 	primativeSpec,
 } from "./specifications.ts";
-
-export type ConfigurationResult<T> =
-	| { source: "argument"; value: string | T }
-	| { source: "variable"; value: string | T }
-	// | { source: "current"; value: T }
-	| { source: "fallback"; value: T };
-
-const _booleans: Record<string, boolean | undefined> = {
-	1: true,
-	true: true,
-	yes: true,
-	0: false,
-	false: false,
-	no: false,
-};
+import {
+	_parseBoolean,
+	_parseFloat,
+	_parsePrimative,
+	_parseURL,
+	ConfigurationResult,
+} from "./parsers.ts";
 
 export interface ConfigurationOptions {
 	readTextFile(url: URL | string): Promise<string | null>;
@@ -71,70 +63,23 @@ export class Configuration {
 		return struct;
 	}
 
-	_getValue<T>(options: PrimativeOptions<T>): ConfigurationResult<T> {
-		const argument = options.flag
-			? this.options.getCommandArgument(options.flag)
-			: null;
-		if (argument) return { source: "argument", value: argument };
-
-		const variable = options.variable
-			? this.options.getEnvironmentVariable(options.variable)
-			: null;
-		if (variable) return { source: "variable", value: variable };
-
-		// if (typeof current !== undefined) {
-		// 	return { source: "current", value: current };
-		// }
-
-		return { source: "fallback", value: options.fallback };
-	}
-
+	/** Wrap a primativ Structure with configuration logic */
 	_primative<T>(
 		struct: Structure<T>,
 		options: PrimativeOptions<T>,
-		deconfigure: (result: ConfigurationResult<T>) => T,
+		deconfigure: (result: ConfigurationResult) => unknown,
 	) {
 		return new Structure<T>(struct.schema, (value, context) => {
-			const configured = this._getValue(options);
-
 			return struct.process(
-				configured.source === "argument" || configured.source === "variable"
-					? deconfigure(configured)
-					: (value ?? options.fallback),
+				deconfigure(_parsePrimative<T>(this.options, options, value)),
 				context,
 			);
 		});
 	}
 
-	_parseFloat(value: ConfigurationResult<number>): number {
-		if (typeof value === "string") {
-			const parsed = Number.parseFloat(value);
-			if (Number.isNaN(parsed)) {
-				throw TypeError(`Invalid number: ${value}`);
-			}
-			return parsed;
-		}
-		if (typeof value === "number") {
-			return value;
-		}
-		throw new TypeError("Unknown float result");
-	}
-
-	_parseBoolean(result: ConfigurationResult<boolean>): boolean {
-		if (typeof result.value === "boolean") return result.value;
-
-		if (typeof _booleans[result.value] === "boolean") {
-			return _booleans[result.value]!;
-		}
-		if (result.source === "argument" && result.value === "") {
-			return true;
-		}
-		throw new TypeError("Unknown boolean result");
-	}
-
 	string(options: PrimativeOptions<string>): Structure<string> {
-		if (typeof options?.fallback !== "string") {
-			throw new SyntaxError("options.fallback must be a string");
+		if (typeof options.fallback !== "string") {
+			throw new TypeError("options.fallback must be a string");
 		}
 
 		const struct = this._primative(
@@ -152,11 +97,11 @@ export class Configuration {
 
 	number(options: PrimativeOptions<number>): Structure<number> {
 		if (typeof options.fallback !== "number") {
-			throw new SyntaxError("options.fallback must be a number");
+			throw new TypeError("options.fallback must be a number");
 		}
 
 		const struct = this._primative(Structure.number(), options, (result) =>
-			this._parseFloat(result),
+			_parseFloat(result),
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
@@ -168,15 +113,36 @@ export class Configuration {
 
 	boolean(options: PrimativeOptions<boolean>): Structure<boolean> {
 		if (typeof options?.fallback !== "boolean") {
-			throw new SyntaxError("options.fallback must be a boolean");
+			throw new TypeError("options.fallback must be a boolean");
 		}
 
 		const struct = this._primative(Structure.boolean(), options, (result) =>
-			this._parseBoolean(result),
+			_parseBoolean(result),
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
 			value: primativeSpec("boolean", options),
+		});
+
+		return struct;
+	}
+
+	url(options: PrimativeOptions<string | URL>): Structure<URL> {
+		if (
+			typeof options.fallback !== "string" &&
+			!(options.fallback instanceof URL)
+		) {
+			throw new TypeError("options.fallback must be a string or URL");
+		}
+
+		const opts2 = { ...options, fallback: new URL(options.fallback) };
+
+		const struct = this._primative<URL>(Structure.url(), opts2, (result) =>
+			_parseURL(result),
+		);
+
+		Object.defineProperty(struct, Configuration.spec, {
+			value: primativeSpec("url", opts2),
 		});
 
 		return struct;
