@@ -101,4 +101,8 @@ export class PromiseList {
 			await Promise.all(this.#promises);
 		}
 	}
+
+	get length() {
+		return this.#promises.length;
+	}
 }

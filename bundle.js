@@ -13,11 +13,6 @@ const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
 
-/** @param {(file: string) => string} exec */
-function rewrite(glob, exec) {
-	for (const path of fs.globSync(glob)) write(path, exec(read(path)));
-}
-
 async function node() {
 	// Setup directory
 	nuke("bundle/node");

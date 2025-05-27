@@ -1,5 +1,7 @@
 import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
+import { PromiseList } from "../core/utilities.ts";
 import { Configuration } from "./configuration.ts";
+import { StructuralError } from "./structural-error.ts";
 import { Structure } from "./structure.ts";
 
 /** @type {import("./configuration.ts").ConfigurationOptions} */
@@ -24,9 +26,114 @@ describe("Configuration", () => {
 		});
 	});
 
-	describe("_loadValue", () => {}); // TODO:
+	describe("_loadValue", () => {
+		const files = {
+			"config.json": '{"name":"Geoff Testington","age":42}',
+			"config2.json":
+				'{"name":"Geoff Testington","age":42, "$schema":"https://example.com"}',
+		};
+		it("reads and validates a file", async () => {
+			const config = new Configuration({
+				...stubOptions,
+				readTextFile: (url) => files[url],
+				parse: (v) => JSON.parse(v),
+			});
 
-	describe("_primative", () => {}); // TODO:
+			const result = await config._loadValue(
+				"config.json",
+				Structure.object({
+					name: Structure.string(),
+					age: Structure.number(),
+				}),
+				{ type: "sync", path: [] },
+			);
+
+			assertEquals(result, {
+				name: "Geoff Testington",
+				age: 42,
+			});
+		});
+		it("returns null for missing files", async () => {
+			const config = new Configuration({
+				...stubOptions,
+				readTextFile: (url) => files[url],
+				parse: (v) => JSON.parse(v),
+			});
+
+			const result = await config._loadValue(
+				"missing.json",
+				Structure.object({ name: Structure.string() }),
+				{ type: "sync", path: [] },
+			);
+
+			assertEquals(result, null);
+		});
+		it("clears $schema", async () => {
+			const config = new Configuration({
+				...stubOptions,
+				readTextFile: (url) => files[url],
+				parse: (v) => JSON.parse(v),
+			});
+
+			const result = await config._loadValue(
+				"config.json",
+				Structure.object({
+					name: Structure.string(),
+					age: Structure.number(),
+				}),
+				{ type: "sync", path: [] },
+			);
+
+			assertEquals(result.$schema, undefined);
+		});
+	});
+
+	describe("_primative", () => {
+		const env = {
+			USER: "geoff",
+		};
+		const args = {
+			"--port": "42",
+		};
+		const config = new Configuration({
+			...stubOptions,
+			getEnvironmentVariable: (key) => env[key],
+			getCommandArgument: (key) => args[key],
+		});
+
+		it("uses env vars", () => {
+			const struct = config._primative(
+				Structure.string(),
+				{ variable: "USER" },
+				(result) => result.value,
+			);
+			assertEquals(struct.process(), "geoff");
+		});
+		it("uses args", () => {
+			const struct = config._primative(
+				Structure.number(),
+				{ flag: "--port" },
+				(result) => parseInt(result.value),
+			);
+			assertEquals(struct.process(), 42);
+		});
+		it("uses fallbacks", () => {
+			const struct = config._primative(
+				Structure.string(),
+				{ fallback: "Geoff Testington" },
+				(result) => result.value,
+			);
+			assertEquals(struct.process(), "Geoff Testington");
+		});
+		it("passes through the value", () => {
+			const struct = config._primative(
+				Structure.string(),
+				{ fallback: "Geoff Testington" },
+				(result) => result.value,
+			);
+			assertEquals(struct.process("Colin Robinson"), "Colin Robinson");
+		});
+	});
 
 	describe("object", () => {
 		const config = new Configuration(stubOptions);
@@ -141,7 +248,92 @@ describe("Configuration", () => {
 		});
 	});
 
-	describe("external", () => {}); // TODO:
+	describe("external", () => {
+		const files = {
+			"object.json": '{"name":"Geoff Testington","age":42}',
+			"array.json": '["first", "second", "third"]',
+		};
+		const config = new Configuration({
+			...stubOptions,
+			readTextFile: (path) => files[path],
+			parse: (v) => JSON.parse(v),
+		});
+		it("loads queues a promise", async () => {
+			const struct = config.external(
+				"object.json",
+				Structure.object({ name: Structure.string(), age: Structure.number() }),
+			);
+			const context = {
+				type: "async",
+				path: [],
+				promises: new PromiseList(),
+			};
+			struct.process(undefined, context);
+
+			assertEquals(context.promises.length, 1);
+		});
+		it("loads and parses objects", async () => {
+			const struct = config.external(
+				"object.json",
+				Structure.object({ name: Structure.string(), age: Structure.number() }),
+			);
+			const context = {
+				type: "async",
+				path: [],
+				promises: new PromiseList(),
+			};
+			const result = struct.process(undefined, context);
+
+			assertEquals(result, {});
+
+			await context.promises.all();
+
+			assertEquals(result, { name: "Geoff Testington", age: 42 });
+		});
+		it("loads and parses arrays", async () => {
+			const struct = config.external(
+				"array.json",
+				Structure.array(Structure.string()),
+			);
+			const context = {
+				type: "async",
+				path: [],
+				promises: new PromiseList(),
+			};
+			const result = struct.process(undefined, context);
+
+			assertEquals(result, []);
+
+			await context.promises.all();
+
+			assertEquals(result, ["first", "second", "third"]);
+		});
+		it("fails when sync", () => {
+			const struct = config.external(
+				"object.json",
+				Structure.object({ name: Structure.string() }),
+			);
+			const exec = () => struct.process(undefined, { type: "sync", path: [] });
+
+			assertThrows(exec, StructuralError);
+		});
+		it("passes through when missing", async () => {
+			const struct = config.external(
+				"missing.json",
+				Structure.object({ name: Structure.string() }),
+			);
+			const context = {
+				type: "async",
+				path: [],
+				promises: new PromiseList(),
+			};
+			const result = struct.process({ name: "Colin Robinson" }, context);
+
+			await context.promises.all();
+
+			assertEquals(result, { name: "Colin Robinson" });
+		});
+	});
 
 	describe("string", () => {
 		const config = new Configuration(stubOptions);

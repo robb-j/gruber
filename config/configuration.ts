@@ -111,7 +111,7 @@ export class Configuration {
 	) {
 		return new Structure(struct.schema, (value, context) => {
 			if (context.type !== "async") {
-				throw new Error("config.external must be used async");
+				throw new SyntaxError("config.external must be used async");
 			}
 
 			// Create a dummy value to return for now
