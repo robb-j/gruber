@@ -1,0 +1,20 @@
+---
+layout: html.njk
+---
+
+<main>
+	<cover-layout minHeight="80vh" centered=".homeHero">
+		<div class="homeHero">
+			<center-layout intrinsic>
+				<h1>🌇 Gruber</h1>
+				<p>Standards-based JavaScript server library & patterns</p>
+			</center-layout>
+		</div>
+	</cover-layout>
+
+	<center-layout>
+		<div class="flow">
+			{{ content | safe }}
+		</div>
+	</center-layout>
+</main>

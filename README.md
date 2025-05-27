@@ -1,3 +1,8 @@
+---
+permalink: /index.html
+layout: home.njk
+---
+
 # Gruber
 
 An isomorphic JavaScript library for creating web apps.
