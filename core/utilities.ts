@@ -84,3 +84,21 @@ export function reconstructTemplateString(
 	}
 	return output;
 }
+
+// A dynamic list of promises that are automatically removed when they resolve
+export class PromiseList {
+	#promises: Promise<unknown>[] = [];
+
+	push(fn: () => Promise<void>) {
+		const prom = fn().then(() => {
+			this.#promises = this.#promises.filter((p) => p !== prom);
+		});
+		this.#promises.push(prom);
+	}
+
+	async all() {
+		while (this.#promises.length > 0) {
+			await Promise.all(this.#promises);
+		}
+	}
+}

@@ -24,6 +24,10 @@ describe("Configuration", () => {
 		});
 	});
 
+	describe("_loadValue", () => {}); // TODO:
+
+	describe("_primative", () => {}); // TODO:
+
 	describe("object", () => {
 		const config = new Configuration(stubOptions);
 
@@ -136,6 +140,8 @@ describe("Configuration", () => {
 			});
 		});
 	});
+
+	describe("external", () => {}); // TODO:
 
 	describe("string", () => {
 		const config = new Configuration(stubOptions);
@@ -317,7 +323,7 @@ describe("Configuration", () => {
 			parse: (v) => JSON.parse(v),
 		});
 
-		const spec = config.object({
+		const struct = config.object({
 			env: config.string({ fallback: "development" }),
 			meta: config.object({
 				version: config.string({ fallback: "0.0.0" }),
@@ -326,7 +332,7 @@ describe("Configuration", () => {
 		});
 
 		it("loads config", async () => {
-			const result = await config.load("config.json", spec);
+			const result = await config.load("config.json", struct);
 			assertEquals(result, {
 				env: "production",
 				meta: { version: "1.2.3" },
@@ -335,7 +341,7 @@ describe("Configuration", () => {
 		});
 
 		it("uses the fallback", async () => {
-			const result = await config.load("missing-config.json", spec);
+			const result = await config.load("missing-config.json", struct);
 			assertEquals(result, {
 				env: "development",
 				meta: { version: "0.0.0" },
@@ -344,7 +350,30 @@ describe("Configuration", () => {
 		});
 
 		it("ignores $schema", async () => {
-			await config.load("config2.json", spec);
+			await config.load("config2.json", struct);
+		});
+
+		it("awaits promises", async () => {
+			const asyncStruct = new Structure({}, (value, context) => {
+				if (context.type !== "async") throw new Error("not async");
+
+				let result = { awaited: false };
+				context.promises.push(async () => {
+					await new Promise((r) => setTimeout(r, 0));
+					result.awaited = true;
+				});
+				return result;
+			});
+
+			const struct = Structure.object({
+				field: asyncStruct,
+			});
+
+			const result = await config.load("config2.json", struct);
+
+			assertEquals(result, {
+				field: { awaited: true },
+			});
 		});
 	});
 

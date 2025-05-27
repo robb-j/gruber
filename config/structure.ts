@@ -1,9 +1,13 @@
-import { DEFAULT_CONTEXT, StructContext } from "./struct-context.ts";
+import {
+	_nestContext,
+	DEFAULT_CONTEXT,
+	StructContext,
+} from "./struct-context.ts";
 import { StructuralError } from "./structural-error.ts";
 
 export type Schema = Record<string, unknown>;
 
-export type StructExec<T> = (input?: unknown, context?: StructContext) => T;
+export type StructExec<T> = (input: unknown, context: StructContext) => T;
 
 export type Infer<T> = T extends Structure<infer U> ? U : never;
 
@@ -25,7 +29,10 @@ export class Structure<T> {
 		this._process = process;
 	}
 
-	process(input: unknown, context: StructContext = DEFAULT_CONTEXT) {
+	process(
+		input: unknown = undefined,
+		context: StructContext = DEFAULT_CONTEXT,
+	) {
 		try {
 			return this._process(input, context);
 		} catch (error) {
@@ -33,18 +40,23 @@ export class Structure<T> {
 		}
 	}
 
-	getSchema(): Schema {
+	getFullSchema(): Schema {
 		return {
 			$schema: "https://json-schema.org/draft/2020-12/schema",
 			...this.schema,
 		};
 	}
 
+	/** @deprecated use {@link getFullSchema} */
+	getSchema(): Schema {
+		return this.getFullSchema();
+	}
+
 	static string(fallback?: string | undefined): Structure<string> {
 		const schema: Schema = { type: "string" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure(schema, (input = fallback, context = undefined) => {
+		return new Structure(schema, (input = fallback, context) => {
 			if (input === undefined) {
 				throw new StructuralError("Missing value", context?.path);
 			}
@@ -59,7 +71,7 @@ export class Structure<T> {
 		const schema: Schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure(schema, (input = fallback, context = undefined) => {
+		return new Structure(schema, (input = fallback, context) => {
 			if (input === undefined) {
 				throw new StructuralError("Missing value", context?.path);
 			}
@@ -98,7 +110,7 @@ export class Structure<T> {
 
 		// ~ make sure the fallback is valid ~
 		const url = fallback ? new URL(fallback) : undefined;
-		return new Structure(schema, (input = url, context = undefined) => {
+		return new Structure(schema, (input = url, context) => {
 			if (input === undefined) {
 				throw new StructuralError("Missing value", context?.path);
 			}
@@ -122,7 +134,7 @@ export class Structure<T> {
 		for (const [key, struct] of Object.entries(fields)) {
 			schema.properties[key] = struct.schema;
 		}
-		return new Structure(schema, (input: any = {}, context = undefined) => {
+		return new Structure(schema, (input: any = {}, context) => {
 			const path = context?.path ?? [];
 			if (input && typeof input !== "object") {
 				throw new StructuralError("Expected an object", path);
@@ -133,11 +145,11 @@ export class Structure<T> {
 			const output: any = {};
 			const errors = [];
 			for (const key in fields) {
-				const ctx = { path: [...path, key] };
+				const childContext = _nestContext(context, key);
 				try {
-					output[key] = fields[key].process(input[key], ctx);
+					output[key] = fields[key].process(input[key], childContext);
 				} catch (error) {
-					errors.push(StructuralError.chain(error, ctx.path));
+					errors.push(StructuralError.chain(error, childContext.path));
 				}
 			}
 
@@ -162,7 +174,7 @@ export class Structure<T> {
 			items: struct.schema,
 			default: [],
 		};
-		return new Structure(schema, (input = [], context = undefined) => {
+		return new Structure(schema, (input = [], context) => {
 			const path = context?.path ?? [];
 			if (!Array.isArray(input)) {
 				throw new StructuralError("Expected an array", path);
@@ -170,11 +182,11 @@ export class Structure<T> {
 			const output = [];
 			const errors = [];
 			for (let i = 0; i < input.length; i++) {
-				const ctx = { path: [...path, `${i}`] };
+				const childContext = _nestContext(context, i.toString());
 				try {
-					output.push(struct.process(input[i], ctx));
+					output.push(struct.process(input[i], childContext));
 				} catch (error) {
-					errors.push(StructuralError.chain(error, ctx.path));
+					errors.push(StructuralError.chain(error, childContext.path));
 				}
 			}
 			if (errors.length > 0) {
@@ -191,7 +203,7 @@ export class Structure<T> {
 	static literal<T extends string | number | boolean>(value: T): Structure<T> {
 		const schema = { type: typeof value, const: value };
 
-		return new Structure(schema, (input, context = undefined) => {
+		return new Structure(schema, (input, context) => {
 			if (input === undefined) {
 				throw new StructuralError("Missing value", context?.path);
 			}
@@ -211,7 +223,7 @@ export class Structure<T> {
 		const schema = {
 			oneOf: types.map((s) => s.schema),
 		};
-		return new Structure(schema, (value, context = undefined) => {
+		return new Structure(schema, (value, context) => {
 			for (const type of types) {
 				try {
 					return type.process(value) as Infer<T[number]>;

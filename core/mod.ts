@@ -1,4 +1,5 @@
 export * from "./authentication.ts";
+export * from "./configuration.ts";
 export * from "./container.ts";
 export * from "./migrator.ts";
 export * from "./postgres.ts";

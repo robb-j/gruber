@@ -1,6 +1,6 @@
 import { Structure, Infer } from "./structure.ts";
 import { StructuralError } from "./structural-error.ts";
-import { formatMarkdownTable } from "../core/mod.ts";
+import { formatMarkdownTable, PromiseList } from "../core/mod.ts";
 import {
 	arraySpec,
 	ConfigurationDescription,
@@ -16,6 +16,7 @@ import {
 	_parseURL,
 	ConfigurationResult,
 } from "./parsers.ts";
+import { StructContext } from "./struct-context.ts";
 
 export interface ConfigurationOptions {
 	readTextFile(url: URL | string): Promise<string | null>;
@@ -33,6 +34,47 @@ export class Configuration {
 	constructor(options: ConfigurationOptions) {
 		this.options = options;
 	}
+
+	//
+	// Utilities
+	//
+	async _loadValue<T>(
+		path: string | URL,
+		structure: Structure<T>,
+		context: StructContext,
+	): Promise<T | null> {
+		const text = await this.options.readTextFile(path);
+
+		// Catch missing files and return null instead, the consumer can decide what to do
+		if (!text) return null;
+
+		// Parse the text file
+		const value = this.options.parse(text);
+
+		// Remove the JSON schema field if it is set
+		delete value.$schema;
+
+		// Process the contents
+		return structure.process(value, context);
+	}
+
+	/** Wrap a primativ Structure with configuration logic */
+	_primative<T>(
+		struct: Structure<T>,
+		options: PrimativeOptions<T>,
+		deconfigure: (result: ConfigurationResult) => unknown,
+	) {
+		return new Structure<T>(struct.schema, (value, context) => {
+			return struct.process(
+				deconfigure(_parsePrimative<T>(this.options, options, value)),
+				context,
+			);
+		});
+	}
+
+	//
+	// Types
+	//
 
 	object<T extends Record<string, Structure<unknown>>>(
 		options: T,
@@ -63,17 +105,38 @@ export class Configuration {
 		return struct;
 	}
 
-	/** Wrap a primativ Structure with configuration logic */
-	_primative<T>(
+	external<T extends Record<string, unknown> | Array<unknown>>(
+		path: string | URL,
 		struct: Structure<T>,
-		options: PrimativeOptions<T>,
-		deconfigure: (result: ConfigurationResult) => unknown,
 	) {
-		return new Structure<T>(struct.schema, (value, context) => {
-			return struct.process(
-				deconfigure(_parsePrimative<T>(this.options, options, value)),
-				context,
-			);
+		return new Structure(struct.schema, (value, context) => {
+			if (context.type !== "async") {
+				throw new Error("config.external must be used async");
+			}
+
+			// Create a dummy value to return for now
+			let internal: any = struct.schema.type === "array" ? [] : {};
+
+			// Register a promise to load the actual value
+			context.promises.push(async () => {
+				// Try loading the external value
+				let loaded = await this._loadValue(path, struct, context);
+
+				// If not found, try the inline value
+				if (loaded === null) {
+					loaded = struct.process(value, context);
+				}
+
+				// Apply the value depending if its an array or not
+				// being carful to modifiy the existing reference
+				if (struct.schema.type === "array") {
+					internal.push(...(loaded as any[]));
+				} else {
+					Object.assign(internal, loaded);
+				}
+			});
+
+			return internal;
 		});
 	}
 
@@ -148,23 +211,30 @@ export class Configuration {
 		return struct;
 	}
 
-	async load<T>(url: URL | string, struct: Structure<T>): Promise<T> {
-		const file = await this.options.readTextFile(url);
+	//
+	// Methods
+	//
 
-		// Catch missing files and create a default configuration
-		if (!file) {
-			return struct.process({});
-		}
+	async load<T>(url: URL | string, struct: Structure<T>): Promise<T> {
+		const context: StructContext = {
+			type: "async",
+			path: [],
+			promises: new PromiseList(),
+		};
 
 		// Fail outside the try-catch to surface structure errors
 		try {
-			const value = await this.options.parse(file);
-			delete value.$schema;
-			return struct.process(value);
+			let obj: T | null = await this._loadValue(url, struct, context);
+			if (!obj) obj = struct.process({}, context);
+
+			await context.promises.all();
+
+			return obj;
 		} catch (error) {
-			console.error("Configuration failed to parse");
 			if (error instanceof StructuralError) {
-				error.message = error.toFriendlyString();
+				console.error(error.toFriendlyString());
+			} else {
+				console.error("Configuration failed to parse");
 			}
 			throw error;
 		}

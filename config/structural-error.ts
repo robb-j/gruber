@@ -27,6 +27,7 @@ export class StructuralError extends Error {
 
 		let chained;
 		if (error instanceof StructuralError) {
+			// If a StructError is thrown, trust it
 			return error;
 		} else if (error instanceof Error) {
 			chained = new StructuralError(error.message, path);
@@ -64,8 +65,8 @@ export class StructuralError extends Error {
 	}
 }
 
-/** @deprecated use `StructuralError` */
+/** @deprecated use {@link StructuralError} */
 export const StructError = StructuralError;
 
-/** @deprecated use `StructuralError` */
+/** @deprecated use {@link StructuralError} */
 export const StructureError = StructuralError;
