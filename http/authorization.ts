@@ -85,11 +85,15 @@ export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 
 export interface AbstractAuthorizationService {
 	getAuthorization(request: Request): string | null;
-	assert(request: Request, options?: AssertOptions): Promise<AuthzToken>;
+	assert(
+		request: Request,
+		options?: AssertOptions,
+	): Promise<AuthorizationResult>;
 	assertUser(
 		request: Request,
 		options?: AssertUserOptions,
 	): Promise<AssertUserResult>;
+	from(request: Request): Promise<AuthorizationResult | null>;
 }
 
 export interface AuthorizationServiceOptions {
@@ -118,7 +122,6 @@ export class AuthorizationService implements AbstractAuthorizationService {
 			: { kind: "service", scope: verified.scope };
 	}
 
-	/** @unstable use at your own risk */
 	async from(request: Request): Promise<AuthorizationResult | null> {
 		const authz = this.getAuthorization(request);
 		if (!authz) return null;
