@@ -1,3 +1,8 @@
+---
+permalink: /changelog/
+layout: simple.njk
+---
+
 # Change log
 
 This file documents notable changes to the project

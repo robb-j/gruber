@@ -115,9 +115,14 @@ async function addEntrypoints(
 	}
 }
 
+async function website() {
+	// TODO: alembic doesn't support different output directories yet
+	// --output=bundle/website
+	exec("npx @11ty/eleventy");
+}
+
 async function main() {
-	await node();
-	await deno();
+	await Promise.all([node(), deno(), website()]);
 }
 
 main();
