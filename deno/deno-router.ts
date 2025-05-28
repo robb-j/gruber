@@ -2,7 +2,7 @@ import { FetchRouter } from "../http/fetch-router.ts";
 import { RouteDefinition } from "../http/define-route.ts";
 
 export interface DenoRouterOptions {
-	routes?: RouteDefinition[];
+	routes?: RouteDefinition<any, any>[];
 }
 
 export class DenoRouter {

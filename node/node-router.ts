@@ -14,11 +14,11 @@ import { RouteDefinition } from "../http/define-route.ts";
 import { MaybePromise } from "../core/types.ts";
 
 export interface NodeRouterOptions {
-	routes?: RouteDefinition[];
+	routes?: RouteDefinition<any, any>[];
 }
 
 /**
-	A HTTP router for Node.js, powered by Koa
+	A HTTP router for pure Node.js
 
 	```js
 	import http from "node:http";

@@ -40,27 +40,30 @@ export interface RouteContext {
 	url: URL;
 }
 
-export interface RouteHandler<T> {
-	(context: RouteContext & T): RouteResult;
+export interface RouteHandler<T extends string, U> {
+	(context: RouteContext & RouteParams<T> & U): RouteResult;
 }
 
 export interface RouteOptions<T extends string, U extends Dependencies> {
 	method: HTTPMethod;
 	pathname: T;
-	handler: RouteHandler<RouteParams<T> & UnwrapDependencies<U>>;
+	handler: RouteHandler<T, UnwrapDependencies<U>>;
 	dependencies?: U;
 }
 
-export interface RouteDefinition<T = {}, U extends Dependencies = {}> {
+export interface RouteDefinition<
+	T extends string = string,
+	U extends Dependencies = {},
+> {
 	method: HTTPMethod;
 	pattern: URLPattern;
-	handler: RouteHandler<T>;
+	handler: RouteHandler<T, UnwrapDependencies<U>>;
 	dependencies: Container<U>;
 }
 
 export function defineRoute<T extends string, U extends Dependencies = {}>(
 	options: RouteOptions<T, U>,
-): RouteDefinition<RouteParams<T> & UnwrapDependencies<U>, U> {
+): RouteDefinition<T, U> {
 	return {
 		method: options.method,
 		pattern: new URLPattern({ pathname: options.pathname }),

@@ -20,7 +20,7 @@ export interface RouteMatch {
 export type RouteErrorHandler = (error: unknown, request: Request) => unknown;
 
 export interface FetchRouterOptions {
-	routes?: RouteDefinition[];
+	routes?: RouteDefinition<any, any>[];
 	errorHandler?: RouteErrorHandler;
 
 	/** @unstable */
