@@ -274,10 +274,10 @@ export class Structure<T> {
 
 		return new Structure(schema, (input: any = {}, context) => {
 			if (input && typeof input !== "object") {
-				throw new StructuralError("Expected an object", context.path);
+				throw new Error("Expected an object");
 			}
 			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
-				throw new StructuralError("Should not have a prototype", context.path);
+				throw new Error("Should not have a prototype");
 			}
 
 			// validate properties, if they are set
@@ -310,6 +310,20 @@ export class Structure<T> {
 				);
 			}
 			return output as Partial<InferObject<T>>;
+		});
+	}
+
+	static date(): Structure<Date> {
+		return new Structure({ type: "string", format: "date-time" }, (value) => {
+			if (value instanceof Date) return value;
+			if (typeof value === "string") {
+				const date = new Date(value);
+				if (Number.isNaN(date.getTime())) {
+					throw new Error("invalid string date");
+				}
+				return date;
+			}
+			throw new Error("not a Date");
 		});
 	}
 }

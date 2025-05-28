@@ -616,4 +616,29 @@ describe("Structure", () => {
 			});
 		});
 	});
+
+	describe("date", () => {
+		it("allows dates", () => {
+			const struct = Structure.date();
+			assertEquals(
+				struct.process(new Date("2025-05-04 12:34:56")),
+				new Date("2025-05-04 12:34:56"),
+			);
+		});
+		it("parses strings", () => {
+			const struct = Structure.date();
+			assertEquals(
+				struct.process("2025-05-04 12:34:56"),
+				new Date("2025-05-04 12:34:56"),
+			);
+		});
+		// https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00#rfc.section.7.3.1
+		it("sets schema", () => {
+			const struct = Structure.date();
+			assertEquals(struct.schema, {
+				type: "string",
+				format: "date-time",
+			});
+		});
+	});
 });
