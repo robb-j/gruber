@@ -39,7 +39,7 @@ async function node() {
 	};
 	writeJson("bundle/node/package.json", pkg);
 
-	await addEntrypoints("node", "bundle/node", ".ts", ".js");
+	await addEntrypoints("node", "bundle/node", ".ts", ".ts");
 
 	// Setup the bundle's package-lock.json
 	const lock = readJson("node/package-lock.json");
@@ -48,7 +48,7 @@ async function node() {
 	writeJson("bundle/node/package-lock.json", lock);
 
 	writeJson("bundle/node/tsconfig.json", {
-		include: ["source/**/*", "core/**/*"],
+		include: ["*.ts", "**/*.ts"],
 		compilerOptions: {
 			target: "ESNext",
 			module: "NodeNext",

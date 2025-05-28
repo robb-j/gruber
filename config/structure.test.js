@@ -312,6 +312,7 @@ describe("Structure", () => {
 				},
 				default: {},
 				additionalProperties: false,
+				required: ["key"],
 			});
 		});
 		it("throws for non-objects", () => {
@@ -385,6 +386,12 @@ describe("Structure", () => {
 
 			assertEquals(error.message, "Should not have a prototype");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
+		});
+		it("ignores undefined", () => {
+			const struct = Structure.object({
+				field: new Structure({}, () => undefined),
+			});
+			assertEquals(Object.keys(struct.process({})), []);
 		});
 	});
 
@@ -551,6 +558,62 @@ describe("Structure", () => {
 		});
 		it("allows arrays", () => {
 			assertEquals(struct.process([1, 2, 3]), [1, 2, 3]);
+		});
+	});
+
+	describe("partial", () => {
+		it("allows all values", () => {
+			const struct = Structure.partial({
+				name: Structure.string(),
+				age: Structure.number(),
+			});
+
+			assertEquals(struct.process({ name: "Geoff Testington", age: 42 }), {
+				name: "Geoff Testington",
+				age: 42,
+			});
+		});
+		it("allows some values", () => {
+			const struct = Structure.partial({
+				name: Structure.string(),
+				age: Structure.number(),
+			});
+
+			assertEquals(struct.process({ name: "Geoff Testington" }), {
+				name: "Geoff Testington",
+			});
+		});
+		it("allows no values", () => {
+			const struct = Structure.partial({
+				name: Structure.string(),
+				age: Structure.number(),
+			});
+
+			assertEquals(struct.process({}), {});
+		});
+		it("defaults", () => {
+			const struct = Structure.partial({
+				name: Structure.string(),
+				age: Structure.number(),
+			});
+
+			assertEquals(struct.process(), {});
+		});
+		it("sets schema", () => {
+			const struct = Structure.partial({
+				name: Structure.string(),
+				age: Structure.number(),
+			});
+
+			assertEquals(struct.schema, {
+				type: "object",
+				properties: {
+					name: { type: "string" },
+					age: { type: "number" },
+				},
+				default: {},
+				additionalProperties: false,
+			});
 		});
 	});
 });

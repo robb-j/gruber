@@ -130,17 +130,17 @@ export class Structure<T> {
 			properties: {} as Record<string, unknown>,
 			default: {},
 			additionalProperties: false,
+			required: Object.keys(fields),
 		};
 		for (const [key, struct] of Object.entries(fields)) {
 			schema.properties[key] = struct.schema;
 		}
 		return new Structure(schema, (input: any = {}, context) => {
-			const path = context?.path ?? [];
 			if (input && typeof input !== "object") {
-				throw new StructuralError("Expected an object", path);
+				throw new StructuralError("Expected an object", context.path);
 			}
 			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
-				throw new StructuralError("Should not have a prototype", path);
+				throw new StructuralError("Should not have a prototype", context.path);
 			}
 			const output: any = {};
 			const errors = [];
@@ -148,6 +148,7 @@ export class Structure<T> {
 				const childContext = _nestContext(context, key);
 				try {
 					output[key] = fields[key].process(input[key], childContext);
+					if (output[key] === undefined) delete output[key];
 				} catch (error) {
 					errors.push(StructuralError.chain(error, childContext.path));
 				}
@@ -155,12 +156,19 @@ export class Structure<T> {
 
 			for (const key of _additionalProperties(fields, input)) {
 				errors.push(
-					new StructuralError("Additional field not allowed", [...path, key]),
+					new StructuralError(
+						"Additional field not allowed",
+						_nestContext(context, key).path,
+					),
 				);
 			}
 
 			if (errors.length > 0) {
-				throw new StructuralError("Object does not match schema", path, errors);
+				throw new StructuralError(
+					"Object does not match schema",
+					context.path,
+					errors,
+				);
 			}
 			return output as InferObject<T>;
 		});
@@ -247,5 +255,61 @@ export class Structure<T> {
 
 	static any() {
 		return new Structure<any>({}, (value) => value);
+	}
+
+	static partial<T extends Record<string, Structure<unknown>>>(
+		fields: T,
+	): Structure<Partial<InferObject<T>>> {
+		const schema = {
+			type: "object",
+			properties: {} as Record<string, unknown>,
+			default: {},
+			additionalProperties: false,
+		};
+
+		// Set child schemas
+		for (const [key, struct] of Object.entries(fields)) {
+			schema.properties[key] = struct.schema;
+		}
+
+		return new Structure(schema, (input: any = {}, context) => {
+			if (input && typeof input !== "object") {
+				throw new StructuralError("Expected an object", context.path);
+			}
+			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
+				throw new StructuralError("Should not have a prototype", context.path);
+			}
+
+			// validate properties, if they are set
+			const output: any = {};
+			const errors = [];
+			for (const key in fields) {
+				if (input[key] === undefined) continue;
+				const childContext = _nestContext(context, key);
+				try {
+					output[key] = fields[key].process(input[key], childContext);
+				} catch (error) {
+					errors.push(StructuralError.chain(error, childContext));
+				}
+			}
+
+			for (const key of _additionalProperties(fields, input)) {
+				errors.push(
+					new StructuralError(
+						"Additional field not allowed",
+						_nestContext(context, key).path,
+					),
+				);
+			}
+
+			if (errors.length > 0) {
+				throw new StructuralError(
+					"Object does not match schema",
+					context.path,
+					errors,
+				);
+			}
+			return output as Partial<InferObject<T>>;
+		});
 	}
 }
