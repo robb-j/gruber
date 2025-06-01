@@ -70,7 +70,7 @@ export class _StructError extends Error {
 
 	getStandardSchemaIssues(): StandardSchemaV1.Issue[] {
 		let issues: StandardSchemaV1.Issue[] = [
-			{ message: this.getOneLiner(), path: this.path },
+			{ message: this.message, path: this.path },
 		];
 		for (const child of this.children) {
 			issues = issues.concat(child.getStandardSchemaIssues());

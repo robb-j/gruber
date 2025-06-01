@@ -245,15 +245,16 @@ export class Structure<T> {
 		};
 		return new Structure(schema, (value, context) => {
 			const errors = [];
-			for (const type of types) {
+			for (const key in types) {
 				try {
-					return type.process(value, context) as Infer<T[number]>;
+					const childContext = _nestContext(context, `[${key}]`);
+					return types[key].process(value, childContext) as Infer<T[number]>;
 				} catch (error) {
 					errors.push(Structure.Error.chain(error, context));
 				}
 			}
 			throw new Structure.Error(
-				"does not match any type in the union",
+				"Does not match any types in the union",
 				context?.path,
 				errors,
 			);
