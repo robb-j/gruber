@@ -1,70 +1,70 @@
 import { assertEquals, describe, it } from "../core/test-deps.js";
-import { StructuralError } from "./mod.ts";
+import { _StructError as StructError } from "./mod.ts";
 
-describe("StructuralError", () => {
+describe("StructError", () => {
 	describe("constructor", () => {
 		it("stores values", () => {
-			const err = new StructuralError("error message", "some.path");
+			const err = new StructError("error message", "some.path");
 			assertEquals(err.path, "some.path");
 			assertEquals(err.message, "error message");
-			assertEquals(err.name, "StructuralError");
+			assertEquals(err.name, "Structure.Error");
 		});
 		it("stores children", () => {
-			const child = new StructuralError("child message", "path");
-			const parent = new StructuralError("parent message", "path", [child]);
+			const child = new StructError("child message", "path");
+			const parent = new StructError("parent message", "path", [child]);
 			assertEquals(parent.children, [child]);
 		});
 	});
 
 	describe("chain", () => {
-		it("returns StructuralErrors", () => {
+		it("returns StructErrors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructuralError.chain(
-				new StructuralError("error message", ["another", "path"]),
+			const result = StructError.chain(
+				new StructError("error message", ["another", "path"]),
 				ctx,
 			);
 			assertEquals(
 				result,
-				new StructuralError("error message", ["another", "path"]),
-				"returns the StructuralError without modifying the path",
+				new StructError("error message", ["another", "path"]),
+				"returns the StructError without modifying the path",
 			);
 		});
 		it("wraps Errors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructuralError.chain(new Error("error message"), ctx);
+			const result = StructError.chain(new Error("error message"), ctx);
 			assertEquals(
 				result,
-				new StructuralError("error message", ["some", "path"]),
-				"creates a StructuralError and sets the path from the context",
+				new StructError("error message", ["some", "path"]),
+				"creates a StructError and sets the path from the context",
 			);
 		});
 		it("wraps non-Errors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructuralError.chain("unknown", ctx);
+			const result = StructError.chain("unknown", ctx);
 			assertEquals(
 				result,
-				new StructuralError("Unknown error", ["some", "path"]),
-				"creates a generic StructuralError",
+				new StructError("Unknown error", ["some", "path"]),
+				"creates a generic StructError",
 			);
 		});
 	});
 
 	describe("getOneLiner", () => {
 		it("formats the error", () => {
-			const error = new StructuralError("error message", ["some", "path"]);
+			const error = new StructError("error message", ["some", "path"]);
 			assertEquals(error.getOneLiner(), "some.path — error message");
 		});
 	});
 
 	describe("[Symbol.iterator]", () => {
 		it("yields children", () => {
-			const error = new StructuralError(
+			const error = new StructError(
 				"error message",
 				["some", "path"],
 				[
-					new StructuralError("child a"),
-					new StructuralError("child b"),
-					new StructuralError("child c"),
+					new StructError("child a"),
+					new StructError("child b"),
+					new StructError("child c"),
 				],
 			);
 			assertEquals(
@@ -74,17 +74,17 @@ describe("StructuralError", () => {
 			);
 		});
 		it("yields nested children", () => {
-			const error = new StructuralError(
+			const error = new StructError(
 				"parent a",
 				["some"],
 				[
-					new StructuralError(
+					new StructError(
 						"parent b",
 						["path"],
 						[
-							new StructuralError("child a"),
-							new StructuralError("child b"),
-							new StructuralError("child c"),
+							new StructError("child a"),
+							new StructError("child b"),
+							new StructError("child c"),
 						],
 					),
 				],
@@ -99,13 +99,13 @@ describe("StructuralError", () => {
 
 	describe("toFriendlyString", () => {
 		it("formats a message", () => {
-			const error = new StructuralError(
+			const error = new StructError(
 				"parent message",
 				["some", "path"],
 				[
-					new StructuralError("child a", ["some", "path", "a"]),
-					new StructuralError("child b", ["some", "path", "b"]),
-					new StructuralError("child c", ["some", "path", "c"]),
+					new StructError("child a", ["some", "path", "a"]),
+					new StructError("child b", ["some", "path", "b"]),
+					new StructError("child c", ["some", "path", "c"]),
 				],
 			);
 

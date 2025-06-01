@@ -1,5 +1,4 @@
 import { Structure, Infer } from "./structure.ts";
-import { StructuralError } from "./structural-error.ts";
 import { formatMarkdownTable, PromiseList } from "../core/mod.ts";
 import {
 	arraySpec,
@@ -108,7 +107,7 @@ export class Configuration {
 	external<T extends Record<string, unknown> | Array<unknown>>(
 		path: string | URL,
 		struct: Structure<T>,
-	) {
+	): Structure<T> {
 		return new Structure(struct.schema, (value, context) => {
 			if (context.type !== "async") {
 				throw new SyntaxError("config.external must be used async");
@@ -231,7 +230,7 @@ export class Configuration {
 
 			return obj;
 		} catch (error) {
-			if (error instanceof StructuralError) {
+			if (error instanceof Structure.Error) {
 				console.error(error.toFriendlyString());
 			} else {
 				console.error("Configuration failed to parse");

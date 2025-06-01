@@ -1,9 +1,10 @@
+import type { StandardSchemaV1 } from "./standard-schema.ts";
 import {
 	_nestContext,
 	DEFAULT_CONTEXT,
 	StructContext,
 } from "./struct-context.ts";
-import { StructuralError } from "./structural-error.ts";
+import { _StructError } from "./struct-error.ts";
 
 export type Schema = Record<string, unknown>;
 
@@ -22,6 +23,21 @@ function _additionalProperties(
 }
 
 export class Structure<T> {
+	static Error = _StructError;
+
+	readonly "~standard": StandardSchemaV1.Props<unknown, T> = {
+		version: 1,
+		vendor: "gruber",
+		validate: (value) => {
+			try {
+				return { value: this.process(value) };
+			} catch (error) {
+				return { issues: (error as _StructError).getStandardSchemaIssues() };
+			}
+			// return
+		},
+	};
+
 	schema: Schema;
 	_process: StructExec<T>;
 	constructor(schema: Schema, process: StructExec<T>) {
@@ -36,7 +52,7 @@ export class Structure<T> {
 		try {
 			return this._process(input, context);
 		} catch (error) {
-			throw StructuralError.chain(error, context.path);
+			throw Structure.Error.chain(error, context.path);
 		}
 	}
 
@@ -56,12 +72,12 @@ export class Structure<T> {
 		const schema: Schema = { type: "string" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure(schema, (input = fallback, context) => {
+		return new Structure(schema, (input = fallback) => {
 			if (input === undefined) {
-				throw new StructuralError("Missing value", context?.path);
+				throw new Error("Missing value");
 			}
 			if (typeof input !== "string") {
-				throw new StructuralError("Expected a string", context?.path);
+				throw new Error("Expected a string");
 			}
 			return input;
 		});
@@ -71,19 +87,19 @@ export class Structure<T> {
 		const schema: Schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure(schema, (input = fallback, context) => {
+		return new Structure(schema, (input = fallback) => {
 			if (input === undefined) {
-				throw new StructuralError("Missing value", context?.path);
+				throw new Error("Missing value");
 			}
 			// if (typeof input === "string") {
 			// 	const parsed = Number.parseFloat(input);
 			// 	if (!Number.isNaN(parsed)) return parsed;
 			// }
 			if (typeof input !== "number") {
-				throw new StructuralError("Expected a number", context?.path);
+				throw new Error("Expected a number");
 			}
 			if (Number.isNaN(input)) {
-				throw new StructuralError("Not a number", context?.path);
+				throw new Error("Not a number");
 			}
 			return input;
 		});
@@ -93,12 +109,12 @@ export class Structure<T> {
 		const schema: Schema = { type: "boolean" };
 		if (fallback !== undefined) schema.default = fallback;
 
-		return new Structure<boolean>(schema, (input = fallback, context) => {
+		return new Structure<boolean>(schema, (input = fallback) => {
 			if (input === undefined) {
-				throw new StructuralError("Missing value", context?.path);
+				throw new Error("Missing value");
 			}
 			if (typeof input !== "boolean") {
-				throw new StructuralError("Not a boolean", context?.path);
+				throw new Error("Not a boolean");
 			}
 			return input;
 		});
@@ -110,13 +126,13 @@ export class Structure<T> {
 
 		// ~ make sure the fallback is valid ~
 		const url = fallback ? new URL(fallback) : undefined;
-		return new Structure(schema, (input = url, context) => {
+		return new Structure(schema, (input = url) => {
 			if (input === undefined) {
-				throw new StructuralError("Missing value", context?.path);
+				throw new Error("Missing value");
 			}
 			if (input instanceof URL) return input;
 			if (typeof input !== "string") {
-				throw new StructuralError("Not a string or URL", context?.path);
+				throw new Error("Not a string or URL");
 			}
 			return new URL(input);
 		});
@@ -137,10 +153,10 @@ export class Structure<T> {
 		}
 		return new Structure(schema, (input: any = {}, context) => {
 			if (input && typeof input !== "object") {
-				throw new StructuralError("Expected an object", context.path);
+				throw new Error("Expected an object");
 			}
 			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
-				throw new StructuralError("Should not have a prototype", context.path);
+				throw new Error("Should not have a prototype");
 			}
 			const output: any = {};
 			const errors = [];
@@ -150,13 +166,13 @@ export class Structure<T> {
 					output[key] = fields[key].process(input[key], childContext);
 					if (output[key] === undefined) delete output[key];
 				} catch (error) {
-					errors.push(StructuralError.chain(error, childContext.path));
+					errors.push(Structure.Error.chain(error, childContext.path));
 				}
 			}
 
 			for (const key of _additionalProperties(fields, input)) {
 				errors.push(
-					new StructuralError(
+					new Structure.Error(
 						"Additional field not allowed",
 						_nestContext(context, key).path,
 					),
@@ -164,7 +180,7 @@ export class Structure<T> {
 			}
 
 			if (errors.length > 0) {
-				throw new StructuralError(
+				throw new Structure.Error(
 					"Object does not match schema",
 					context.path,
 					errors,
@@ -183,9 +199,8 @@ export class Structure<T> {
 			default: [],
 		};
 		return new Structure(schema, (input = [], context) => {
-			const path = context?.path ?? [];
 			if (!Array.isArray(input)) {
-				throw new StructuralError("Expected an array", path);
+				throw new Error("Expected an array");
 			}
 			const output = [];
 			const errors = [];
@@ -194,13 +209,13 @@ export class Structure<T> {
 				try {
 					output.push(struct.process(input[i], childContext));
 				} catch (error) {
-					errors.push(StructuralError.chain(error, childContext.path));
+					errors.push(Structure.Error.chain(error, childContext.path));
 				}
 			}
 			if (errors.length > 0) {
-				throw new StructuralError(
+				throw new Structure.Error(
 					"Array item does not match schema",
-					path,
+					context.path,
 					errors,
 				);
 			}
@@ -213,13 +228,10 @@ export class Structure<T> {
 
 		return new Structure(schema, (input, context) => {
 			if (input === undefined) {
-				throw new StructuralError("Missing value", context?.path);
+				throw new Error("Missing value");
 			}
 			if (input !== value) {
-				throw new StructuralError(
-					`Expected ${schema.type} literal: ${value}`,
-					context?.path,
-				);
+				throw new Error(`Expected ${schema.type} literal: ${value}`);
 			}
 			return value;
 		});
@@ -232,16 +244,18 @@ export class Structure<T> {
 			oneOf: types.map((s) => s.schema),
 		};
 		return new Structure(schema, (value, context) => {
+			const errors = [];
 			for (const type of types) {
 				try {
-					return type.process(value) as Infer<T[number]>;
-				} catch {
-					// ...
+					return type.process(value, context) as Infer<T[number]>;
+				} catch (error) {
+					errors.push(Structure.Error.chain(error, context));
 				}
 			}
-			throw new StructuralError(
+			throw new Structure.Error(
 				"does not match any type in the union",
 				context?.path,
+				errors,
 			);
 		});
 	}
@@ -289,13 +303,13 @@ export class Structure<T> {
 				try {
 					output[key] = fields[key].process(input[key], childContext);
 				} catch (error) {
-					errors.push(StructuralError.chain(error, childContext));
+					errors.push(Structure.Error.chain(error, childContext));
 				}
 			}
 
 			for (const key of _additionalProperties(fields, input)) {
 				errors.push(
-					new StructuralError(
+					new Structure.Error(
 						"Additional field not allowed",
 						_nestContext(context, key).path,
 					),
@@ -303,7 +317,7 @@ export class Structure<T> {
 			}
 
 			if (errors.length > 0) {
-				throw new StructuralError(
+				throw new Structure.Error(
 					"Object does not match schema",
 					context.path,
 					errors,

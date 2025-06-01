@@ -1,7 +1,6 @@
 import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
 import { PromiseList } from "../core/utilities.ts";
 import { Configuration } from "./configuration.ts";
-import { StructuralError } from "./structural-error.ts";
 import { Structure } from "./structure.ts";
 
 /** @type {import("./configuration.ts").ConfigurationOptions} */
@@ -315,7 +314,7 @@ describe("Configuration", () => {
 			);
 			const exec = () => struct.process(undefined, { type: "sync", path: [] });
 
-			assertThrows(exec, StructuralError);
+			assertThrows(exec, Structure.Error);
 		});
 		it("passes through when missing", async () => {
 			const struct = config.external(

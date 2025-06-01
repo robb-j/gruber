@@ -36,6 +36,10 @@ export function assertRequestBody<T>(
 		input = Object.fromEntries(input.entries());
 	}
 
+	if (input instanceof URLSearchParams) {
+		input = Object.fromEntries(input);
+	}
+
 	// Attempt to validate the input, or throw a useful HTTPError
 	try {
 		return struct.process(input);
