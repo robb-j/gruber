@@ -85,7 +85,11 @@ export function reconstructTemplateString(
 	return output;
 }
 
-// A dynamic list of promises that are automatically removed when they resolve
+/**
+ * A dynamic list of promises that are automatically removed when they resolve
+ *
+ * @internal
+ */
 export class PromiseList {
 	#promises: Promise<unknown>[] = [];
 

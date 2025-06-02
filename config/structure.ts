@@ -6,6 +6,9 @@ import {
 } from "./struct-context.ts";
 import { _StructError } from "./struct-error.ts";
 
+// NOTE: Structure types should inline types where possible to expose the raw type to consumers,
+// not a Partial, Infer or InferObject
+
 export type Schema = Record<string, unknown>;
 
 export type StructExec<T> = (input: unknown, context: StructContext) => T;
@@ -138,9 +141,9 @@ export class Structure<T> {
 		});
 	}
 
-	static object<T extends Record<string, Structure<unknown>>>(
-		fields: T,
-	): Structure<InferObject<T>> {
+	static object<T extends Record<string, unknown>>(fields: {
+		[K in keyof T]: Structure<T[K]>;
+	}): Structure<T> {
 		const schema = {
 			type: "object",
 			properties: {} as Record<string, unknown>,
@@ -186,13 +189,11 @@ export class Structure<T> {
 					errors,
 				);
 			}
-			return output as InferObject<T>;
+			return output as T;
 		});
 	}
 
-	static array<T extends Structure<unknown>>(
-		struct: T,
-	): Structure<Array<Infer<T>>> {
+	static array<T extends unknown>(struct: Structure<T>): Structure<Array<T>> {
 		const schema: Schema = {
 			type: "array",
 			items: struct.schema,
@@ -202,7 +203,7 @@ export class Structure<T> {
 			if (!Array.isArray(input)) {
 				throw new Error("Expected an array");
 			}
-			const output = [];
+			const output: T[] = [];
 			const errors = [];
 			for (let i = 0; i < input.length; i++) {
 				const childContext = _nestContext(context, i.toString());
@@ -219,7 +220,7 @@ export class Structure<T> {
 					errors,
 				);
 			}
-			return output as Array<Infer<T>>;
+			return output;
 		});
 	}
 
@@ -272,9 +273,9 @@ export class Structure<T> {
 		return new Structure<any>({}, (value) => value);
 	}
 
-	static partial<T extends Record<string, Structure<unknown>>>(
-		fields: T,
-	): Structure<Partial<InferObject<T>>> {
+	static partial<T extends Record<string, unknown>>(fields: {
+		[K in keyof T]: Structure<T[K]>;
+	}): Structure<{ [K in keyof T]?: T[K] }> {
 		const schema = {
 			type: "object",
 			properties: {} as Record<string, unknown>,
@@ -324,7 +325,7 @@ export class Structure<T> {
 					errors,
 				);
 			}
-			return output as Partial<InferObject<T>>;
+			return output as Partial<T>;
 		});
 	}
 

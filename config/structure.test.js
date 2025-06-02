@@ -568,7 +568,9 @@ describe("Structure", () => {
 				age: Structure.number(),
 			});
 
-			assertEquals(struct.process({ name: "Geoff Testington", age: 42 }), {
+			const result = struct.process({ name: "Geoff Testington", age: 42 });
+
+			assertEquals(result, {
 				name: "Geoff Testington",
 				age: 42,
 			});

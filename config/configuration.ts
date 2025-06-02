@@ -75,31 +75,31 @@ export class Configuration {
 	// Types
 	//
 
-	object<T extends Record<string, Structure<unknown>>>(
-		options: T,
-	): Structure<{ [K in keyof T]: Infer<T[K]> }> {
-		if (typeof options !== "object" || options === null) {
+	object<T extends Record<string, unknown>>(fields: {
+		[K in keyof T]: Structure<T[K]>;
+	}): Structure<T> {
+		if (typeof fields !== "object" || fields === null) {
 			throw new TypeError("options must be a non-null object");
 		}
-		for (const key in options) {
-			if (!(options[key] instanceof Structure)) {
+		for (const key in fields) {
+			if (!(fields[key] instanceof Structure)) {
 				throw new TypeError(`options[${key}] is not a Structure`);
 			}
 		}
-		const struct = Structure.object(options);
+		const struct = Structure.object(fields);
 		Object.defineProperty(struct, Configuration.spec, {
-			value: objectSpec(options),
+			value: objectSpec(fields),
 		});
 		return struct;
 	}
 
-	array<T extends Structure<unknown>>(options: T): Structure<Infer<T>[]> {
-		if (!(options instanceof Structure)) {
+	array<T extends unknown>(item: Structure<T>): Structure<T[]> {
+		if (!(item instanceof Structure)) {
 			throw new TypeError("options is not a Structure");
 		}
-		const struct = Structure.array(options);
+		const struct = Structure.array(item);
 		Object.defineProperty(struct, Configuration.spec, {
-			value: arraySpec(options),
+			value: arraySpec(item),
 		});
 		return struct;
 	}

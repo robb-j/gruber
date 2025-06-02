@@ -7,11 +7,11 @@ function _defaultLogger(request: Request, response: Response) {
 	return response;
 }
 
-export interface RouteMiddleware {
+export interface _RouteMiddleware {
 	(request: Request, response: Response): Promise<Response> | Response;
 }
 
-export interface RouteMatch {
+export interface _RouteMatch {
 	route: RouteDefinition;
 	url: URL;
 	result: URLPatternResult;
@@ -24,7 +24,7 @@ export interface FetchRouterOptions {
 	errorHandler?: RouteErrorHandler;
 
 	/** @unstable */
-	log?: boolean | RouteMiddleware;
+	log?: boolean | _RouteMiddleware;
 
 	/** @unstable */
 	cors?: Cors;
@@ -33,7 +33,7 @@ export interface FetchRouterOptions {
 export class FetchRouter {
 	routes: RouteDefinition[];
 	errorHandler?: RouteErrorHandler;
-	_middleware: RouteMiddleware[] = [];
+	_middleware: _RouteMiddleware[] = [];
 
 	constructor(options: FetchRouterOptions = {}) {
 		this.routes = options.routes ?? [];
@@ -45,7 +45,7 @@ export class FetchRouter {
 		}
 	}
 
-	*findMatches(request: Request): Iterable<RouteMatch> {
+	*findMatches(request: Request): Iterable<_RouteMatch> {
 		const url = new URL(request.url);
 
 		for (const route of this.routes) {
@@ -58,7 +58,7 @@ export class FetchRouter {
 		}
 	}
 
-	async processMatches(request: Request, matches: Iterable<RouteMatch>) {
+	async processMatches(request: Request, matches: Iterable<_RouteMatch>) {
 		for (const { route, result, url } of matches) {
 			const response = await this.processRoute(route, {
 				request,
