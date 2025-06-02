@@ -9,3 +9,4 @@ node_modules
 .local
 coverage
 bundle
+_site

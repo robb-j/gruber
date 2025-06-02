@@ -44,7 +44,7 @@ export function getPostgresMigratorOptions(
 	};
 }
 
-/** @deprecated use `getPostgresMigratorOptions` */
+/** @deprecated use {@link getPostgresMigratorOptions} */
 export const getDenoPostgresMigratorOptions = getPostgresMigratorOptions;
 
 /**
@@ -57,5 +57,5 @@ export function getPostgresMigrator(options: PostgresMigratorOptions) {
 	return new Migrator(getPostgresMigratorOptions(options));
 }
 
-/** @deprecated use `getPostgresMigrator` */
+/** @deprecated use {@link getPostgresMigrator} */
 export const getDenoPostgresMigrator = getPostgresMigrator;

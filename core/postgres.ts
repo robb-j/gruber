@@ -74,7 +74,7 @@ export const postgresBootstrapMigration = defineMigration<SqlDependency>({
 	},
 });
 
-/** @deprecated use `postgresBootstrapMigration` */
+/** @deprecated use {@link postgresBootstrapMigration} */
 export const bootstrapMigration = postgresBootstrapMigration;
 
 export function definePostgresMigration(

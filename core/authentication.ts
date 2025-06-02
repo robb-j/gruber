@@ -1,4 +1,4 @@
-import { HTTPError } from "./http.ts";
+import { HTTPError } from "../http/http-error.ts";
 import { RandomService } from "./random.ts";
 import { Store } from "./store.ts";
 import { TokenService } from "./tokens.ts";
@@ -58,12 +58,21 @@ export interface AuthenticationServiceOptions {
 }
 
 export class AuthenticationService implements AbstractAuthenticationService {
+	options: AuthenticationServiceOptions;
+	store: Store;
+	random: RandomService;
+	tokens: TokenService;
 	constructor(
-		public options: AuthenticationServiceOptions,
-		public store: Store,
-		public random: RandomService,
-		public tokens: TokenService,
-	) {}
+		options: AuthenticationServiceOptions,
+		store: Store,
+		random: RandomService,
+		tokens: TokenService,
+	) {
+		this.options = options;
+		this.store = store;
+		this.random = random;
+		this.tokens = tokens;
+	}
 
 	//
 	// Internal

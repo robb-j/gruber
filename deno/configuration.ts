@@ -1,7 +1,7 @@
-import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
+import { Configuration, ConfigurationOptions } from "../config/mod.ts";
 import { parseArgs } from "./deps.ts";
 
-export { Configuration };
+export * from "../config/mod.ts";
 
 // deno-lint-ignore no-empty-interface
 export interface DenoConfigurationOptions {}
@@ -39,8 +39,8 @@ export function getConfiguration(options: DenoConfigurationOptions = {}) {
 	return new Configuration(getConfigurationOptions(options));
 }
 
-/** @deprecated use `getConfigurationOptions` */
+/** @deprecated use {@link getConfigurationOptions} */
 export const getDenoConfigOptions = getConfigurationOptions;
 
-/** @deprecated use `getConfiguration` */
+/** @deprecated use {@link getConfiguration} */
 export const getDenoConfiguration = getConfiguration;

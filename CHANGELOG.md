@@ -1,12 +1,50 @@
+---
+permalink: /changelog/
+layout: simple.njk
+---
+
 # Change log
 
 This file documents notable changes to the project
 
-## next
+## 0.9
+
+**features**
+
+- Add `config.external`
+- Set "dependencies" on HTTP routes that are evaluated on-demand per request
+- Revamp website
+- Start splitting code out into modules
+- [StandardSchema](https://standardschema.dev) support
+- Add `AuthorizationService#from`
+- Add `Structure.null`
+- Add `Structure.any`
+- Add `Structure.partial`
+- Add `Structure.date`
+- `assertRequestBody` can return a Promise if you pass a request,
+  where it will use `getRequestBody` to get the body then validate it
+- Add `createStoppable` to Node.js module and apply it to `serveHTTP`
+- Add `testing` module with utilities, stubs, fakes and a testing router
+
+**improved**
+
+- More test coverage
+- Better deprecation comments with `@link`
+- Add `SqlDependency#end` method
+- Export `SqlDependency`
+- Simplified `Structure` and `config` generics with nested structures
+- Update `urlpattern-polyfill` to 10.1.0
+- Move to erasable TypeScript code
 
 **fixes**
 
-- Fix `AbstractAuthorizationService` to include assert's `options` parameter
+- `AbstractAuthorizationService` includes assert's `options` parameter
+- Configuration correctly follows `flags > env > json > fallback`
+- `Structure.object` sets required fields in schema
+
+**deprecations**
+
+- `StructError` -> `Structure.Error`
 
 ## 0.8.0
 

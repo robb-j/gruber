@@ -1,0 +1,12 @@
+---
+layout: html.njk
+---
+
+<main>
+	<sidebar-layout sideWidth="40ch">
+		<div class="flow">LEFT</div>
+		<div class="flow">
+			{{ content | safe }}
+		</div>
+	</sidebar-layout>
+</main>

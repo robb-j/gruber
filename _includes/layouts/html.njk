@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{{ site.title }}</title>
+		<!-- @openlab/alembic inject-css -->
+		<link rel="stylesheet" href="/assets/style.css">
+		<link rel="stylesheet" href="/assets/prism.css">
+		<link rel="stylesheet" href="https://fonts.openlab.dev/inter/inter.css">
+	</head>
+	<body>
+		<header>
+			<cluster-layout justify="space-between" align="center">
+				<a href="/" class="brand">Gruber</a>
+				<nav>
+					<cluster-layout>
+						{% for page in collections.all | eleventyNavigation %}
+						<a href="{{ page.url }}">{{ page.title }}</a>
+						{% endfor %}
+					</cluster-layout>
+				</nav>
+			</cluster-layout>
+		</header>
+		{{ content | safe }}
+		<footer>
+			<p>
+				<a href="https://github.com/robb-j/gruber">robb-j/gruber</a> v{{pkg.version}}
+				&mdash; made by
+				<a href="https://www.r0b.io">Rob</a>
+			</p>
+		</footer>
+		<!-- @openlab/alembic inject-js -->
+	</body>
+</html>

@@ -5,8 +5,17 @@
 		"module": "Preserve",
 		"moduleResolution": "Bundler",
 		"allowImportingTsExtensions": true,
+		"erasableSyntaxOnly": true,
 		"strict": true,
 		"noEmit": true
 	},
-	"include": ["core", "node", "bundle/node", "examples/node"]
+	"include": [
+		"core",
+		"node",
+		"bundle/node",
+		"examples/node",
+		"http",
+		"testing",
+		"config"
+	]
 }

@@ -1,27 +1,5 @@
-import { assertInstanceOf, assertEquals, describe, it } from "./test-deps.js";
-import { assertRequestBody, defineRoute, HTTPError } from "./http.ts";
-import { Structure } from "./structures.ts";
-
-describe("defineRoute", () => {
-	it("sets the method", () => {
-		const result = defineRoute({
-			method: "GET",
-			pathname: "/",
-			handler() {},
-		});
-		assertEquals(result.method, "GET");
-	});
-
-	it("creates a URLPattern", () => {
-		const result = defineRoute({
-			method: "GET",
-			pathname: "/hello/:name",
-			handler() {},
-		});
-		assertInstanceOf(result.pattern, URLPattern);
-		assertEquals(result.pattern.pathname, "/hello/:name");
-	});
-});
+import { describe, it, assertEquals } from "../core/test-deps.js";
+import { HTTPError } from "./http-error.ts";
 
 describe("HTTPError", () => {
 	describe("constructor", () => {
@@ -87,49 +65,5 @@ describe("HTTPError", () => {
 				assertEquals(result.statusText, "Not Implemented");
 			});
 		});
-	});
-});
-
-describe("assertRequestBody", () => {
-	const struct = Structure.object({
-		name: Structure.string(),
-	});
-	it("validates json", () => {
-		const result = assertRequestBody(struct, {
-			name: "Geoff Testington",
-		});
-
-		assertEquals(result, { name: "Geoff Testington" });
-	});
-	it("validates FormData", () => {
-		const data = new FormData();
-		data.set("name", "Geoff Testington");
-		const result = assertRequestBody(struct, data);
-
-		assertEquals(result, { name: "Geoff Testington" });
-	});
-	it("validates a json Request", async () => {
-		const result = await assertRequestBody(
-			struct,
-			new Request("http://testing.local", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ name: "Geoff Testington" }),
-			}),
-		);
-
-		assertEquals(result, { name: "Geoff Testington" });
-	});
-	it("validates a FormData Request", async () => {
-		const data = new FormData();
-		data.set("name", "Geoff Testington");
-		const result = await assertRequestBody(
-			struct,
-			new Request("http://testing.local", { method: "POST", body: data }),
-		);
-
-		assertEquals(result, { name: "Geoff Testington" });
 	});
 });

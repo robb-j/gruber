@@ -1,3 +1,8 @@
+---
+permalink: /index.html
+layout: home.njk
+---
+
 # Gruber
 
 An isomorphic JavaScript library for creating web apps.
@@ -333,6 +338,13 @@ const struct = config.object({
 			fallback: "postgres://user:secret@localhost:5432/database",
 		}),
 	}),
+
+	auth: config.external(
+		new URL("./auth.json", import.meta.url),
+		config.object({
+			users: Structure.array(Structure.string()),
+		}),
+	),
 });
 
 // Load the configuration and parse it

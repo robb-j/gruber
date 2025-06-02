@@ -11,6 +11,9 @@ export interface SqlDependency {
 
 	/** Prepare JSON for a query */
 	json(value: unknown): any;
+
+	/** end the connection */
+	end(): Promise<void>;
 }
 
 export interface _SignJWT {

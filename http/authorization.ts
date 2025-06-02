@@ -1,5 +1,5 @@
-import { HTTPError } from "./http.ts";
-import { AuthzToken, TokenService } from "./tokens.ts";
+import { HTTPError } from "./http-error.ts";
+import { AuthzToken, TokenService } from "../core/mod.ts";
 
 /**
  * Based on deno std
@@ -85,11 +85,15 @@ export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 
 export interface AbstractAuthorizationService {
 	getAuthorization(request: Request): string | null;
-	assert(request: Request, options?: AssertOptions): Promise<AuthzToken>;
+	assert(
+		request: Request,
+		options?: AssertOptions,
+	): Promise<AuthorizationResult>;
 	assertUser(
 		request: Request,
 		options?: AssertUserOptions,
 	): Promise<AssertUserResult>;
+	from(request: Request): Promise<AuthorizationResult | null>;
 }
 
 export interface AuthorizationServiceOptions {
@@ -98,10 +102,12 @@ export interface AuthorizationServiceOptions {
 
 /** @unstable */
 export class AuthorizationService implements AbstractAuthorizationService {
-	constructor(
-		public options: AuthorizationServiceOptions,
-		public tokens: TokenService,
-	) {}
+	options: AuthorizationServiceOptions;
+	tokens: TokenService;
+	constructor(options: AuthorizationServiceOptions, tokens: TokenService) {
+		this.options = options;
+		this.tokens = tokens;
+	}
 
 	getAuthorization(request: Request) {
 		return (
@@ -116,7 +122,6 @@ export class AuthorizationService implements AbstractAuthorizationService {
 			: { kind: "service", scope: verified.scope };
 	}
 
-	/** @unstable use at your own risk */
 	async from(request: Request): Promise<AuthorizationResult | null> {
 		const authz = this.getAuthorization(request);
 		if (!authz) return null;
