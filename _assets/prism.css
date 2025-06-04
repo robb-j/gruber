@@ -1,17 +1,21 @@
 :root {
-	--dracula-pink: #ff79c6;
-	--dracula-yellow: #f1fa8c;
-	--dracula-green: #50fa7b;
-	--dracula-cyan: #8be9fd;
-	--dracula-background: #282a36;
-	--dracula-foreground: #f8f8f2;
-	--dracula-comment: #6272a4;
-	--dracula-orange: #ffb86c;
+	--r0b-background: #322d3e;
+	--r0b-foreground: #e5f0e9;
+
+	--r0b-keyword: #e58ef7;
+	--r0b-string: #f8fd70;
+	--r0b-type: 9edaff;
+	--r0b-field: #eeb06e;
+	--r0b-primative: #ea74d7;
+	--r0b-function: #6cec8c;
+	--r0b-operator: #99e0ec;
+	--r0b-comment: #87968b;
 }
 
 pre {
-	color: var(--dracula-foreground);
-	background-color: var(--dracula-background);
+	color: var(--r0b-foreground);
+	background-color: var(--r0b-background);
+	border: none;
 }
 
 pre > code {
@@ -23,27 +27,27 @@ pre > code {
 }
 
 .token.keyword {
-	color: var(--dracula-pink);
+	color: var(--r0b-keyword);
 }
 .token.string {
-	color: var(--dracula-yellow);
+	color: var(--r0b-string);
 }
 .token.function {
-	color: var(--dracula-green);
+	color: var(--r0b-function);
 }
 .token.operator {
-	color: rgba(139, 233, 253, 1);
+	color: var(--r0b-operator);
 }
 .token.builtin,
 .token.class-name {
-	color: var(--dracula-cyan);
+	color: var(--r0b-type);
 }
 .token.comment {
-	color: var(--dracula-comment);
+	color: var(--r0b-comment);
 }
 .token.number {
-	color: rgba(189, 147, 249, 1);
+	color: var(--r0b-primative);
 }
 .token.property {
-	color: var(--dracula-orange);
+	color: var(--r0b-field);
 }
