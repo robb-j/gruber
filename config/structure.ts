@@ -94,10 +94,11 @@ export class Structure<T> {
 			if (input === undefined) {
 				throw new Error("Missing value");
 			}
-			// if (typeof input === "string") {
-			// 	const parsed = Number.parseFloat(input);
-			// 	if (!Number.isNaN(parsed)) return parsed;
-			// }
+			// TODO: this needs testing
+			if (typeof input === "string") {
+				const parsed = Number.parseFloat(input);
+				if (!Number.isNaN(parsed)) return parsed;
+			}
 			if (typeof input !== "number") {
 				throw new Error("Expected a number");
 			}
