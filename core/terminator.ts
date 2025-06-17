@@ -20,17 +20,11 @@ export class Terminator {
 	state: TerminatorState = "running";
 	options: TerminatorOptions;
 	timers: TimerService;
-	// #stack: AsyncDisposable[] = []; // NOTE: DisposableStack isn't ready yet
-	// ac = new AbortController();
 
 	constructor(options: TerminatorOptions, timers: TimerService) {
 		this.options = options;
 		this.timers = timers;
 	}
-
-	// get signal() {
-	// 	return this.ac.signal;
-	// }
 
 	start(block: TerminatorAction) {
 		this.options.startListeners(this.options.signals, () => {
@@ -47,18 +41,11 @@ export class Terminator {
 
 		try {
 			await block();
-			// for (const d of this.#stack.reverse()) await d[Symbol.asyncDispose]();
-			// this.ac.abort();
 			this.options.exitProcess(0);
 		} catch (error) {
 			this.options.exitProcess(1, error);
 		}
 	}
-
-	// /** @unstable very */
-	// _enqueue(value: AsyncDisposable) {
-	// 	this.#stack.push(value);
-	// }
 
 	getResponse(): Response {
 		return new Response(this.state, {
