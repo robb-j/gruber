@@ -953,7 +953,7 @@ const hasPets = Structure.boolean(true);
 const person = Structure.object({ name, age, website });
 
 // Process the Structure and get a value out. The returned value is strongly typed!
-// This will throw a StructError if the value passed does not match the schema.
+// This will throw a Structure.Error if the value passed does not match the schema.
 const value = person.process(/* ... */);
 ```
 
@@ -968,10 +968,10 @@ Those static Structure methods return a `Structure` instance. These are the diff
 - `Structure.array(struct)` — **unstable** — An array of a structure
 - `Structure.union(structs)` — **unstable** — Exactly one of the structures
 
-You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [StructError](#structerror).
+You can also create your own types with the constructor. This example shows how to do that, and also starts to unveil how the internals work a bit with [Structure.Error](#structureerror).
 
 ```js
-import { Structure, StructError } from "gruber/structures.js";
+import { Structure } from "gruber/structures.js";
 
 // Create a new boolean structure (this should probably be included as Structure.boolean tbh)
 const boolean = new Structure(
@@ -979,7 +979,7 @@ const boolean = new Structure(
 	(input, context) => {
 		if (input === undefined) return false;
 		if (typeof input !== "boolean") {
-			throw new StructError("Expected a boolean", context?.path);
+			throw new Structure.Error("Expected a boolean", context?.path);
 		}
 		return input;
 	},
@@ -987,7 +987,7 @@ const boolean = new Structure(
 ```
 
 To create a custom Structure, you give it a [JSON schema](https://json-schema.org/) and a "process" function.
-The function is called to validate a value against the structure. It should return the processed value or throw a `StructError`.
+The function is called to validate a value against the structure. It should return the processed value or throw a `Structure.Error`.
 
 The `context` object might not be set and this means the struct is at the root level. If it is nested in an `object` then the context contains the path that the struct is located at, all the way from the root object. That path is expressed as an array of strings. That path is used to generate friendlier error messages to explain which nested field failed.
 
@@ -1007,7 +1007,7 @@ console.log(JSON.stringify(person.getSchema(), null, 2));
 
 This is a bit WIP, but you could use this to generate a JSON schema to lint configurations in your IDE.
 
-#### StructError
+#### Structure.Error
 
 This Error subclass contains extra information about why parsing a `Structure` failed.
 
@@ -1021,7 +1021,7 @@ On the error, there are also methods to help use it:
 - `getOneLiner` converts the error to a succint one-line error message, concatentating the path and message
 - `[Symbol.iterator]` is also available if you want to loop through all children nodes, only those that do not have children themselves.
 
-There is also the static method `StructError.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a StructError).
+There is also the static method `Structure.Error.chain(error, context)` which is useful for catching errors and applying a context to them (if they are not already a Structure.Error).
 
 ### Terminator
 

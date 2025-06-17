@@ -1,17 +1,17 @@
 import { assertEquals, describe, it } from "../core/test-deps.js";
-import { _StructError as StructError } from "./mod.ts";
+import { _StructError } from "./mod.ts";
 
 describe("Structure.Error", () => {
 	describe("constructor", () => {
 		it("stores values", () => {
-			const err = new StructError("error message", "some.path");
+			const err = new _StructError("error message", "some.path");
 			assertEquals(err.path, "some.path");
 			assertEquals(err.message, "error message");
 			assertEquals(err.name, "Structure.Error");
 		});
 		it("stores children", () => {
-			const child = new StructError("child message", "path");
-			const parent = new StructError("parent message", "path", [child]);
+			const child = new _StructError("child message", "path");
+			const parent = new _StructError("parent message", "path", [child]);
 			assertEquals(parent.children, [child]);
 		});
 	});
@@ -19,31 +19,31 @@ describe("Structure.Error", () => {
 	describe("chain", () => {
 		it("returns StructErrors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain(
-				new StructError("error message", ["another", "path"]),
+			const result = _StructError.chain(
+				new _StructError("error message", ["another", "path"]),
 				ctx,
 			);
 			assertEquals(
 				result,
-				new StructError("error message", ["another", "path"]),
+				new _StructError("error message", ["another", "path"]),
 				"returns the StructError without modifying the path",
 			);
 		});
 		it("wraps Errors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain(new Error("error message"), ctx);
+			const result = _StructError.chain(new Error("error message"), ctx);
 			assertEquals(
 				result,
-				new StructError("error message", ["some", "path"]),
+				new _StructError("error message", ["some", "path"]),
 				"creates a StructError and sets the path from the context",
 			);
 		});
 		it("wraps non-Errors", () => {
 			const ctx = { path: ["some", "path"] };
-			const result = StructError.chain("unknown", ctx);
+			const result = _StructError.chain("unknown", ctx);
 			assertEquals(
 				result,
-				new StructError("Unknown error", ["some", "path"]),
+				new _StructError("Unknown error", ["some", "path"]),
 				"creates a generic StructError",
 			);
 		});
@@ -51,20 +51,20 @@ describe("Structure.Error", () => {
 
 	describe("getOneLiner", () => {
 		it("formats the error", () => {
-			const error = new StructError("error message", ["some", "path"]);
+			const error = new _StructError("error message", ["some", "path"]);
 			assertEquals(error.getOneLiner(), "some.path — error message");
 		});
 	});
 
 	describe("[Symbol.iterator]", () => {
 		it("yields children", () => {
-			const error = new StructError(
+			const error = new _StructError(
 				"error message",
 				["some", "path"],
 				[
-					new StructError("child a"),
-					new StructError("child b"),
-					new StructError("child c"),
+					new _StructError("child a"),
+					new _StructError("child b"),
+					new _StructError("child c"),
 				],
 			);
 			assertEquals(
@@ -74,17 +74,17 @@ describe("Structure.Error", () => {
 			);
 		});
 		it("yields nested children", () => {
-			const error = new StructError(
+			const error = new _StructError(
 				"parent a",
 				["some"],
 				[
-					new StructError(
+					new _StructError(
 						"parent b",
 						["path"],
 						[
-							new StructError("child a"),
-							new StructError("child b"),
-							new StructError("child c"),
+							new _StructError("child a"),
+							new _StructError("child b"),
+							new _StructError("child c"),
 						],
 					),
 				],
@@ -99,13 +99,13 @@ describe("Structure.Error", () => {
 
 	describe("toFriendlyString", () => {
 		it("formats a message", () => {
-			const error = new StructError(
+			const error = new _StructError(
 				"parent message",
 				["some", "path"],
 				[
-					new StructError("child a", ["some", "path", "a"]),
-					new StructError("child b", ["some", "path", "b"]),
-					new StructError("child c", ["some", "path", "c"]),
+					new _StructError("child a", ["some", "path", "a"]),
+					new _StructError("child b", ["some", "path", "b"]),
+					new _StructError("child c", ["some", "path", "c"]),
 				],
 			);
 
