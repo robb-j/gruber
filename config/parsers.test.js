@@ -1,9 +1,9 @@
-import { assertEquals, describe, it } from "../core/test-deps.js";
+import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
 import {
 	_parseBoolean,
 	_parseFloat,
-	_parseURL,
 	_parsePrimative,
+	_parseURL,
 } from "./parsers.ts";
 
 describe("_parsePrimative", () => {
@@ -83,6 +83,12 @@ describe("_parseFloat", () => {
 			_parseFloat({ source: "fallback", value: 98.76 }),
 			98.76,
 			"should preserve number literals",
+		);
+	});
+	it("throws for non-numeric strings", () => {
+		assertThrows(
+			() => _parseFloat({ source: "argument", value: "abcdef" }),
+			TypeError,
 		);
 	});
 });
