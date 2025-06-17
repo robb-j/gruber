@@ -22,9 +22,15 @@ export interface ServerSentEventMessage {
 	retry?: number;
 }
 
-function assertHasNoNewline(value: string, varName: string, errPrefix: string) {
+export function _assertHasNoNewline(
+	value: string,
+	variable: string,
+	errPrefix: string,
+) {
 	if (value.match(NEWLINE_REGEXP) !== null) {
-		throw new SyntaxError(`${errPrefix}: ${varName} cannot contain a newline`);
+		throw new SyntaxError(
+			`${errPrefix}: "${variable}" cannot contain a newline`,
+		);
 	}
 }
 
@@ -33,22 +39,14 @@ function assertHasNoNewline(value: string, varName: string, errPrefix: string) {
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format}
  */
-function stringify(message: ServerSentEventMessage): Uint8Array {
+export function _stringify(message: ServerSentEventMessage): string {
 	const lines = [];
 	if (message.comment) {
-		assertHasNoNewline(
-			message.comment,
-			"`message.comment`",
-			"Cannot serialize message",
-		);
+		_assertHasNoNewline(message.comment, "message.comment", "SSE Error");
 		lines.push(`:${message.comment}`);
 	}
 	if (message.event) {
-		assertHasNoNewline(
-			message.event,
-			"`message.event`",
-			"Cannot serialize message",
-		);
+		_assertHasNoNewline(message.event, "message.event", "SSE Error");
 		lines.push(`event:${message.event}`);
 	}
 	if (message.data) {
@@ -57,15 +55,13 @@ function stringify(message: ServerSentEventMessage): Uint8Array {
 			.forEach((line) => lines.push(`data:${line}`));
 	}
 	if (message.id) {
-		assertHasNoNewline(
-			message.id.toString(),
-			"`message.id`",
-			"Cannot serialize message",
-		);
+		_assertHasNoNewline(message.id.toString(), "message.id", "SSE Error");
 		lines.push(`id:${message.id}`);
 	}
-	if (message.retry) lines.push(`retry:${message.retry}`);
-	return encoder.encode(lines.join("\n") + "\n\n");
+	if (message.retry) {
+		lines.push(`retry:${message.retry}`);
+	}
+	return lines.join("\n") + "\n\n";
 }
 
 /**
@@ -98,7 +94,7 @@ export class ServerSentEventStream extends TransformStream<
 	constructor() {
 		super({
 			transform: (message, controller) => {
-				controller.enqueue(stringify(message));
+				controller.enqueue(encoder.encode(_stringify(message)));
 			},
 		});
 	}
