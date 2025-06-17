@@ -1,4 +1,4 @@
-import { StructuralError, Structure } from "../config/mod.ts";
+import { StandardSchemaV1, Structure } from "../config/mod.ts";
 import { HTTPError } from "./http-error.ts";
 
 /** @unstable */
@@ -15,20 +15,21 @@ export function getRequestBody(request: Request) {
 }
 
 /** @unstable */
-export function assertRequestBody<T>(
-	struct: Structure<T>,
+export function assertRequestBody<T extends StandardSchemaV1>(
+	schema: T,
 	input: Request,
-): Promise<T>;
-export function assertRequestBody<T>(struct: Structure<T>, input: unknown): T;
-export function assertRequestBody<T>(
-	struct: Structure<T>,
-	input: any,
-): T | Promise<T> {
+): Promise<StandardSchemaV1.InferOutput<T>>;
+export function assertRequestBody<T extends StandardSchemaV1>(
+	schema: T,
+	input: unknown,
+): StandardSchemaV1.InferOutput<T>;
+export function assertRequestBody<T extends StandardSchemaV1>(
+	schema: T,
+	input: StandardSchemaV1.InferInput<T> | Request,
+): StandardSchemaV1.InferOutput<T> | Promise<StandardSchemaV1.InferOutput<T>> {
 	// If passed a request, return a promise to resolve the body and validate it
 	if (input instanceof Request) {
-		return new Promise((resolve) => {
-			resolve(getRequestBody(input).then((v) => assertRequestBody(struct, v)));
-		});
+		return getRequestBody(input).then((v) => assertRequestBody(schema, v));
 	}
 
 	// If passed form data, turn it into an object
@@ -36,17 +37,30 @@ export function assertRequestBody<T>(
 		input = Object.fromEntries(input.entries());
 	}
 
+	// If passed search parameters, turn them into an object
 	if (input instanceof URLSearchParams) {
 		input = Object.fromEntries(input);
 	}
 
 	// Attempt to validate the input, or throw a useful HTTPError
-	try {
-		return struct.process(input);
-	} catch (error) {
-		if (error instanceof StructuralError) {
-			throw HTTPError.badRequest(error.toFriendlyString());
-		}
-		throw Error;
+
+	const result = schema["~standard"].validate(input);
+
+	// I'm not sure how to handle async StandardSchemas yet
+	if (result instanceof Promise) {
+		throw HTTPError.internalServerError("async not supported");
 	}
+
+	if (result.issues) {
+		throw HTTPError.badRequest(
+			"Invalid request body:\n • " +
+				result.issues
+					.map(({ path = [], message }) =>
+						path.length > 0 ? `${path.join(".")} - ${message}` : message,
+					)
+					.join("\n • "),
+		);
+	}
+
+	return result.value;
 }

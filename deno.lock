@@ -4,11 +4,14 @@
     "specifiers": {
       "jsr:@std/cli@1.0.6": "jsr:@std/cli@1.0.6",
       "jsr:@std/path@1.0.6": "jsr:@std/path@1.0.6",
+      "jsr:@valibot/valibot@^1.1.0": "jsr:@valibot/valibot@1.1.0",
       "npm:@types/express@^5.0.0": "npm:@types/express@5.0.0",
       "npm:@types/koa@^2.15.0": "npm:@types/koa@2.15.0",
+      "npm:arktype@^2.1.20": "npm:arktype@2.1.20",
       "npm:jose@^5.9.6": "npm:jose@5.9.6",
       "npm:prettier@^3.3.3": "npm:prettier@3.3.3",
-      "npm:redis@^4.7.0": "npm:redis@4.7.0_@redis+client@1.6.0"
+      "npm:redis@^4.7.0": "npm:redis@4.7.0_@redis+client@1.6.0",
+      "npm:zod@^3.25.67": "npm:zod@3.25.67"
     },
     "jsr": {
       "@std/cli@1.0.6": {
@@ -16,9 +19,22 @@
       },
       "@std/path@1.0.6": {
         "integrity": "ab2c55f902b380cf28e0eec501b4906e4c1960d13f00e11cfbcd21de15f18fed"
+      },
+      "@valibot/valibot@1.1.0": {
+        "integrity": "2617f02b532011b8140926899d420a3e1bbb0fcb7cdf8e7b669df89e7edd7f5f"
       }
     },
     "npm": {
+      "@ark/schema@0.46.0": {
+        "integrity": "sha512-c2UQdKgP2eqqDArfBqQIJppxJHvNNXuQPeuSPlDML4rjw+f1cu0qAlzOG4b8ujgm9ctIDWwhpyw6gjG5ledIVQ==",
+        "dependencies": {
+          "@ark/util": "@ark/util@0.46.0"
+        }
+      },
+      "@ark/util@0.46.0": {
+        "integrity": "sha512-JPy/NGWn/lvf1WmGCPw2VGpBg5utZraE84I7wli18EDF3p3zc/e9WolT35tINeZO3l7C77SjqRJeAUoT0CvMRg==",
+        "dependencies": {}
+      },
       "@redis/bloom@1.2.0_@redis+client@1.6.0": {
         "integrity": "sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==",
         "dependencies": {
@@ -169,6 +185,13 @@
           "@types/send": "@types/send@0.17.4"
         }
       },
+      "arktype@2.1.20": {
+        "integrity": "sha512-IZCEEXaJ8g+Ijd59WtSYwtjnqXiwM8sWQ5EjGamcto7+HVN9eK0C4p0zDlCuAwWhpqr6fIBkxPuYDl4/Mcj/+Q==",
+        "dependencies": {
+          "@ark/schema": "@ark/schema@0.46.0",
+          "@ark/util": "@ark/util@0.46.0"
+        }
+      },
       "cluster-key-slot@1.1.2": {
         "integrity": "sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==",
         "dependencies": {}
@@ -198,6 +221,10 @@
       },
       "yallist@4.0.0": {
         "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==",
+        "dependencies": {}
+      },
+      "zod@3.25.67": {
+        "integrity": "sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==",
         "dependencies": {}
       }
     }
