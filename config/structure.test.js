@@ -5,7 +5,7 @@ import {
 	describe,
 	it,
 } from "../core/test-deps.js";
-import { StructuralError, Structure } from "./mod.ts";
+import { Structure } from "./mod.ts";
 
 describe("Structure", () => {
 	describe("constructor", () => {
@@ -36,12 +36,12 @@ describe("Structure", () => {
 				"should pass through the context",
 			);
 		});
-		it("wraps errors in StructuralError", () => {
+		it("wraps errors in Structure.Error", () => {
 			const struct = new Structure({}, () => {
 				throw new Error("input error");
 			});
 			const exec = () => struct.process(42, { path: ["some", "path"] });
-			const error = assertThrows(exec, StructuralError);
+			const error = assertThrows(exec, Structure.Error);
 			assertEquals(error.message, "input error");
 			assertEquals(error.path, ["some", "path"]);
 		});
@@ -89,7 +89,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(error.message, "Expected a string");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -99,7 +99,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -131,8 +131,7 @@ describe("Structure", () => {
 				"should fall back to the default if undefined is passed",
 			);
 		});
-		// TODO: I'm not sure if this should be on Structure or Configuration
-		it.skip("parses string integers", () => {
+		it("parses strings", () => {
 			const struct = Structure.number(42);
 			assertEquals(
 				struct.process("33"),
@@ -140,12 +139,12 @@ describe("Structure", () => {
 				"should parse the integer out of the string",
 			);
 		});
-		it.skip("throws for non-numbers", () => {
+		it("throws for non-numbers", () => {
 			const struct = Structure.number(42);
 
 			const error = assertThrows(
 				() => struct.process("a string", { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Expected a number");
@@ -156,7 +155,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -165,7 +164,7 @@ describe("Structure", () => {
 			const struct = Structure.number();
 			const error = assertThrows(
 				() => struct.process(Number.NaN),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(error.message, "Not a number");
 		});
@@ -201,12 +200,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process("a string", { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(
 				error,
-				new StructuralError("Expected a boolean", ["some", "path"]),
-				"should throw a StructuralError and capture the context",
+				new Structure.Error("Expected a boolean", ["some", "path"]),
+				"should throw a Structure.Error and capture the context",
 			);
 		});
 		it("generates JSON schema", () => {
@@ -252,7 +251,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(42, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Not a string or URL");
@@ -263,7 +262,7 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(error.message, "Missing value");
 			assertEquals(error.path, ["some", "path"], "should capture the context");
@@ -287,7 +286,7 @@ describe("Structure", () => {
 		it("catches URL errors", () => {
 			const struct = Structure.url("https://example.com");
 			const exec = () => struct.process("not a url");
-			assertThrows(exec, StructuralError);
+			assertThrows(exec, Structure.Error);
 		});
 	});
 
@@ -321,7 +320,7 @@ describe("Structure", () => {
 			});
 			const error = assertThrows(
 				() => struct.process("not an object", { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Expected an object");
@@ -340,7 +339,7 @@ describe("Structure", () => {
 			});
 			const error = assertThrows(
 				() => struct.process({ key: 42 }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Object does not match schema");
@@ -359,7 +358,7 @@ describe("Structure", () => {
 						{ key: "value", something: "else" },
 						{ path: ["some", "path"] },
 					),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Object does not match schema");
@@ -381,7 +380,7 @@ describe("Structure", () => {
 			}
 			const error = assertThrows(
 				() => struct.process(new Injector(), { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Should not have a prototype");
@@ -414,7 +413,7 @@ describe("Structure", () => {
 			const struct = Structure.array(Structure.string());
 			const error = assertThrows(
 				() => struct.process("not an object", { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Expected an array");
@@ -429,7 +428,7 @@ describe("Structure", () => {
 			const struct = Structure.array(Structure.string());
 			const error = assertThrows(
 				() => struct.process(["a", 2, "c"]),
-				StructuralError,
+				Structure.Error,
 			);
 
 			assertEquals(error.message, "Array item does not match schema");
@@ -454,12 +453,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(69, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(
 				error,
-				new StructuralError("Expected number literal: 42", ["some", "path"]),
-				"should throw a StructuralError and capture the context",
+				new Structure.Error("Expected number literal: 42", ["some", "path"]),
+				"should throw a Structure.Error and capture the context",
 			);
 		});
 		it("throws for different types", () => {
@@ -467,12 +466,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process("nice", { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(
 				error,
-				new StructuralError("Expected number literal: 42", ["some", "path"]),
-				"should throw a StructuralError and capture the context",
+				new Structure.Error("Expected number literal: 42", ["some", "path"]),
+				"should throw a Structure.Error and capture the context",
 			);
 		});
 		it("throws for missing values", () => {
@@ -480,12 +479,12 @@ describe("Structure", () => {
 
 			const error = assertThrows(
 				() => struct.process(undefined, { path: ["some", "path"] }),
-				StructuralError,
+				Structure.Error,
 			);
 			assertEquals(
 				error,
-				new StructuralError("Missing value", ["some", "path"]),
-				"should throw a StructuralError and capture the context",
+				new Structure.Error("Missing value", ["some", "path"]),
+				"should throw a Structure.Error and capture the context",
 			);
 		});
 	});
@@ -523,7 +522,7 @@ describe("Structure", () => {
 		it("fails when no matches", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
 			const exec = () => struct.process(true);
-			assertThrows(exec, StructuralError);
+			assertThrows(exec, Structure.Error);
 		});
 	});
 
@@ -536,7 +535,7 @@ describe("Structure", () => {
 		it("blocks not-null", () => {
 			assertThrows(
 				() => struct.process("a string"),
-				(error) => error instanceof StructuralError,
+				(error) => error instanceof Structure.Error,
 			);
 		});
 	});
