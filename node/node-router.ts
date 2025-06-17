@@ -131,7 +131,7 @@ export interface ServeHTTPHandler {
 export async function serveHTTP(
 	options: ServeHTTPOptions,
 	handler: ServeHTTPHandler,
-): Promise<Server & Stoppable> {
+): Promise<Server & Stoppable & AsyncDisposable> {
 	const http = createServer(async (httpReq, httpRes) => {
 		const request = getFetchRequest(httpReq);
 		const response = await handler(request);
@@ -151,10 +151,7 @@ export async function serveHTTP(
 		options.port ?? 3000,
 	);
 
-	// NOTE: maybe embed/depend on stoppable ~ https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
 	const stop = createStoppable(server, { grace: options.grace });
-
-	(server as any)[Symbol.asyncDispose] = stop;
 
 	// options.terminator?._enqueue({
 	// 	[Symbol.asyncDispose]: () => stop() as Promise<void>,
@@ -163,7 +160,7 @@ export async function serveHTTP(
 	// NOTE: AbortSignal? ~ it loses the async-ness
 	// options.signal?.addEventListener("abort", () => stop());
 
-	return Object.assign(server, { stop });
+	return Object.assign(server, { stop, [Symbol.asyncDispose]: stop });
 }
 
 export interface StopServerOptions {
