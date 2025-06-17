@@ -1,7 +1,7 @@
 import { assertEquals, describe, it } from "../core/test-deps.js";
 import { _StructError as StructError } from "./mod.ts";
 
-describe("StructError", () => {
+describe("Structure.Error", () => {
 	describe("constructor", () => {
 		it("stores values", () => {
 			const err = new StructError("error message", "some.path");
