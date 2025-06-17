@@ -30,7 +30,6 @@ export class Container<T extends Dependencies> {
 	}
 
 	reset() {
-		// TODO: should this also clear unwrapped?
 		this.overrides.clear();
 	}
 
@@ -58,7 +57,7 @@ export class Container<T extends Dependencies> {
 	}
 }
 
-// TODO: I'm not sure if Container should reach deeply into dependencies,
+// NOTE: I'm not sure if Container should reach deeply into dependencies,
 // it forces dependencies to be objects
 function unmetDependency(name: string) {
 	const get = (target: any, path: any) => {

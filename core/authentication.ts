@@ -57,6 +57,7 @@ export interface AuthenticationServiceOptions {
 	/** milliseconds */ sessionDuration: number;
 }
 
+/** @unstable */
 export class AuthenticationService implements AbstractAuthenticationService {
 	options: AuthenticationServiceOptions;
 	store: Store;
@@ -150,7 +151,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 			`${this.options.cookieName}=${token}; Max-Age=${duration}; Path=/; HttpOnly`,
 		);
 
-		// TODO: Microsoft "safe links" opens URLs, generates auth then throws it away
+		// NOTE: Microsoft "safe links" opens URLs, generates auth then throws it away
 		// Maybe it should be a counter? like 3 you get uses
 		// await cache.delete(`/authn/request/${request.token}`)
 
