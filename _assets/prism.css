@@ -4,12 +4,14 @@
 
 	--r0b-keyword: #e58ef7;
 	--r0b-string: #f8fd70;
-	--r0b-type: 9edaff;
+	--r0b-type: #9edaff;
 	--r0b-field: #eeb06e;
 	--r0b-primative: #ea74d7;
 	--r0b-function: #6cec8c;
 	--r0b-operator: #99e0ec;
 	--r0b-comment: #87968b;
+
+	--r0b-bold: #eeffff;
 }
 
 pre {
