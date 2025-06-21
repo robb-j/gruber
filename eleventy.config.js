@@ -27,4 +27,5 @@ export const config = {
 		layouts: "_includes/layouts",
 		output: "bundle/website",
 	},
+	markdownTemplateEngine: "njk",
 };
