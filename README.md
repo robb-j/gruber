@@ -12,14 +12,14 @@ An isomorphic JavaScript library for creating web apps.
 ## Contents
 
 - [Quick tour](/quick-tour/)
-- [Core](/core/)
-- [HTTP](/http/)
-- [Configuration](/config/)
-- [Migrations](/core#migrations)
-- [Testing](/testing/)
-- [Node](/node/)
-- [Deno](/deno/)
-- [Examples](/examples/)
+- [Core](/core/) — essential primitives that use or build on web-standards
+- [HTTP](/http/) — quickly define server endpoints
+- [Configuration](/config/) — specify exactly how to configure your application
+- [Migrations](/core#migrations) — curate how to migrate your state
+- [Testing](/testing/) — ensure your code does what you thought it does
+- [Node](/node/) — easily use Gruber in Node.js
+- [Deno](/deno/) — easily use Gruber in Deno
+- [Examples](/examples/) — more in-depth use cases and patterns
 
 ## About
 
