@@ -11,7 +11,7 @@ An isomorphic JavaScript library for creating web apps.
 
 ## Contents
 
-- [Quick tour](/quick-tour/)
+- [Quick tour](/quick-tour/) — a whistle-stop tour of all of Gruber
 - [Core](/core/) — essential primitives that use or build on web-standards
 - [HTTP](/http/) — quickly define server endpoints
 - [Configuration](/config/) — specify exactly how to configure your application
