@@ -33,7 +33,7 @@ export const helloRoute = defineRoute({
 ```
 
 A route is a definition to handle a specific HTTP request with a response.
-It defines which method and path it is responding to and an asynchronous funcition to generate a response.
+It defines which method and path it is responding to and an asynchronous function to generate a response.
 
 Both the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
@@ -61,9 +61,9 @@ export async function runServer(options = { port: 3000 }) {
 
 There are a few things going on here too.
 
-**FetchRouter** is a runtime-agnosting routing library, based on the definitions from `defineRoute`
+**FetchRouter** is a runtime-agnostic routing library, based on the definitions from `defineRoute`
 
-**serveHTTP** is a Node.js helper to quickly start a server using Fetch API Request & Response primatives, rather than the native [IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) and [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse). You pass it a function that returns a Response. Inspired by `Deno.serve`.
+**serveHTTP** is a Node.js helper to quickly start a server using Fetch API Request & Response primitives, rather than the native [IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) and [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse). You pass it a function that returns a Response. Inspired by `Deno.serve`.
 
 [More about HTTP →](/http/)
 
@@ -95,13 +95,13 @@ try {
 }
 ```
 
-This is mostly yargs-specific code, it creates an entrypoint so we can run the server and configure the port it runs on.
+This is mostly yargs-specific code, it creates an entry-point so we can run the server and configure the port it runs on.
 
 ## Configuration
 
 The CLI is one way of changing how the application runs by exposing options to configure what the code does. Gruber has a much more in-depth **Configuration** module you can use to declaratively define how all parts of your application are configured.
 
-> Reccomended reading [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) - it really inspired the design of configuration
+> Recommended reading [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) - it really inspired the design of configuration
 
 Lets use configuration, create **config.js**:
 
@@ -239,7 +239,7 @@ cli.command(
 
 ## Migrations
 
-Migrations are another Gruber primative for safely transitioning between states of your application.
+Migrations are another Gruber primitive for safely transitioning between states of your application.
 
 Migrations are a directory of JavaScript that are designed to be run in alphabetical order.
 A migration is made up of an "up" and "down" function, one to do the change, one to undo it later.
@@ -291,8 +291,8 @@ export async function getMigrator() {
 }
 ```
 
-`Migrator` is an agnostic primative for migrating there is also a bespoke integration with [postgres.js](https://github.com/porsager/postgres).
-When used agnostically, it facilitates the preperation and running of migrations.
+`Migrator` is an agnostic primitive for migrating there is also a bespoke integration with [postgres.js](https://github.com/porsager/postgres).
+When used agnostically, it facilitates the preparation and running of migrations.
 With postgres, it uses that facilitation to add a `migrations` table to track which have been run and execute new ones.
 
 > `loader` is a utility to run a function once and cache the result for subsequent calls, it's a very basic "memo".
@@ -327,9 +327,7 @@ cli.command(
 );
 ```
 
-The `Migrator` is agnostic and provides a bespoke integration with [postgres.js](https://github.com/porsager/postgres).
-When used agnostically, it facilitates the preperation and running of migrations.
-With postgres, it uses that facilitation to add a `migrations` table to track which have been run and execute new ones.
+Now we can run and un-run our migrations from the command line.
 
 [More about Migrations →](/core/#migrations)
 

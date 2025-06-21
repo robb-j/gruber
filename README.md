@@ -25,8 +25,8 @@ An isomorphic JavaScript library for creating web apps.
 
 Gruber is a collection of modules for creating isomorphic JavaScript applications, that means web-standards JavaScript on the front- and back-end. It's a bet that web-standards aren't going to change, so our apps don't break in the future. There's also a hope that [WinterTG](https://wintertc.org/work) works some stuff out. (Previously WinterCG, which is a good step!)
 
-Gruber acknowledges that web-standards don't do everything we want (at least yet!) and that they aren't implemented properly everwhere either.
-For this reason, the core of Gruber is agnostic and attempts to make sensible building blocks on top of them. Then there are **helpers** for using specific runtimes and **modules** that build around those common primatives.
+Gruber acknowledges that web-standards don't do everything we want (at least yet!) and that they aren't implemented properly everywhere either.
+For this reason, the core of Gruber is agnostic and attempts to make sensible building blocks on top of them. Then there are **helpers** for using specific runtimes and **modules** that build around those common primitives.
 
 Gruber itself is a library and can be used however you like. The rest are **patterns** which you can apply if you like.
 Patterns are ways of structuring your code if you don't already have opinions on the matter.
@@ -55,6 +55,11 @@ Some of the apps I've made:
 Many frameworks expect you to be making the next big platform with millions of users,
 I don't expect this to be true and would prefer to keep things as simple as possible for the projects I am working on.
 
+I'm also quite wary of going all-in on a big tech company's library or framework,
+having explored lots of them on smaller projects.
+The fatigue from breaking changes or deprecations is real,
+"move fast and break things" sounds great but it creates a lot of maintenance when you work of lots of small projects in small teams.
+
 ## Principles
 
 - Composability — logic should be composed together rather than messily intertwined
@@ -62,5 +67,5 @@ I don't expect this to be true and would prefer to keep things as simple as poss
 - Agnostic — a frontend framework or backend runtime shouldn't be forced upon you
 - Patterns — how you _could_ use modules rather than enforce an implementation
 - Minimal — start small, carefully add features and consider removing them
-- Hollistic — by owning the tech-stack it creates unique opportunities for integration
+- Holistic — by owning the tech-stack it creates unique opportunities for integration
 - No magic — it's confusing when you don't know whats going on
