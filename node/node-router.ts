@@ -5,18 +5,20 @@ import {
 	IncomingMessage,
 	RequestListener,
 	ServerResponse,
+	Server,
 } from "node:http";
+import { Socket } from "node:net";
 
-import { FetchRouter } from "../core/fetch-router.ts";
-import { RouteDefinition } from "../core/http.ts";
+import { FetchRouter } from "../http/fetch-router.ts";
+import { RouteDefinition } from "../http/define-route.ts";
 import { MaybePromise } from "../core/types.ts";
 
 export interface NodeRouterOptions {
-	routes?: RouteDefinition[];
+	routes?: RouteDefinition<any, any>[];
 }
 
 /**
-	A HTTP router for Node.js, powered by Koa
+	A HTTP router for pure Node.js
 
 	```js
 	import http from "node:http";
@@ -115,6 +117,9 @@ export function getResponseReadable(response: Response, res?: ServerResponse) {
 export interface ServeHTTPOptions {
 	port: number;
 	hostname?: string;
+	grace?: number;
+	// signal?: AbortSignal;
+	// terminator?: Terminator;
 }
 
 /** @unstable */
@@ -123,10 +128,10 @@ export interface ServeHTTPHandler {
 }
 
 /** @unstable A node version of Deno.serve now all the polyfills are in place */
-export function serveHTTP(
+export async function serveHTTP(
 	options: ServeHTTPOptions,
 	handler: ServeHTTPHandler,
-) {
+): Promise<Server & Stoppable & AsyncDisposable> {
 	const http = createServer(async (httpReq, httpRes) => {
 		const request = getFetchRequest(httpReq);
 		const response = await handler(request);
@@ -135,17 +140,100 @@ export function serveHTTP(
 
 	const server = http.listen(
 		{ port: options.port, hostname: options.hostname },
-		() => {
-			console.log(
-				"Listening on http://%s:%s",
-				options.hostname ?? "0.0.0.0",
-				options.port ?? 3000,
-			);
-		},
+		() => {},
 	);
 
-	// NOTE: AbortSignal?
-	// NOTE: maybe embed/depend on stoppable ~ https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
+	await new Promise<void>((r) => server.once("listening", () => r()));
 
-	return server;
+	console.log(
+		"Listening on http://%s:%s",
+		options.hostname ?? "0.0.0.0",
+		options.port ?? 3000,
+	);
+
+	const stop = createStoppable(server, { grace: options.grace });
+
+	// options.terminator?._enqueue({
+	// 	[Symbol.asyncDispose]: () => stop() as Promise<void>,
+	// });
+
+	// NOTE: AbortSignal? ~ it loses the async-ness
+	// options.signal?.addEventListener("abort", () => stop());
+
+	return Object.assign(server, { stop, [Symbol.asyncDispose]: stop });
+}
+
+export interface StopServerOptions {
+	grace?: number;
+}
+
+export interface Stoppable {
+	stop(): Promise<boolean>;
+}
+
+// Adapted from https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
+export function createStoppable(
+	server: Server,
+	options: StopServerOptions = {},
+): Stoppable["stop"] {
+	const timeout = typeof options.grace === "number" ? options.grace : Infinity;
+	const socketRequests = new Map<Socket, number>();
+
+	let stopping = false;
+	let gracefully = true;
+
+	// Listen for sockets
+	server.on("connection", (socket) => {
+		socketRequests.set(socket, 0);
+		socket.once("close", () => socketRequests.delete(socket));
+	});
+
+	// Count the requests per socket as they come in/out of the server
+	// so we can later determine idle connections
+	server.on("request", (req, res) => {
+		if (!socketRequests.has(req.socket)) return;
+
+		socketRequests.set(req.socket, socketRequests.get(req.socket)! + 1);
+
+		res.once("finish", () => {
+			if (!socketRequests.has(req.socket)) return;
+
+			const pending = socketRequests.get(req.socket)! - 1;
+			socketRequests.set(req.socket, pending);
+
+			if (stopping && pending === 0) req.socket.end();
+		});
+	});
+
+	// Dangerously end sockets and destroy connections
+	async function nuke() {
+		gracefully = false;
+		for (const socket of socketRequests.keys()) socket.end();
+		await new Promise((r) => setImmediate(r));
+		for (const socket of socketRequests.keys()) socket.destroy();
+	}
+
+	return async () => {
+		if (stopping) throw new Error("already stopping");
+
+		// allow request handlers to update state before we act on that state
+		await new Promise((r) => setImmediate(r));
+
+		stopping = true;
+
+		// Start the countdown to fully stop the server, if a timeout was set
+		if (timeout < Infinity) setTimeout(() => nuke(), timeout);
+
+		// Start closing the server
+		const promise = new Promise<boolean>((resolve, reject) =>
+			server.close((err) => (err ? reject(err) : resolve(gracefully))),
+		);
+
+		// Close any idle sockets
+		for (const [socket, requests] of socketRequests.entries()) {
+			if (requests === 0) socket.end();
+		}
+
+		return promise;
+	};
 }

@@ -1,0 +1,55 @@
+:root {
+	--r0b-background: #322d3e;
+	--r0b-foreground: #e5f0e9;
+
+	--r0b-keyword: #e58ef7;
+	--r0b-string: #f8fd70;
+	--r0b-type: #9edaff;
+	--r0b-field: #eeb06e;
+	--r0b-primative: #ea74d7;
+	--r0b-function: #6cec8c;
+	--r0b-operator: #99e0ec;
+	--r0b-comment: #87968b;
+
+	--r0b-bold: #eeffff;
+}
+
+pre {
+	color: var(--r0b-foreground);
+	background-color: var(--r0b-background);
+	border: none;
+}
+
+pre > code {
+	padding: unset;
+	background: unset;
+	border-radius: unset;
+	font-size: 0.9em;
+	tab-size: 2em;
+}
+
+.token.keyword {
+	color: var(--r0b-keyword);
+}
+.token.string {
+	color: var(--r0b-string);
+}
+.token.function {
+	color: var(--r0b-function);
+}
+.token.operator {
+	color: var(--r0b-operator);
+}
+.token.builtin,
+.token.class-name {
+	color: var(--r0b-type);
+}
+.token.comment {
+	color: var(--r0b-comment);
+}
+.token.number {
+	color: var(--r0b-primative);
+}
+.token.property {
+	color: var(--r0b-field);
+}

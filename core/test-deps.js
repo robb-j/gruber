@@ -1,5 +1,8 @@
 export * from "https://deno.land/std@0.211.0/assert/mod.ts";
 export * from "https://deno.land/std@0.211.0/testing/bdd.ts";
+export { z as zod } from "npm:zod@^3.25.67";
+export * as valibot from "jsr:@valibot/valibot@^1.1.0";
+export * as ark from "npm:arktype@^2.1.20";
 
 /** @returns {import("./random.ts").RandomService} */
 export function fakeRandom() {

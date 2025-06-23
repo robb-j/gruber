@@ -13,8 +13,7 @@ export interface Store {
 	get<T>(key: string): Promise<T | undefined>;
 	set<T>(key: string, value: T, options?: StoreSetOptions): Promise<void>;
 	delete(key: string): Promise<void>;
-
-	/*TODO: is this method needed?*/ close(): Promise<void>;
+	close(): Promise<void>;
 }
 
 /** @unstable */

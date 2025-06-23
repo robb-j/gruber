@@ -5,9 +5,14 @@
 
 import "gruber/polyfill.js";
 
-import { createServer } from "node:http";
+import {
+	defineRoute,
+	getTerminator,
+	HTTPError,
+	NodeRouter,
+	serveHTTP,
+} from "gruber";
 import process from "node:process";
-import { defineRoute, HTTPError, NodeRouter, getTerminator } from "gruber";
 
 const terminator = getTerminator({
 	timeout: process.env.NODE_ENV === "development" ? 0 : 5_000,
@@ -38,17 +43,10 @@ const routes = [helloRoute, healthzRoute];
 
 async function runServer(options) {
 	const router = new NodeRouter({ routes });
-	const server = createServer(router.forHttpServer());
-
-	server.listen(options, () => {
-		console.log("Listening on http://%s:%d", options.hostname, options.port);
-	});
+	const server = await serveHTTP(options, (req) => router.getResponse(req));
 
 	terminator.start(async () => {
-		// NOTE – maybe use something like `stoppable`
-		await new Promise((resolve, reject) => {
-			server.close((err) => (err ? reject(err) : resolve()));
-		});
+		await server.stop();
 	});
 }
 

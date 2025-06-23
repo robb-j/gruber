@@ -3,7 +3,7 @@ import {
 	Response as ExpressResponse,
 } from "express";
 
-import { FetchRouter } from "../core/fetch-router.ts";
+import { FetchRouter } from "../http/fetch-router.ts";
 import {
 	applyResponse,
 	getFetchRequest,

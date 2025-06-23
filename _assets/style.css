@@ -1,0 +1,37 @@
+.homeHero h1 {
+	font-size: 4.9rem;
+}
+body > header nav a {
+	font-size: 1.1rem;
+	font-weight: 400;
+}
+.brand {
+	text-decoration: none;
+}
+.brand:hover {
+	text-decoration: underline;
+}
+
+/* dracula fixes */
+.token.punctuation {
+	color: unset;
+}
+pre {
+	padding: var(--s0);
+}
+
+/* EXPERIMENTAL */
+.gutters {
+	display: grid;
+	grid-template-columns: 1fr var(--s1) minmax(0, var(--measure)) var(--s1) 1fr;
+	margin-inline: calc(var(--s1) * -1);
+}
+.gutters > * {
+	grid-column: 3;
+}
+.gutters > [data-gutter="pop"] {
+	grid-column: 2 / 4;
+}
+.gutters > [data-gutter="fill"] {
+	grid-column: 1 / 6;
+}

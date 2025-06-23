@@ -1,19 +1,27 @@
 {
 	"private": true,
-	"version": "0.8.0",
+	"version": "0.9.0-beta.0",
 	"type": "module",
-	"scripts": {},
+	"scripts": {
+		"website": "eleventy --serve"
+	},
 	"devDependencies": {
-		"@types/express": "^5.0.0",
+		"@11ty/eleventy": "^3.1.0",
+		"@11ty/eleventy-navigation": "^1.0.4",
+		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
+		"@openlab/alembic": "^0.4.0",
+		"@types/express": "^5.0.2",
 		"@types/koa": "^2.15.0",
-		"@types/node": "^22.8.6",
+		"@types/node": "^22.15.21",
+		"dracula-prism": "^2.1.16",
 		"jose": "^5.9.6",
-		"postgres": "^3.4.5",
+		"markdown-it-anchor": "^9.2.0",
+		"postgres": "^3.4.7",
 		"prettier": "^3.3.3",
 		"redis": "^4.7.0",
-		"tsx": "^4.19.2",
-		"typescript": "^5.7.2",
-		"urlpattern-polyfill": "^10.0.0"
+		"tsx": "^4.19.4",
+		"typescript": "^5.8.3",
+		"urlpattern-polyfill": "^10.1.0"
 	},
 	"prettier": {}
 }

@@ -2,7 +2,9 @@ import fs from "node:fs";
 import process from "node:process";
 import util from "node:util";
 
-import { Configuration, ConfigurationOptions } from "../core/configuration.ts";
+import { Configuration, ConfigurationOptions } from "../config/mod.ts";
+
+export * from "../config/mod.ts";
 
 export function getConfigurationOptions(): ConfigurationOptions {
 	const args = util.parseArgs({
@@ -39,8 +41,8 @@ export function getConfiguration() {
 	return new Configuration(getConfigurationOptions());
 }
 
-/** @deprecated use `getConfigurationOptions` */
+/** @deprecated use {@link getConfigurationOptions} */
 export const getNodeConfigOptions = getConfigurationOptions;
 
-/** @deprecated use `getNodeConfiguration` */
+/** @deprecated use {@link getConfiguration} */
 export const getNodeConfiguration = getConfiguration;

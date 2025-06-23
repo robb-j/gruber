@@ -1,4 +1,4 @@
-import { HTTPError } from "./http.ts";
+import { HTTPError } from "../http/http-error.ts";
 import { RandomService } from "./random.ts";
 import { Store } from "./store.ts";
 import { TokenService } from "./tokens.ts";
@@ -57,13 +57,23 @@ export interface AuthenticationServiceOptions {
 	/** milliseconds */ sessionDuration: number;
 }
 
+/** @unstable */
 export class AuthenticationService implements AbstractAuthenticationService {
+	options: AuthenticationServiceOptions;
+	store: Store;
+	random: RandomService;
+	tokens: TokenService;
 	constructor(
-		public options: AuthenticationServiceOptions,
-		public store: Store,
-		public random: RandomService,
-		public tokens: TokenService,
-	) {}
+		options: AuthenticationServiceOptions,
+		store: Store,
+		random: RandomService,
+		tokens: TokenService,
+	) {
+		this.options = options;
+		this.store = store;
+		this.random = random;
+		this.tokens = tokens;
+	}
 
 	//
 	// Internal
@@ -141,7 +151,7 @@ export class AuthenticationService implements AbstractAuthenticationService {
 			`${this.options.cookieName}=${token}; Max-Age=${duration}; Path=/; HttpOnly`,
 		);
 
-		// TODO: Microsoft "safe links" opens URLs, generates auth then throws it away
+		// NOTE: Microsoft "safe links" opens URLs, generates auth then throws it away
 		// Maybe it should be a counter? like 3 you get uses
 		// await cache.delete(`/authn/request/${request.token}`)
 

@@ -44,7 +44,6 @@ export class JoseTokens implements TokenService {
 				scope: token.payload.scope as string,
 			};
 		} catch (error) {
-			// TODO: translate JWT errors better?
 			return null;
 		}
 	}

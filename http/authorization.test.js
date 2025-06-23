@@ -4,7 +4,7 @@ import {
 	describe,
 	fakeTokens,
 	it,
-} from "./test-deps.js";
+} from "../core/test-deps.js";
 import {
 	_checkScope,
 	_expandScopes,
