@@ -1,5 +1,5 @@
 import process from "node:process";
-import { Terminator, TerminatorOptions } from "../core/terminator.ts";
+import { Terminator, type TerminatorOptions } from "../core/terminator.ts";
 
 export interface NodeTerminatorOptions {
 	timeout?: number;

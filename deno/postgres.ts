@@ -1,4 +1,4 @@
-import { type SqlDependency } from "../core/types.ts";
+import type { SqlDependency } from "../core/types.ts";
 import { Migrator, MigratorOptions, loadMigration } from "../core/migrator.ts";
 import {
 	executePostgresMigration,

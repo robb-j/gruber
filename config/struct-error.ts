@@ -1,4 +1,4 @@
-import { StandardSchemaV1 } from "./standard-schema.ts";
+import type { StandardSchemaV1 } from "./standard-schema.ts";
 import type { Structure } from "./structure.ts";
 
 /** @internal */

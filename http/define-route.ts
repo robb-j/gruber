@@ -1,7 +1,7 @@
 import {
 	Container,
-	Dependencies,
-	UnwrapDependencies,
+	type Dependencies,
+	type UnwrapDependencies,
 } from "../core/container.ts";
 
 export type HTTPMethod =

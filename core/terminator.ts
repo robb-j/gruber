@@ -1,4 +1,4 @@
-import { TimerService } from "./timers.ts";
+import type { TimerService } from "./timers.ts";
 
 export interface TerminatorOptions {
 	timeout: number;

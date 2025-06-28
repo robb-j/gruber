@@ -2,7 +2,7 @@ import type { StandardSchemaV1 } from "./standard-schema.ts";
 import {
 	_nestContext,
 	DEFAULT_CONTEXT,
-	StructContext,
+	type StructContext,
 } from "./struct-context.ts";
 import { _StructError } from "./struct-error.ts";
 

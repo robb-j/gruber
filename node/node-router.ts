@@ -1,17 +1,17 @@
 import { Readable } from "node:stream";
 import {
 	createServer,
-	IncomingHttpHeaders,
-	IncomingMessage,
-	RequestListener,
+	type IncomingHttpHeaders,
+	type IncomingMessage,
+	type RequestListener,
 	ServerResponse,
 	Server,
 } from "node:http";
 import { Socket } from "node:net";
 
 import { FetchRouter } from "../http/fetch-router.ts";
-import { RouteDefinition } from "../http/define-route.ts";
-import { MaybePromise } from "../core/types.ts";
+import { type RouteDefinition } from "../http/define-route.ts";
+import { type MaybePromise } from "../core/types.ts";
 
 export interface NodeRouterOptions {
 	routes?: RouteDefinition<any, any>[];

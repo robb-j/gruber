@@ -1,11 +1,11 @@
-import { Structure, Infer } from "./structure.ts";
+import { Structure } from "./structure.ts";
 import { formatMarkdownTable, PromiseList } from "../core/mod.ts";
 import {
 	arraySpec,
-	ConfigurationDescription,
+	type ConfigurationDescription,
 	getSpecification,
 	objectSpec,
-	PrimativeOptions,
+	type PrimativeOptions,
 	primativeSpec,
 } from "./specifications.ts";
 import {
@@ -13,9 +13,9 @@ import {
 	_parseFloat,
 	_parsePrimative,
 	_parseURL,
-	ConfigurationResult,
+	type ConfigurationResult,
 } from "./parsers.ts";
-import { StructContext } from "./struct-context.ts";
+import { type StructContext } from "./struct-context.ts";
 
 export interface ConfigurationOptions {
 	readTextFile(url: URL | string): Promise<string | null>;

@@ -1,6 +1,6 @@
-import { MigrationDefinition } from "./migrator.ts";
-import { TimerService } from "./timers.ts";
-import { RedisDependency, SqlDependency } from "./types.ts";
+import type { MigrationDefinition } from "./migrator.ts";
+import type { TimerService } from "./timers.ts";
+import type { RedisDependency, SqlDependency } from "./types.ts";
 
 /** @unstable */
 export interface StoreSetOptions {

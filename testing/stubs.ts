@@ -1,4 +1,4 @@
-import { TokenService } from "../core/mod.ts";
+import type { TokenService } from "../core/mod.ts";
 import { AuthorizationService } from "../http/mod.ts";
 
 export function fakeToken(scope: string, userId?: number) {

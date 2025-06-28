@@ -1,7 +1,7 @@
 import { HTTPError } from "../http/http-error.ts";
-import { RandomService } from "./random.ts";
-import { Store } from "./store.ts";
-import { TokenService } from "./tokens.ts";
+import type { RandomService } from "./random.ts";
+import type { Store } from "./store.ts";
+import type { TokenService } from "./tokens.ts";
 
 /**
  * An in-progress authentication, being stored while the client completes their challenge

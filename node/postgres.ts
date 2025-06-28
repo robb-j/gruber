@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { SqlDependency } from "../core/types.ts";
 
-import { loadMigration, Migrator, MigratorOptions } from "../core/migrator.ts";
+import {
+	loadMigration,
+	Migrator,
+	type MigratorOptions,
+} from "../core/migrator.ts";
 import {
 	executePostgresMigration,
 	getPostgresMigrations,

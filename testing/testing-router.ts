@@ -1,4 +1,4 @@
-import { FetchRouter, HTTPError, RouteDefinition } from "../http/mod.ts";
+import { FetchRouter, HTTPError } from "../http/mod.ts";
 
 export interface TestingRequestInit extends RequestInit {
 	dependencies?: Record<string, unknown>;

@@ -13,6 +13,11 @@ const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
 
+/**
+ * plop
+ * @something else
+ */
+
 async function node() {
 	// Setup directory
 	nuke("bundle/node");
@@ -58,6 +63,7 @@ async function node() {
 			strict: true,
 			rewriteRelativeImportExtensions: true,
 			erasableSyntaxOnly: true,
+			verbatimModuleSyntax: true,
 		},
 	});
 	exec("npx tsc", {

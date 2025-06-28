@@ -1,4 +1,4 @@
-import { type JoseDependency } from "./types.ts";
+import type { JoseDependency } from "./types.ts";
 
 export interface AuthzToken {
 	userId?: number;

@@ -1,4 +1,4 @@
-import {
+import type {
 	RequestHandler as ExpressRequestHandler,
 	Response as ExpressResponse,
 } from "express";
@@ -7,7 +7,7 @@ import { FetchRouter } from "../http/fetch-router.ts";
 import {
 	applyResponse,
 	getFetchRequest,
-	NodeRouterOptions,
+	type NodeRouterOptions,
 } from "./node-router.ts";
 
 /**

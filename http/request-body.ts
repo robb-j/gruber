@@ -1,4 +1,4 @@
-import { StandardSchemaV1, Structure } from "../config/mod.ts";
+import type { StandardSchemaV1 } from "../config/mod.ts";
 import { HTTPError } from "./http-error.ts";
 
 /** @unstable */

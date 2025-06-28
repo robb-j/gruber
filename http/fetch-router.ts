@@ -1,5 +1,9 @@
 import { Cors } from "./cors.ts";
-import { RouteContext, RouteDefinition, RouteResult } from "./define-route.ts";
+import type {
+	RouteContext,
+	RouteDefinition,
+	RouteResult,
+} from "./define-route.ts";
 import { HTTPError } from "./http-error.ts";
 
 function _defaultLogger(request: Request, response: Response) {

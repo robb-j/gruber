@@ -1,10 +1,4 @@
-import {
-	assertEquals,
-	assertThrows,
-	describe,
-	fakeTokens,
-	it,
-} from "./test-deps.js";
+import { assertEquals, describe, it } from "./test-deps.js";
 import { CompositeTokens } from "./tokens.ts";
 
 describe("CompositeTokens", () => {

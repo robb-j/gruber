@@ -1,5 +1,5 @@
 import { HTTPError } from "./http-error.ts";
-import { AuthzToken, TokenService } from "../core/mod.ts";
+import type { AuthzToken, TokenService } from "../core/mod.ts";
 
 /**
  * Based on deno std

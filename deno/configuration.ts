@@ -1,4 +1,4 @@
-import { Configuration, ConfigurationOptions } from "../config/mod.ts";
+import { Configuration, type ConfigurationOptions } from "../config/mod.ts";
 import { parseArgs } from "./deps.ts";
 
 export * from "../config/mod.ts";

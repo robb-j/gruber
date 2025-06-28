@@ -1,5 +1,5 @@
-import { ConfigurationOptions } from "./configuration.ts";
-import { PrimativeOptions } from "./specifications.ts";
+import type { ConfigurationOptions } from "./configuration.ts";
+import type { PrimativeOptions } from "./specifications.ts";
 
 export type ConfigurationResult =
 	| { source: "argument"; value: unknown }

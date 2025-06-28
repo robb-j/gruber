@@ -1,10 +1,10 @@
 import type { SqlDependency } from "./types.ts";
 import {
 	defineMigration,
-	MigrateDirection,
-	MigrationDefinition,
-	MigrationOptions,
-	MigrationRecord,
+	type MigrateDirection,
+	type MigrationDefinition,
+	type MigrationOptions,
+	type MigrationRecord,
 } from "./migrator.ts";
 
 export interface PostgresMigrationRecord {
