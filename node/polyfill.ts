@@ -1,1 +1,1 @@
-import("urlpattern-polyfill");
+import "urlpattern-polyfill";
