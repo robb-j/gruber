@@ -11,19 +11,20 @@ import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-} from "../core/postgres.ts";
+	type PostgresService,
+} from "../postgres/mod.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: unknown;
+	sql: PostgresService;
 	directory: URL;
 }
 
-export function getPostgresMigratorOptions(
-	options: PostgresMigratorOptions,
-): MigratorOptions<SqlDependency> {
-	const sql = options.sql as SqlDependency;
+export function getPostgresMigratorOptions({
+	sql,
+	directory,
+}: PostgresMigratorOptions): MigratorOptions<SqlDependency> {
 	return {
 		getRecords() {
 			return getPostgresMigrations(sql);
@@ -38,7 +39,7 @@ export function getPostgresMigratorOptions(
 				{ name: "000-bootstrap.js", ...postgresBootstrapMigration },
 			];
 
-			const files = await fs.readdir(options.directory, {
+			const files = await fs.readdir(directory, {
 				withFileTypes: true,
 			});
 
@@ -46,7 +47,7 @@ export function getPostgresMigratorOptions(
 				if (!stat.isFile()) continue;
 				if (!migrationExtensions.has(path.extname(stat.name))) continue;
 
-				migrations.push(await loadMigration(stat.name, options.directory));
+				migrations.push(await loadMigration(stat.name, directory));
 			}
 
 			return migrations.sort((a, b) => a.name.localeCompare(b.name));

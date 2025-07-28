@@ -1,6 +1,5 @@
-import type { MigrationDefinition } from "./migrator.ts";
 import type { TimerService } from "./timers.ts";
-import type { RedisDependency, SqlDependency } from "./types.ts";
+import type { RedisDependency } from "./types.ts";
 
 /** @unstable */
 export interface StoreSetOptions {
@@ -56,92 +55,6 @@ export class MemoryStore implements Store {
 	close(): Promise<void> {
 		return Promise.resolve();
 	}
-}
-
-/** @unstable */
-export interface PostgresValue {
-	key: string;
-	value: any;
-	expiry: Date | null;
-}
-
-/** @unstable */
-export interface PostgresStoreOptions {
-	tableName?: string;
-}
-
-/** @unstable */
-export class PostgresStore implements Store {
-	get tableName() {
-		return this.options.tableName;
-	}
-
-	static getMigration(tableName: string): MigrationDefinition<any> {
-		return {
-			name: "00-postgres-store",
-			up: async (sql) => {
-				await sql`
-					CREATE TABLE ${tableName} {
-						"key" VARCHAR(255) PRIMARY KEY,
-						"value" JSONB NOT NULL,
-						"expiry" TIMESTAMP DEFAULT NULL
-					}
-				`;
-			},
-			down: async (sql) => {
-				await sql`
-					DROP TABLE ${tableName}
-				`;
-			},
-		};
-	}
-
-	sql: SqlDependency;
-	options: Required<PostgresStoreOptions>;
-	constructor(sql: unknown, options: PostgresStoreOptions = {}) {
-		this.sql = sql as SqlDependency;
-		this.options = {
-			tableName: options.tableName ?? "cache",
-		};
-	}
-
-	async get<T>(key: string): Promise<T | undefined> {
-		const [record = null] = await this.sql<PostgresValue[]>`
-			SELECT name, key, expiry
-			FROM ${this.tableName}
-			WHERE key = ${key}
-		`;
-		if (record?.expiry && record.expiry.getTime() < Date.now()) {
-			this.delete(key);
-		}
-		return record?.value;
-	}
-
-	async set<T>(
-		key: string,
-		value: T,
-		options: StoreSetOptions = {},
-	): Promise<void> {
-		const record: PostgresValue = { key, value, expiry: null };
-
-		if (options.maxAge) {
-			record.expiry = new Date(Date.now() + options.maxAge);
-		}
-
-		await this.sql`
-			INSERT INTO ${this.tableName} ${this.sql(record)}
-			ON CONFLICT (key) DO UPDATE
-				SET value = EXCLUDED.value, expiry = EXCLUDED.expiry;
-		`;
-	}
-
-	async delete(key: string): Promise<void> {
-		await this.sql`
-			DELETE FROM ${this.tableName} WHERE key = ${key}
-		`;
-	}
-
-	async close(): Promise<void> {}
 }
 
 /** @unstable */

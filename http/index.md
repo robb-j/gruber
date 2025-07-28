@@ -1,5 +1,4 @@
 ---
-permalink: /http/
 layout: simple.njk
 eleventyNavigation:
   key: HTTP

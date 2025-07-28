@@ -1,5 +1,4 @@
 ---
-permalink: /config/
 layout: simple.njk
 eleventyNavigation:
   key: Config

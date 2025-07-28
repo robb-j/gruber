@@ -4,20 +4,21 @@ import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-} from "../core/postgres.ts";
+	type PostgresService,
+} from "../postgres/mod.ts";
 import { extname } from "./deps.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: unknown;
+	sql: PostgresService;
 	directory: URL;
 }
 
-export function getPostgresMigratorOptions(
-	options: PostgresMigratorOptions,
-): MigratorOptions<SqlDependency> {
-	const sql = options.sql as SqlDependency;
+export function getPostgresMigratorOptions({
+	sql,
+	directory,
+}: PostgresMigratorOptions): MigratorOptions<SqlDependency> {
 	return {
 		getRecords() {
 			return getPostgresMigrations(sql);
@@ -32,11 +33,11 @@ export function getPostgresMigratorOptions(
 				{ name: "000-bootstrap.ts", ...postgresBootstrapMigration },
 			];
 
-			for await (const stat of Deno.readDir(options.directory)) {
+			for await (const stat of Deno.readDir(directory)) {
 				if (!stat.isFile) continue;
 				if (!migrationExtensions.has(extname(stat.name))) continue;
 
-				migrations.push(await loadMigration(stat.name, options.directory));
+				migrations.push(await loadMigration(stat.name, directory));
 			}
 
 			return migrations.sort((a, b) => a.name.localeCompare(b.name));

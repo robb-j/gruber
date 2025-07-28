@@ -1,14 +1,12 @@
 ---
 layout: simple.njk
 eleventyNavigation:
-  key: Helpers
+  key: Integrations
   order: 6
 ---
 
-# Helpers
+# Integrations
 
 These are utilities and wrappers that get you towards using web-standards and Gruber, rather than platform specifics.
 
-The helpers:
-
-{{ collections.all | eleventyNavigation("Helpers") | eleventyNavigationToHtml | safe }}
+{{ collections.all | eleventyNavigation("Integrations") | eleventyNavigationToHtml | safe }}

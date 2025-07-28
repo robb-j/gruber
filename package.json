@@ -15,10 +15,10 @@
 		"@types/node": "^22.15.21",
 		"dracula-prism": "^2.1.16",
 		"jose": "^5.9.6",
-		"markdown-it-anchor": "^9.2.0",
 		"postgres": "^3.4.7",
 		"prettier": "^3.3.3",
 		"redis": "^4.7.0",
+		"ts-morph": "^26.0.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
 		"urlpattern-polyfill": "^10.1.0"

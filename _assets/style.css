@@ -1,3 +1,7 @@
+:root {
+	scroll-behavior: smooth;
+}
+
 .homeHero h1 {
 	font-size: 4.9rem;
 }
@@ -34,4 +38,24 @@ pre {
 }
 .gutters > [data-gutter="fill"] {
 	grid-column: 1 / 6;
+}
+
+sidebar-layout {
+	position: relative;
+}
+sidebar-layout > nav:first-child > .flow {
+	position: sticky;
+	top: 0;
+}
+
+main.api {
+	flex: 1;
+	padding: var(--s0);
+}
+main.api h2 {
+	position: sticky;
+	top: 0;
+	background: var(--background);
+	padding-bottom: 0.5rem;
+	margin-bottom: -0.5rem;
 }

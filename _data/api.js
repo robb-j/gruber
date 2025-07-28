@@ -1,0 +1,123 @@
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import createDebug from "debug";
+
+// import getDependencies from "@11ty/dependency-tree";
+
+import { Project, SyntaxKind } from "ts-morph";
+
+const debug = createDebug("gruber:api");
+
+const entrypoints = [
+	"config/mod.ts",
+	"core/mod.ts",
+	// "deno/mod.ts",
+	"http/mod.ts",
+	// "node/mod.ts",
+	"postgres/mod.ts",
+	"testing/mod.ts",
+];
+
+async function generate() {
+	const project = new Project({
+		tsConfigFilePath: "tsconfig.json",
+	});
+
+	const output = {};
+
+	for (const entrypoint of entrypoints) {
+		const entry = project.getSourceFiles("./" + entrypoint)[0];
+		if (!entry) continue;
+
+		output[entrypoint] = {};
+
+		debug(entrypoint);
+
+		for (let symbol of entry.getExportSymbols()) {
+			const result = processSymbol(symbol);
+			if (!result) continue;
+
+			output[entrypoint][symbol.getEscapedName()] = {
+				entrypoint,
+				...result,
+			};
+		}
+	}
+
+	return output;
+}
+
+/** @param {import("ts-morph").Symbol} symbol */
+function processSymbol(symbol, prefix = "") {
+	if (
+		symbol.getJsDocTags().some((t) => t.getName() === "internal") ||
+		symbol.getEscapedName().startsWith("_")
+	) {
+		debug("skip: " + symbol.getEscapedName());
+		return null;
+	}
+
+	if (symbol.isAlias()) symbol = symbol.getAliasedSymbolOrThrow();
+
+	let markdown = [];
+	let members = {};
+
+	for (let declaration of symbol.getDeclarations()) {
+		// https://github.com/dsherret/ts-morph/issues/901
+		if (declaration.getKind() === SyntaxKind.VariableDeclaration) {
+			declaration = declaration.getVariableStatementOrThrow();
+		}
+
+		// TODO: should this use `Node.isJSDocable(decl)` + `node#getJsDocs()` ?
+		for (const range of declaration.getLeadingCommentRanges()) {
+			const match = /\/\*\*([\s\S]+)\*\//.exec(range.getText());
+			if (!match) continue;
+			markdown.push(match[1].replaceAll(/^[ \t]*?@.*$/gm, ""));
+		}
+
+		if (declaration.getKind() === SyntaxKind.ClassDeclaration) {
+			for (const child of symbol.getMembers()) {
+				const result = processSymbol(child, symbol.getEscapedName() + "_");
+				if (result) members[child.getEscapedName()] = result;
+			}
+		}
+
+		// if (declaration.getKind() === SyntaxKind.InterfaceDeclaration) {
+		// 	console.log("interface", symbol.getEscapedName());
+		// }
+	}
+
+	return {
+		id: prefix + symbol.getEscapedName(),
+		name: symbol.getEscapedName(),
+		content: markdown.join("\n\n").replaceAll(/^\s*?\*\s*?/gm, ""),
+		tags: symbol.getJsDocTags().map((tag) => ({
+			name: tag.getName(),
+			text: tag.getText(),
+		})),
+		members,
+	};
+}
+
+export default async function () {
+	// try {
+	// 	const cached = JSON.parse(
+	// 		await fs.promises.readFile(
+	// 			new URL("../.cache/api.json", import.meta.url),
+	// 			"utf8",
+	// 		),
+	// 	);
+	// 	return cached;
+	// } catch {}
+
+	const data = await generate();
+	// await fs.promises.mkdir(new URL("../.cache/", import.meta.url), {
+	// 	recursive: true,
+	// });
+	// await fs.promises.writeFile(
+	// 	new URL("../.cache/api.json", import.meta.url),
+	// 	JSON.stringify(data),
+	// );
+	return data;
+}

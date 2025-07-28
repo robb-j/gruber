@@ -1,9 +1,10 @@
 ---
-permalink: /node/
 layout: simple.njk
 eleventyNavigation:
   key: Node.js
-  parent: Helpers
+  parent: Integrations
+api:
+  entrypoint: node/mod.ts
 ---
 
 # Node.js

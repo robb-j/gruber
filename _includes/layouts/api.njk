@@ -1,0 +1,63 @@
+---
+api:
+  entrypoint: core/mod.ts
+layout: html.njk
+---
+
+<main class="api">
+	<sidebar-layout sideWidth="25ch" noStretch>
+		<nav>
+			<div class="flow">
+				<h2>Contents</h2>
+				<ul>
+					{% for entry in api[api.entrypoint] | dictsort %}
+					<li>
+						<a href="#{{ entry[1].id | slugify }}">
+							{{ entry[1].name }}
+						</a>
+					</li>
+					<ul>
+						{% for member in entry[1].members | dictsort %}
+						<li>
+							<a href="#{{ member[1].id | slugify }}">
+								{{ member[1].name }}
+							</a>
+						</li>
+						{% endfor %}
+					</ul>
+					{% endfor %}
+				</ul>
+			</div>
+		</nav>
+		<div>
+			<center-layout>
+				<stack-layout space="s3">
+					<div class="flow">
+						{{ content | safe }}
+					</div>
+	
+					{% for entry in api[api.entrypoint] | dictsort %}
+					<div class="flow">
+						<h2 id="{{ entry[1].id | slugify }}">{{ entry[0] }}</h2>
+	
+						{{ entry[1].content | renderContent('md') | safe }}
+	
+						{% for member in entry[1].members | dictsort %}
+						<!-- <h3 id="{{ entry[0] }}_{{ member[0] }}">{{ member[0] }}</h3> -->
+						 <h3 id="{{ member[1].id | slugify }}">{{ member[0] }}</h3>
+	
+						{{ member[1].content | renderContent('md') | safe }}
+	
+						{% endfor %}
+					</div>
+					{% endfor %}
+	
+					<details>
+						<summary>debug</summary>
+						<pre>{{ api[api.entrypoint] | dump(2) | safe }}</pre>
+					</details>
+				</stack-layout>
+			</center-layout>
+		</div>
+	</sidebar-layout>
+</main>
