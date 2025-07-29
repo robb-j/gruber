@@ -4,6 +4,8 @@ import type { Store } from "./store.ts";
 import type { TokenService } from "./tokens.ts";
 
 /**
+ * @hidden
+ *
  * An in-progress authentication, being stored while the client completes their challenge
  */
 export interface AuthnRequest {
@@ -17,6 +19,8 @@ export interface AuthnRequest {
 // export type CachedAuthnAttempts = [`/authn/attempts/${string}`, number]
 
 /**
+ * @hidden
+ *
  * Intermediary parameters to present to the user to complete their authentication
  */
 export interface AuthnCheck {
@@ -25,6 +29,8 @@ export interface AuthnCheck {
 }
 
 /**
+ * @hidden
+ *
  * Completed credentials after completing an authentication,
  * including cookie+redirected headers and the redirect itself
  */
@@ -34,6 +40,9 @@ export interface AuthnResult {
 	redirect: string;
 }
 
+/**
+ * @internal
+ */
 export interface AbstractAuthenticationService {
 	check(
 		token: string | undefined | null,
@@ -43,6 +52,9 @@ export interface AbstractAuthenticationService {
 	finish(request: AuthnRequest): Promise<AuthnResult>;
 }
 
+/**
+ * @internal
+ */
 export function formatAuthenticationCode(code: number) {
 	return [
 		code.toString().padStart(6, "0").slice(0, 3),
@@ -50,6 +62,9 @@ export function formatAuthenticationCode(code: number) {
 	].join(" ");
 }
 
+/**
+ * @internal
+ */
 export interface AuthenticationServiceOptions {
 	allowedHosts: () => URL[] | Promise<URL[]>;
 	cookieName: string;
@@ -57,7 +72,7 @@ export interface AuthenticationServiceOptions {
 	/** milliseconds */ sessionDuration: number;
 }
 
-/** @unstable */
+/** @internal */
 export class AuthenticationService implements AbstractAuthenticationService {
 	options: AuthenticationServiceOptions;
 	store: Store;

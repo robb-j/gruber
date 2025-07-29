@@ -11,6 +11,7 @@ api:
 
 At the centre of Gruber are a set of agnostic modules to help create platform-independent JavaScript servers. They are roughly organised as:
 
+<!--
 - `authentication.ts`
   - AuthnRequest
   - AuthnCheck
@@ -80,4 +81,4 @@ TBR
   - getPostgresMigrations
   - executePostgresMigration
   - postgresBootstrapMigration
-  - definePostgresMigration
+  - definePostgresMigration -->

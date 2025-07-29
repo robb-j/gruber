@@ -1,20 +1,59 @@
 import type { MaybePromise } from "./types.ts";
 
+/**
+ * Options for defining some sort of migration
+ *
+ * ```js
+ * const options = {
+ *   up(value) {},
+ *   down(value) {},
+ * }
+ * ```
+ */
 export interface MigrationOptions<T = unknown> {
 	up(value: T): MaybePromise<void>;
 	down(value: T): MaybePromise<void>;
 }
 
+/**
+ * A definition for a migration, it's basically a `MigrationOptions` with a unique name
+ *
+ * ```js
+ * const migration = {
+ *   name: '042-some-migration',
+ *   up() {},
+ *   down() {},
+ * }
+ * ```
+ */
 export interface MigrationDefinition<T = unknown> {
 	name: string;
 	up(value: T): MaybePromise<void>;
 	down(value: T): MaybePromise<void>;
 }
 
+/**
+ * A record of a migration that has been performed
+ *
+ * ```js
+ * const record = { name: '042-some-migration' }
+ * ```
+ */
 export interface MigrationRecord {
 	name: string;
 }
 
+/**
+ * Define a generic migration, this is a generic wrapper around creating a `MigrationOptions`
+ * which within TypeScript you can specify the `<T>` once, rather than for each action.
+ *
+ * ```js
+ * const migration = defineMigration({
+ *   up () {},
+ *   down () {},
+ * })
+ * ```
+ */
 export function defineMigration<T>(
 	options: MigrationOptions<T>,
 ): MigrationOptions<T> {
@@ -35,24 +74,66 @@ export interface MigratorOptions<T> {
 	): void | Promise<void>;
 }
 
+/**
+ * Migrator provides methods for running a specific type of migrations.
+ * The idea is that different platforms/integrations can create a migrator that
+ * works with a specific feature they want to add migrations around, e.g. a Postgres database.
+ *
+ * ```js
+ * async function getRecords() {}
+ *
+ * async function getDefinitions() {}
+ *
+ * async function execute() {}
+ *
+ * const migrator = new Migrator({ getRecords, getDefinitions, execute })
+ * ```
+ *
+ * See [examples/node-fs-migrator](/examples/node-fs-migrator/node-fs-migrator.js)
+ */
 export class Migrator<T = unknown> {
 	options: MigratorOptions<T>;
 	constructor(options: MigratorOptions<T>) {
 		this.options = options;
 	}
 
+	/**
+	 * Run any pending "up" migrations
+	 *
+	 * > It would be cool to specify a number here so you could run just 1 but
+	 * > I haven't needed this so it hasn't been properly designed yet
+	 *
+	 * ```js
+	 * await migrator.up()
+	 * ```
+	 */
 	async up() {
-		for (const def of await this._getTodo("up", -1)) {
+		for (const def of await this._getTodo("up")) {
 			await this.options.execute(def, "up");
 		}
 	}
 
+	/**
+	 * Run any "down" migrations for migrations that have already been performed
+	 *
+	 * > It would be cool to specify a number here so you could run just 1 but
+	 * > I haven't needed this so it hasn't been properly designed yet
+	 *
+	 * ```js
+	 * await migrator.up()
+	 * ```
+	 */
 	async down() {
-		for (const def of await this._getTodo("down", -1)) {
+		for (const def of await this._getTodo("down")) {
 			await this.options.execute(def, "down");
 		}
 	}
 
+	/**
+	 * @internal
+	 *
+	 * Get a number of migrations that need to be performed in a specific direction
+	 */
 	async _getTodo(direction: MigrateDirection, count = -1) {
 		const defs = await this.options.getDefinitions();
 		const records = await this.options.getRecords();
@@ -64,6 +145,25 @@ export class Migrator<T = unknown> {
 	}
 }
 
+/**
+ * Attempt to load a migration from a file using `import`.
+ *
+ * It combines the `name` and `directory` to get a file path, attempts to `import`-it and convert the `default` export into a `MigrationDefinition`. You can also force the `<T>` parameter onto the definition.
+ *
+ * It will throw errors if the file does not exist or if the default export doesn't look like a `MigrationOptions`.
+ *
+ *
+ * ```js
+ * const migration = await loadMigration(
+ *   '001-create-users.js',
+ *   new URL('./migrations/', import.meta.url)
+ * )
+ *
+ * migration.name // "001-create-users.js"
+ * migration.up // function
+ * migration.down // function
+ * ```
+ */
 export async function loadMigration<T = unknown>(
 	name: string,
 	directory: string | URL,

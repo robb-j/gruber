@@ -90,7 +90,15 @@ function processSymbol(symbol, prefix = "") {
 
 	const { content, tags } = processMarkdown(markdown.join("\n\n"));
 
-	if (!content.trim() || Object.keys(tags) === 0 || tags.internal) return null;
+	if (symbol.getValueDeclaration() === undefined) {
+		tags.type = "true";
+	}
+
+	// if ((!content.trim() && Object.keys(tags).length === 0) || tags.internal) {
+	// if (!content.trim() && Object.keys(tags).length === 0) {
+	if (!content.trim() || tags.hidden) {
+		return null;
+	}
 
 	return {
 		id: prefix + symbol.getEscapedName(),

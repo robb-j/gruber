@@ -6,12 +6,9 @@ layout: html.njk
 
 {% macro labels(tags) %}
 <span space="s-3" class="apiLabels">
-	{% if tags.unstable %}
-	<code>unstable</code>
-	{% endif %}
-	{% if tags.internal %}
-	<code>internal</code>
-	{% endif %}
+	{% if tags.unstable %}<code>unstable</code>{% endif %}
+	{% if tags.internal %}<code>internal</code>{% endif %}
+	{% if tags.type %}<code>type</code>{% endif %}
 </span>
 {% endmacro %}
 
@@ -59,6 +56,7 @@ layout: html.njk
 						{% for member in entry[1].members | dictsort %}
 						<div class="flow" id="{{ member[1].id | slugify }}">
 							<h3>
+								<!-- {{ entry[0] }}# -->
 								{{ member[0] }}
 								{{ labels(member[1].tags) }}
 							</h3>

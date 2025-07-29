@@ -73,3 +73,11 @@ main.api > sidebar-layout > nav {
 .apiLabels code {
 	font-size: 0.7em;
 }
+main.api .flow .flow {
+	padding-inline-start: var(--s0);
+	padding-block: var(--s-2);
+	border-left: var(--border-thin) solid var(--border);
+}
+main.api :is(h2, h3) {
+	font-family: var(--font-mono);
+}
