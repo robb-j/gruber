@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import createDebug from "debug";
+import slugify from "@sindresorhus/slugify";
 
 // import getDependencies from "@11ty/dependency-tree";
 
@@ -111,7 +112,7 @@ function processSymbol(symbol, prefix = "") {
 
 /** @param {string} text */
 function processMarkdown(text) {
-	let content = [];
+	let lines = [];
 	let tags = {};
 
 	const tagish = /^@([\w-_]+)(?:\s(.+))?$/;
@@ -121,10 +122,21 @@ function processMarkdown(text) {
 
 		const tag = tagish.exec(text);
 		if (tag) tags[tag[1]] = tag[2] || "true";
-		else content.push(text);
+		else lines.push(text);
 	}
 
-	return { content: content.join("\n").trim(), tags };
+	// TODO: this @link only works for same-file links
+	const content = lines
+		.join("\n")
+		.trim()
+		.replace(/{@link\s+(\S+)\s*}/g, (...match) => replaceLink(match));
+
+	return { content, tags };
+}
+
+function replaceLink(match) {
+	const id = slugify(match[1].toLowerCase());
+	return `[${match[1]}](#${id})`;
 }
 
 export default async function () {
