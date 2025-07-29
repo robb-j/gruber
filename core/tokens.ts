@@ -68,6 +68,7 @@ export class JoseTokens implements TokenService {
 
 /**
  * @unstable
+ *
  * A TokenService with multiple verification methods and a single signer
  */
 export class CompositeTokens implements TokenService {

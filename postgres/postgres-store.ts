@@ -16,7 +16,7 @@ export interface PostgresStoreOptions {
 	tableName?: string;
 }
 
-/** @unstable lol */
+/** @unstable */
 export class PostgresStore implements Store {
 	get tableName() {
 		return this.options.tableName;

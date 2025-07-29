@@ -50,10 +50,7 @@ async function generate() {
 
 /** @param {import("ts-morph").Symbol} symbol */
 function processSymbol(symbol, prefix = "") {
-	if (
-		symbol.getJsDocTags().some((t) => t.getName() === "internal") ||
-		symbol.getEscapedName().startsWith("_")
-	) {
+	if (symbol.getEscapedName().startsWith("_")) {
 		debug("skip: " + symbol.getEscapedName());
 		return null;
 	}
@@ -78,6 +75,9 @@ function processSymbol(symbol, prefix = "") {
 
 		if (declaration.getKind() === SyntaxKind.ClassDeclaration) {
 			for (const child of symbol.getMembers()) {
+				if (child.getValueDeclaration() === undefined) {
+					continue; // Skip type-only members, ie generics
+				}
 				const result = processSymbol(child, symbol.getEscapedName() + "_");
 				if (result) members[child.getEscapedName()] = result;
 			}
@@ -88,16 +88,35 @@ function processSymbol(symbol, prefix = "") {
 		// }
 	}
 
+	const { content, tags } = processMarkdown(markdown.join("\n\n"));
+
+	if (!content.trim() || Object.keys(tags) === 0 || tags.internal) return null;
+
 	return {
 		id: prefix + symbol.getEscapedName(),
 		name: symbol.getEscapedName(),
-		content: markdown.join("\n\n").replaceAll(/^\s*?\*\s*?/gm, ""),
-		tags: symbol.getJsDocTags().map((tag) => ({
-			name: tag.getName(),
-			text: tag.getText(),
-		})),
+		content,
+		tags,
 		members,
 	};
+}
+
+/** @param {string} text */
+function processMarkdown(text) {
+	let content = [];
+	let tags = {};
+
+	const tagish = /^@([\w-_]+)(?:\s(.+))?$/;
+
+	for (const line of text.split("\n")) {
+		const text = line.replace(/^\s*\*\s?/, "");
+
+		const tag = tagish.exec(text);
+		if (tag) tags[tag[1]] = tag[2] || "true";
+		else content.push(text);
+	}
+
+	return { content: content.join("\n").trim(), tags };
 }
 
 export default async function () {

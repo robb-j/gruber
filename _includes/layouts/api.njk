@@ -4,6 +4,17 @@ api:
 layout: html.njk
 ---
 
+{% macro labels(tags) %}
+<span space="s-3" class="apiLabels">
+	{% if tags.unstable %}
+	<code>unstable</code>
+	{% endif %}
+	{% if tags.internal %}
+	<code>internal</code>
+	{% endif %}
+</span>
+{% endmacro %}
+
 <main class="api">
 	<sidebar-layout sideWidth="25ch" noStretch>
 		<nav>
@@ -37,16 +48,23 @@ layout: html.njk
 					</div>
 	
 					{% for entry in api[api.entrypoint] | dictsort %}
-					<div class="flow">
-						<h2 id="{{ entry[1].id | slugify }}">{{ entry[0] }}</h2>
+					<div class="flow" id="{{ entry[1].id | slugify }}">
+						<h2>
+							{{ entry[0] }}
+							{{ labels(entry[1].tags) }}
+						</h2>
 	
 						{{ entry[1].content | renderContent('md') | safe }}
 	
 						{% for member in entry[1].members | dictsort %}
-						<!-- <h3 id="{{ entry[0] }}_{{ member[0] }}">{{ member[0] }}</h3> -->
-						 <h3 id="{{ member[1].id | slugify }}">{{ member[0] }}</h3>
-	
-						{{ member[1].content | renderContent('md') | safe }}
+						<div class="flow" id="{{ member[1].id | slugify }}">
+							<h3>
+								{{ member[0] }}
+								{{ labels(member[1].tags) }}
+							</h3>
+		
+							{{ member[1].content | renderContent('md') | safe }}
+						</div>
 	
 						{% endfor %}
 					</div>
