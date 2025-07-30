@@ -7,8 +7,17 @@
 // - An option to configure which methods are allowed
 //
 
-//
-interface CorsOptions {
+/**
+ * Options for creating a {@link Cors} object with
+ *
+ * ```js
+ * const options = {
+ *   origins: ['http://localhost:8080'],
+ *   credentials: true
+ * }
+ * ```
+ */
+export interface CorsOptions {
 	/** Origins you want to be allowed to access this server or "*" for any server */
 	origins?: string[];
 
@@ -16,7 +25,39 @@ interface CorsOptions {
 	credentials?: boolean;
 }
 
-/** @unstable */
+/**
+ * @unstable
+ *
+ * A development utility for apply CORS headers to a HTTP server using standard
+ * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects.
+ *
+ * > This really **should not** be used in production, I built this with the intention that
+ * > whatever reverse-proxy the app is deployed behind would manage these headers instead.
+ *
+ * This implementation was adapted from [expressjs/cors](https://github.com/expressjs/cors),
+ * mostly to modernise it and remove features that weren't needed for this development-intended class.
+ *
+ * It will:
+ *
+ * - set `Access-Control-Allow-Methods` to all methods
+ * - mirror headers in `Access-Control-Request-Headers` from the request
+ * - properly set the `Vary` header for any request header that varies the response
+ * - set `Access-Control-Allow-Origin` based on the `options.origins` option, allowing the origin if it is in the array or if the array includes `*`
+ * - set `Access-Control-Allow-Credentials` if opted in through `options.credentials`
+ *
+ * ```js
+ * const cors = new Cors({
+ *   origins: ['http://localhost:8080'],
+ *   credentials: true
+ * })
+ *
+ * const request = new Request('http://localhost:3000/books/')
+ * const response = Response.json({})
+ *
+ * const result = cors.apply(request, response)
+ * ```
+ */
 export class Cors {
 	origins: Set<string>;
 	credentials: boolean;

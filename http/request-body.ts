@@ -1,7 +1,28 @@
 import type { StandardSchemaV1 } from "../config/mod.ts";
 import { HTTPError } from "./http-error.ts";
 
-/** @unstable */
+/**
+ * @unstable
+ * @group Validation
+ *
+ * Get and parse well-known request bodies based on the Content-Type header supplied
+ *
+ * ```js
+ *
+ * // Parse a application/x-www-form-urlencoded or multipart/form-data request
+ * const formData = await getRequestBody(
+ *   new Request('http://localhost:8000', { body: new FormData() })
+ * )
+ *
+ * // Parse a JSON request
+ * const json = await getRequestBody(
+ *   new Request('http://localhost:8000', {
+ *     body: JSON.stringify({ hello: 'world' }),
+ *     headers: { 'Content-Type': 'application/json' },
+ *   })
+ * )
+ * ```
+ */
 export function getRequestBody(request: Request) {
 	const ct = request.headers.get("Content-Type");
 	if (
@@ -14,7 +35,41 @@ export function getRequestBody(request: Request) {
 	return request.json();
 }
 
-/** @unstable */
+/**
+ * @unstable
+ * @group Validation
+ *
+ * Validate the body of a request against a [StandardSchema](https://standardschema.dev/) (which includes gruber Structures).
+ *
+ * This will throw nice {@link HTTPError} errors that are caught by gruber and sent along to the user.
+ *
+ * ```js
+ * const struct = Structure.object({ name: Structure.string() })
+ *
+ * const body1 = await assertRequestBody(struct, new Request('...'))
+ * ```
+ *
+ * or from a JavaScript value:
+ *
+ * ```js
+ * const struct = Structure.object({ name: Structure.string() })
+ *
+ * const body2 = assertRequestBody(struct, { ... })
+ * const body3 = assertRequestBody(struct, new FormData(...))
+ * const body3 = assertRequestBody(struct, new URLSearchParams(...))
+ * ```
+ *
+ * you can use any StandardSchema library with this:
+ *
+ * ```js
+ * import { z } from 'zod'
+ *
+ * const body4 = assertRequestBody(
+ *   z.object({ name: z.string() }),
+ *   { name: "Geoff Testington" }
+ * )
+ * ```
+ */
 export function assertRequestBody<T extends StandardSchemaV1>(
 	schema: T,
 	input: Request,

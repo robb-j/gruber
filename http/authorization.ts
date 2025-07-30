@@ -57,32 +57,91 @@ export function _checkScope(actual: string, expected: string[]) {
 	return false;
 }
 
+/**
+ * @group Authorization
+ *
+ * Check whether a provided scope meets the requirement of the expected scope
+ *
+ * ```js
+ * includesScope("user:books:read", "user:books:read"); // true
+ * includesScope("user:books", "user:books:read"); // true
+ * includesScope("user", "user:books:read"); // true
+ * includesScope("user", "user:podcasts"); // true
+ * includesScope("user:books", "user:podcasts"); // false
+ * ```
+ */
 export function includesScope(actual: string, expected: string) {
 	return _checkScope(actual, _expandScopes(expected));
 }
 
+/**
+ * @group Authorization
+ *
+ * Options for asserting the authorization on any request
+ *
+ * ```js
+ * const options = { scope: 'user:books' }
+ * ```
+ */
 export interface AssertOptions {
 	scope?: string;
 }
 
+/**
+ * @group Authorization
+ *
+ * Options for asserting the authorization on a request that originated from a user
+ *
+ * ```js
+ * const options = { scope: 'user:books' }
+ * ```
+ */
 export interface AssertUserOptions {
 	scope?: string;
 }
 
-// NOTE: should userId be a string for future-proofing / to align to JWTs?
+/**
+ * @group Authorization
+ *
+ * The result from asserting a request which was authorized for a user
+ *
+ * ```js
+ * const result = { kind: 'user', userId: 42, scope: 'user' }
+ * ```
+ */
 export interface AssertUserResult {
 	kind: "user";
+
+	// NOTE: should userId be a string for future-proofing / to align to JWTs?
 	userId: number;
 	scope: string;
 }
 
+/**
+ * @group Authorization
+ *
+ * The result from asserting a request which was authorized for a service,
+ * i.e. not a user
+ *
+ * ```js
+ * const result = { kind: 'service', scope: 'user' }
+ * ```
+ */
 export interface AssertServiceResult {
 	kind: "service";
 	scope: string;
 }
 
+/**
+ * @group Authorization
+ * The possible types of result from asserting a request's authorization
+ */
 export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 
+/**
+ * @group Authorization
+ * @unstable
+ */
 export interface AbstractAuthorizationService {
 	getAuthorization(request: Request): string | null;
 	assert(
@@ -100,7 +159,10 @@ export interface AuthorizationServiceOptions {
 	cookieName: string;
 }
 
-/** @unstable */
+/**
+ * @unstable
+ * @group Authorization
+ */
 export class AuthorizationService implements AbstractAuthorizationService {
 	options: AuthorizationServiceOptions;
 	tokens: TokenService;

@@ -5,9 +5,18 @@ const NEWLINE_REGEXP = /\r\n|\r|\n/;
 const encoder = new TextEncoder();
 
 /**
- * Represents a message in the Server-Sent Event (SSE) protocol.
+ * Represents a message in the [Server-Sent Event protocol](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#fields)
  *
- * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#fields}
+ * ```js
+ * // All fields are optional
+ * const message = {
+ *   comment: 'hello there',
+ *   event: 'my-event',
+ *   data: JSON.stringify({ lots: 'of', things: true }),
+ *   id: 42,
+ *   retry: 3600
+ * }
+ * ```
  */
 export interface ServerSentEventMessage {
 	/** Ignored by the client. */
@@ -16,7 +25,7 @@ export interface ServerSentEventMessage {
 	event?: string;
 	/** The data field for the message. Split by new lines. */
 	data?: string;
-	/** The event ID to set the {@linkcode EventSource} object's last event ID value. */
+	/** The event ID to set the `EventSource` object's last event ID value. */
 	id?: string | number;
 	/** The reconnection time. */
 	retry?: number;
@@ -66,20 +75,16 @@ export function _stringify(message: ServerSentEventMessage): string {
 
 /**
  * Transforms server-sent message objects into strings for the client.
+ * [more info](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
  *
- * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events}
+ * ```js
+ * const data = [{ data: "hello there" }]
  *
- * @example Usage
- * ```ts no-assert
- * import {
- *   type ServerSentEventMessage,
- *   ServerSentEventStream,
- * } from "@std/http/server-sent-event-stream";
+ * // Get a stream somehow, then pipe it through
+ * const stream = ReadableStream.from<ServerSentEventMessage>(data)
+ *   .pipeThrough(new ServerSentEventStream());
  *
- * const stream = ReadableStream.from<ServerSentEventMessage>([
- *   { data: "hello there" }
- * ]).pipeThrough(new ServerSentEventStream());
- * new Response(stream, {
+ * const response = new Response(stream, {
  *   headers: {
  *     "content-type": "text/event-stream",
  *     "cache-control": "no-cache",

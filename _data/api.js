@@ -74,7 +74,10 @@ function processSymbol(symbol, prefix = "") {
 			markdown.push(match[1].replaceAll(/^[ \t]*?@.*$/gm, ""));
 		}
 
-		if (declaration.getKind() === SyntaxKind.ClassDeclaration) {
+		if (
+			declaration.getKind() === SyntaxKind.ClassDeclaration ||
+			declaration.getKind() === SyntaxKind.InterfaceDeclaration
+		) {
 			for (const child of symbol.getMembers()) {
 				if (child.getValueDeclaration() === undefined) {
 					continue; // Skip type-only members, ie generics

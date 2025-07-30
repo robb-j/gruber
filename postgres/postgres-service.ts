@@ -43,14 +43,68 @@
  * ```
  */
 export interface PostgresService {
+	/**
+	 * Start a transaction with a `BEGIN`, then `COMMIT` if all goes well or `ROLLBACK` if not.
+	 *
+	 * ```js
+	 * // Run an SQL transaction and return the response
+	 * const result = await sql.transaction(async (trx) => {
+	 *   await trx.execute` INSERT INTO ... `
+	 *   return trx.execute` SELECT * FROM ... `
+	 * })
+	 * ```
+	 */
 	transaction<T>(block: (sql: PostgresService) => T): Promise<Awaited<T>>;
 
+	/**
+	 * Perform an SQL query against the database and return the results.
+	 * Values are automatically escaped.
+	 *
+	 * ```js
+	 * const users = await sql.execute`
+	 *   SELECT * FROM users WHERE id = ${5}
+	 * `
+	 */
 	execute<T>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T[]>;
 
+	/**
+	 * Prepare a value to be used in an SQL query,
+	 * for instance if you want to turn an array into a SQL set,
+	 *
+	 * ```js
+	 * const pets = await sql.execute`
+	 *   SELECT * FROM pets WHERE id IN ${sql.prepare([1, 2, 3, 4])}
+	 * `
+	 * ```
+	 *
+	 * would become:
+	 *
+	 * ```sql
+	 * SELECT * FROM pets WHERE id IN (1,2,3,4)
+	 * ```
+	 */
 	prepare(value: unknown): any;
 
+	/**
+	 * Prepare JSON to be serialized into a query
+	 *
+	 * ```js
+	 * // Write JSON to the database
+	 * await sql.execute`
+	 *   INSERT INTO bicycles (name, model)
+	 *   VALUES ("Big red", ${sql.json({ id: "xxx-yyy-zzz", manufacturer: 'Cube' })})
+	 * `
+	 * ```
+	 */
 	json(value: unknown): any;
 
+	/**
+	 * Close the connection
+	 *
+	 * ```js
+	 * await sql.dispose()
+	 * ```
+	 */
 	dispose(): Promise<void>;
 
 	[Symbol.asyncDispose](): Promise<void>;

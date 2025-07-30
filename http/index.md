@@ -1,8 +1,10 @@
 ---
-layout: simple.njk
+layout: api.njk
 eleventyNavigation:
   key: HTTP
   order: 3
+api:
+  entrypoint: http/mod.ts
 ---
 
 # HTTP
