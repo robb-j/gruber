@@ -2,6 +2,7 @@ import type { TimerService } from "./timers.ts";
 
 /**
  * @internal
+ * @group Terminator
  *
  * Options for creating a {@link Terminator} instance
  *
@@ -38,6 +39,7 @@ export type TerminatorAction = () => unknown;
 
 /**
  * @internal
+ * @group Terminator
  *
  * Terminators let you add graceful shutdown to your applications,
  * create one with {@link TerminatorOptions}

@@ -1,6 +1,8 @@
 import type { MaybePromise } from "./types.ts";
 
 /**
+ * @group Migrator
+ *
  * Options for defining some sort of migration
  *
  * ```js
@@ -16,6 +18,8 @@ export interface MigrationOptions<T = unknown> {
 }
 
 /**
+ * @group Migrator
+ *
  * A definition for a migration, it's basically a `MigrationOptions` with a unique name
  *
  * ```js
@@ -33,6 +37,8 @@ export interface MigrationDefinition<T = unknown> {
 }
 
 /**
+ * @group Migrator
+ *
  * A record of a migration that has been performed
  *
  * ```js
@@ -44,6 +50,8 @@ export interface MigrationRecord {
 }
 
 /**
+ * @group Migrator
+ *
  * Define a generic migration, this is a generic wrapper around creating a `MigrationOptions`
  * which within TypeScript you can specify the `<T>` once, rather than for each action.
  *
@@ -75,6 +83,8 @@ export interface MigratorOptions<T> {
 }
 
 /**
+ * @group Migrator
+ *
  * Migrator provides methods for running a specific type of migrations.
  * The idea is that different platforms/integrations can create a migrator that
  * works with a specific feature they want to add migrations around, e.g. a Postgres database.
@@ -146,6 +156,8 @@ export class Migrator<T = unknown> {
 }
 
 /**
+ * @group Migrator
+ *
  * Attempt to load a migration from a file using `import`.
  *
  * It combines the `name` and `directory` to get a file path, attempts to `import`-it and convert the `default` export into a `MigrationDefinition`. You can also force the `<T>` parameter onto the definition.

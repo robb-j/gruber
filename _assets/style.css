@@ -59,11 +59,13 @@ main.api center-layout h2 {
 	padding-bottom: 0.5rem;
 	margin-bottom: -0.5rem;
 }
-main.api > sidebar-layout > nav {
-	max-height: 100vh;
-	overflow-y: auto;
-	position: sticky;
-	top: 0;
+@media (min-width: 768px) {
+	main.api > sidebar-layout > nav {
+		max-height: 100vh;
+		overflow-y: auto;
+		position: sticky;
+		top: 0;
+	}
 }
 .apiLabels {
 	display: inline-flex;
@@ -73,11 +75,17 @@ main.api > sidebar-layout > nav {
 .apiLabels code {
 	font-size: 0.7em;
 }
-main.api .flow .flow {
+.apiMember {
 	padding-inline-start: var(--s0);
 	padding-block: var(--s-2);
 	border-left: var(--border-thin) solid var(--border);
 }
 main.api :is(h2, h3) {
 	font-family: var(--font-mono);
+}
+
+a[data-variant="subtle"] {
+	color: var(--color);
+	text-decoration: underline dashed var(--border);
+	font-weight: bold;
 }

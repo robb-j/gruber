@@ -11,74 +11,9 @@ api:
 
 At the centre of Gruber are a set of agnostic modules to help create platform-independent JavaScript servers. They are roughly organised as:
 
-<!--
-- `authentication.ts`
-  - AuthnRequest
-  - AuthnCheck
-  - AuthnResult
-  - AbstractAuthenticationService
-  - formatAuthenticationCode
-  - AuthenticationServiceOptions
-  - AuthenticationService
-- `container.ts`
-  - Dependencies
-  - UnwrapDependencies
-  - WrapDependencies
-  - Container
-- `migrator.ts`
-  - MigrationOptions
-  - MigrationDefinition
-  - MigrationRecord
-  - defineMigration
-  - MigrateDirection
-  - MigratorOptions
-  - Migrator
-  - loadMigration
-- `random.ts`
-  - RandomService
-  - useRandom
-- `store.ts`
-  - StoreSetOptions
-  - Store
-  - MemoryStore
-  - RedisStoreOptions
-  - RedisStore
-- `terminator.ts`
-  - TerminatorOptions
-  - TerminatorState
-  - TerminatorAction
-  - Terminator
-- `timers.ts`
-  - TimerService
-  - useTimers
-- `tokens.ts`
-  - AuthzToken
-  - SignTokenOptions
-  - TokenService
-  - JoseTokensOptions
-  - JoseTokens
-  - CompositeTokens
-- `types.ts`
-  - MaybePromise
-  - SqlDependency
-  - JoseDependency
-  - RedisDependency
-- `utilities.ts`
-  - formatMarkdownTable
-  - loader
-  - trimIndentation
-  - reconstructTemplateString
-  - PromiseList
-
-TBR
-
-- `store.ts`
-  - PostgresValue
-  - PostgresStoreOptions
-  - PostgresStore
-- `postgres.ts`
-  - PostgresMigrationRecord
-  - getPostgresMigrations
-  - executePostgresMigration
-  - postgresBootstrapMigration
-  - definePostgresMigration -->
+- **Container** is a dependency management utility to capture code dependencies, provide them on demand and allow them to be replaced during testing.
+- **Migrator** is a helper for structuring project migrations that run up or down to manage the state of something like a database.
+- **Miscellaneous** contains various things that are often useful
+- **Store** is an abstraction for interacting with asynchonous key-value storage
+- **Terminator** is a utility for ensuring graceful shutdown of your apps, especially when behind a load-balancer
+- **Tokens** are an abstraction around signing access to a user to be consumed by other parts of the application

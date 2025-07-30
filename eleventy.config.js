@@ -22,6 +22,8 @@ export default function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy({ _assets: "assets" });
 	eleventyConfig.addGlobalData("pkg", pkg);
 	eleventyConfig.addWatchTarget("**/*.ts");
+	eleventyConfig.addFilter("entries", (v) => Object.entries(v));
+	eleventyConfig.addFilter("keys", (v) => Object.keys(v));
 }
 
 export const config = {

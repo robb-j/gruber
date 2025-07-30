@@ -12,60 +12,82 @@ layout: html.njk
 </span>
 {% endmacro %}
 
+{% set groups = api[api.entrypoint] | entries | groupby('1.tags.group') %}
+
 <main class="api">
 	<sidebar-layout sideWidth="25ch" noStretch>
 		<nav>
 			<div class="flow">
 				<h2>Contents</h2>
-				<ul>
-					{% for entry in api[api.entrypoint] | dictsort %}
-					<li>
-						<a href="#{{ entry[1].id | slugify }}">
-							{{ entry[1].name }}
-						</a>
-					</li>
+				{% for group, entries in groups %}
+				<div>
+					{% if (groups | keys).length > 1 %}
+					<p>
+						<a data-variant="subtle" href="#group-{{ group | slugify }}">{{ group }}</a>
+					</p>
+					{% endif %}
 					<ul>
-						{% for member in entry[1].members | dictsort %}
+						{% for entry in entries | sort(false, false, '1') %}
 						<li>
-							<a href="#{{ member[1].id | slugify }}">
-								{{ member[1].name }}
+							<a href="#{{ entry[1].id | slugify }}">
+								{{ entry[1].name }}
 							</a>
 						</li>
+						<ul>
+							{% for member in entry[1].members | dictsort %}
+							<li>
+								<a href="#{{ member[1].id | slugify }}">
+									{{ member[1].name }}
+								</a>
+							</li>
+							{% endfor %}
+						</ul>
 						{% endfor %}
 					</ul>
-					{% endfor %}
-				</ul>
+				</div>
+				{% endfor %}
 			</div>
 		</nav>
 		<div>
 			<center-layout>
-				<stack-layout space="s3">
+				<stack-layout space="s5">
 					<div class="flow">
 						{{ content | safe }}
 					</div>
 	
-					{% for entry in api[api.entrypoint] | dictsort %}
-					<div class="flow" id="{{ entry[1].id | slugify }}">
-						<h2>
-							{{ entry[0] }}
-							{{ labels(entry[1].tags) }}
-						</h2>
-	
-						{{ entry[1].content | renderContent('md') | safe }}
-	
-						{% for member in entry[1].members | dictsort %}
-						<div class="flow" id="{{ member[1].id | slugify }}">
+					{% for group, entries in groups %}
+					<stack-layout space="s3">
+						{% if (groups | keys).length > 1 %}
+						<div id="group-{{ group | slugify }}" style="--flow: 0">
+							<h2>{{ group }}</h2>
+						</div>
+						{% endif %}
+
+
+						{% for entry in entries | sort(false, false, '1') %}
+						<div class="flow apiEntry" id="{{ entry[1].id | slugify }}">
 							<h3>
-								<!-- {{ entry[0] }}# -->
-								{{ member[0] }}
-								{{ labels(member[1].tags) }}
+								{{ entry[0] }}
+								{{ labels(entry[1].tags) }}
 							</h3>
 		
-							{{ member[1].content | renderContent('md') | safe }}
+							{{ entry[1].content | renderContent('md') | safe }}
+		
+							{% for member in entry[1].members | dictsort %}
+							<div class="flow apiMember" id="{{ member[1].id | slugify }}">
+								<h4>
+									<!-- {{ entry[0] }}# -->
+									{{ member[0] }}
+									{{ labels(member[1].tags) }}
+								</h4>
+			
+								{{ member[1].content | renderContent('md') | safe }}
+							</div>
+		
+							{% endfor %}
 						</div>
-	
 						{% endfor %}
-					</div>
+					</stack-layout>
 					{% endfor %}
 	
 					<details>

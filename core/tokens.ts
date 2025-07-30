@@ -1,27 +1,48 @@
 import type { JoseDependency } from "./types.ts";
 
+/**
+ * @unstable
+ * @group Tokens
+ */
 export interface AuthzToken {
 	userId?: number;
 	scope: string;
 }
 
+/**
+ * @unstable
+ * @group Tokens
+ */
 export interface SignTokenOptions {
 	userId?: number;
 	/** milliseconds */ maxAge?: number;
 }
 
-/** A service for signing and verifying access tokens */
+/**
+ * @unstable
+ * @group Tokens
+ *
+ * A service for signing and verifying access tokens
+ */
 export interface TokenService {
 	verify(token: string): Promise<AuthzToken | null>;
 	sign(scope: string, options?: SignTokenOptions): Promise<string>;
 }
 
+/**
+ * @unstable
+ * @group Tokens
+ */
 export interface JoseTokensOptions {
 	secret: string;
 	issuer: string;
 	audience: string;
 }
 
+/**
+ * @unstable
+ * @group Tokens
+ */
 export class JoseTokens implements TokenService {
 	options: JoseTokensOptions;
 	jose: JoseDependency;
@@ -68,6 +89,7 @@ export class JoseTokens implements TokenService {
 
 /**
  * @unstable
+ * @group Tokens
  *
  * A TokenService with multiple verification methods and a single signer
  */

@@ -8,6 +8,8 @@ export interface StoreSetOptions {
 }
 
 /**
+ * @group Store
+ *
  * Store is an async abstraction around a key-value engine like Redis or a JavaScript Map
  * with extra features for storing things for set-durations
  *
@@ -50,7 +52,7 @@ export interface Store {
 }
 
 /**
- * @unstable
+ * @group Store
  *
  * MemoryStore is a in-memory implementation of {@link Store} that puts values into a Map and uses timers to expire data.
  * It was mainly made for automated testing.
@@ -108,12 +110,18 @@ export class MemoryStore implements Store {
 	}
 }
 
-/** @unstable */
+/**
+ * @group Store
+ * @unstable
+ */
 export interface RedisStoreOptions {
 	prefix?: string;
 }
 
-/** @unstable */
+/**
+ * @group Store
+ * @unstable
+ */
 export class RedisStore implements Store {
 	redis: RedisDependency;
 	prefix: string;

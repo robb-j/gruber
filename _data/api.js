@@ -131,6 +131,8 @@ function processMarkdown(text) {
 		.trim()
 		.replace(/{@link\s+(\S+)\s*}/g, (...match) => replaceLink(match));
 
+	tags.group ??= "Miscellaneous";
+
 	return { content, tags };
 }
 

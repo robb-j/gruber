@@ -1,9 +1,11 @@
 /**
+ * @group Container
  * A utility type for defining a record of dependency-factories
  */
 export type Dependencies = Record<string, () => unknown>;
 
 /**
+ * @group Container
  * A utility type for converting a record of dependency-factories to dependencies
  */
 export type UnwrapDependencies<T> = {
@@ -11,6 +13,7 @@ export type UnwrapDependencies<T> = {
 };
 
 /**
+ * @group Container
  * A utility type to convert dependencies back into dependency-factories
  */
 export type WrapDependencies<T> = {
@@ -19,6 +22,7 @@ export type WrapDependencies<T> = {
 
 /**
  * @unstable
+ * @group Container
  *
  * Container holds a set of dependencies that are lazily generated from their factories
  * and provides a system to override those dependencies for testing
