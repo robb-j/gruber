@@ -100,7 +100,7 @@ function processSymbol(symbol, prefix = "") {
 
 	// if ((!content.trim() && Object.keys(tags).length === 0) || tags.internal) {
 	// if (!content.trim() && Object.keys(tags).length === 0) {
-	if (!content.trim() || tags.hidden) {
+	if (!content.trim() || tags.ignore) {
 		return null;
 	}
 

@@ -4,7 +4,7 @@ import type { Store } from "./store.ts";
 import type { TokenService } from "./tokens.ts";
 
 /**
- * @hidden
+ * @ignore
  *
  * An in-progress authentication, being stored while the client completes their challenge
  */
@@ -19,7 +19,7 @@ export interface AuthnRequest {
 // export type CachedAuthnAttempts = [`/authn/attempts/${string}`, number]
 
 /**
- * @hidden
+ * @ignore
  *
  * Intermediary parameters to present to the user to complete their authentication
  */
@@ -29,7 +29,7 @@ export interface AuthnCheck {
 }
 
 /**
- * @hidden
+ * @ignore
  *
  * Completed credentials after completing an authentication,
  * including cookie+redirected headers and the redirect itself
@@ -41,7 +41,7 @@ export interface AuthnResult {
 }
 
 /**
- * @internal
+ * @ignore
  */
 export interface AbstractAuthenticationService {
 	check(
@@ -53,7 +53,7 @@ export interface AbstractAuthenticationService {
 }
 
 /**
- * @internal
+ * @ignore
  */
 export function formatAuthenticationCode(code: number) {
 	return [
@@ -63,7 +63,7 @@ export function formatAuthenticationCode(code: number) {
 }
 
 /**
- * @internal
+ * @ignore
  */
 export interface AuthenticationServiceOptions {
 	allowedHosts: () => URL[] | Promise<URL[]>;
@@ -72,7 +72,7 @@ export interface AuthenticationServiceOptions {
 	/** milliseconds */ sessionDuration: number;
 }
 
-/** @internal */
+/** @ignore */
 export class AuthenticationService implements AbstractAuthenticationService {
 	options: AuthenticationServiceOptions;
 	store: Store;

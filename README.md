@@ -11,6 +11,7 @@ An isomorphic JavaScript library for creating web apps.
 
 ## Contents
 
+- [Install](#install)
 - [Quick tour](/quick-tour/) — a whistle-stop tour of all of Gruber
 - [Core](/core/) — essential primitives that use or build on web-standards
 - [HTTP](/http/) — quickly define server endpoints
@@ -35,9 +36,9 @@ They also help to explain why Gruber is made in the way it is.
 There is a lot not in Gruber too. By design it tries to be as minimal as possible.
 For examples, there is a development CORs implementation but a production app should be run behind a reverse proxy and that can do those things for you.
 
-## Why does this exist
+## Background
 
-I've spent the past few years working on JavaScript backends and nothing has really stuck with me.
+I've spent several years working on JavaScript backends and nothing has really stuck with me.
 There have been lots of nice ideas along the way but no one solution ever felt like home.
 It always felt like starting from scratch for each project.
 
@@ -58,14 +59,57 @@ I don't expect this to be true and would prefer to keep things as simple as poss
 I'm also quite wary of going all-in on a big tech company's library or framework,
 having explored lots of them on smaller projects.
 The fatigue from breaking changes or deprecations is real,
-"move fast and break things" sounds great but it creates a lot of maintenance when you work of lots of small projects in small teams.
+"move fast and break things" sounds great but it creates a lot of maintenance.
+Especially when you work of lots of small projects in small teams.
+
+I'd prefer a style of **move slow then contribute back**.
+So I use Gruber in a project and develop features in that project.
+The if the features are really useful and I find myself copy-pasting them between projects,
+I'll look into ways of contributing them back to the library.
 
 ## Principles
 
-- Composability — logic should be composed together rather than messily intertwined
-- Standards based — where available existing standards should be applied or migrated towards
-- Agnostic — a frontend framework or backend runtime shouldn't be forced upon you
-- Patterns — how you _could_ use modules rather than enforce an implementation
-- Minimal — start small, carefully add features and consider removing them
-- Holistic — by owning the tech-stack it creates unique opportunities for integration
-- No magic — it's confusing when you don't know whats going on
+- **Composability** — logic should be composed together rather than messily intertwined
+- **Standards** based — where available existing standards should be applied or migrated towards
+- **Agnostic** — a frontend framework or backend runtime shouldn't be forced upon you
+- **Patterns** — how you _could_ use modules rather than enforce an implementation
+- **Minimal** — start small, carefully add features and consider removing them
+- **Holistic** — complete ownership or careful abstractions creates unique opportunities for integration
+- **No magic** — it's confusing when you don't know what's going on
+
+## Install
+
+**Node.js**
+
+Gruber is available on NPM as [gruber](https://www.npmjs.com/package/gruber).
+
+```bash
+# cd to/your/project
+npm install gruber
+```
+
+and use it like this:
+
+```js
+import { defineRoute } from "gruber";
+```
+
+**Deno**
+
+Gruber is available at `esm.r0b.io/gruber@{{ pkg.version }}/mod.ts`, add it to your _deno.json_:
+
+> Find different version from [GitHub releases](https://github.com/robb-j/gruber/releases).
+
+```
+{
+  "imports": {
+    "gruber/": "https://esm.r0b.io/gruber@{{ pkg.version }}/"
+  }
+}
+```
+
+Then use it like this:
+
+```js
+import { defineRoute } from "gruber/mod.ts";
+```

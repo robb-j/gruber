@@ -8,6 +8,8 @@
 //
 
 /**
+ * @ignore
+ *
  * Options for creating a {@link Cors} object with
  *
  * ```js

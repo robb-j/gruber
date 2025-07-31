@@ -75,39 +75,26 @@ export function includesScope(actual: string, expected: string) {
 }
 
 /**
- * @group Authorization
- *
+ * @ignore
  * Options for asserting the authorization on any request
- *
- * ```js
- * const options = { scope: 'user:books' }
- * ```
  */
 export interface AssertOptions {
 	scope?: string;
 }
 
 /**
- * @group Authorization
+ * @ignore
  *
  * Options for asserting the authorization on a request that originated from a user
- *
- * ```js
- * const options = { scope: 'user:books' }
- * ```
  */
 export interface AssertUserOptions {
 	scope?: string;
 }
 
 /**
- * @group Authorization
+ * @ignore
  *
  * The result from asserting a request which was authorized for a user
- *
- * ```js
- * const result = { kind: 'user', userId: 42, scope: 'user' }
- * ```
  */
 export interface AssertUserResult {
 	kind: "user";
@@ -118,14 +105,10 @@ export interface AssertUserResult {
 }
 
 /**
- * @group Authorization
+ * @ignore
  *
  * The result from asserting a request which was authorized for a service,
  * i.e. not a user
- *
- * ```js
- * const result = { kind: 'service', scope: 'user' }
- * ```
  */
 export interface AssertServiceResult {
 	kind: "service";
@@ -133,7 +116,7 @@ export interface AssertServiceResult {
 }
 
 /**
- * @group Authorization
+ * @ignore
  * The possible types of result from asserting a request's authorization
  */
 export type AuthorizationResult = AssertUserResult | AssertServiceResult;
@@ -141,20 +124,41 @@ export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 /**
  * @group Authorization
  * @unstable
+ *
+ * ...
  */
 export interface AbstractAuthorizationService {
+	/**
+	 * ...
+	 */
 	getAuthorization(request: Request): string | null;
+
+	/**
+	 * ...
+	 */
 	assert(
 		request: Request,
 		options?: AssertOptions,
 	): Promise<AuthorizationResult>;
+
+	/**
+	 * ...
+	 */
 	assertUser(
 		request: Request,
 		options?: AssertUserOptions,
 	): Promise<AssertUserResult>;
+
+	/**
+	 * ...
+	 */
 	from(request: Request): Promise<AuthorizationResult | null>;
 }
 
+/**
+ * @ignore
+ * Options for creating an AuthorizationService
+ */
 export interface AuthorizationServiceOptions {
 	cookieName: string;
 }

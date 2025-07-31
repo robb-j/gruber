@@ -7,25 +7,25 @@ eleventyNavigation:
 
 # Quick tour
 
-To see what Gruber does, let's make a simple Node.js server.
-This is pure JavaScript, but you get a lot of benefits if Gruber's TypeScript without needing to use it directly.
+To see what Gruber does, let's make a simple **Node.js** server.
+This is pure JavaScript, you can get a lot of benefits of Gruber's TypeScript without needing to use it directly.
 
 ```bash
-npm install gruber yargs
+npm install gruber
 ```
 
 Let's start by creating a route, **hello-route.js**
 
 ```js
-import { defineRoute, HttpError } from "gruber";
+import { defineRoute, HTTPError } from "gruber";
 
 // A route is a first-class thing, it can easily be passed around and used
 export const helloRoute = defineRoute({
   method: "GET",
   pathname: "/hello/:name",
-  handler({ request, url, params }) {
+  handler({ request, params }) {
     if (params.name === "McClane") {
-      throw HttpError.unauthorized();
+      throw HTTPError.unauthorized();
     }
     return new Response(`Hello, ${params.name}!`);
   },
@@ -35,14 +35,14 @@ export const helloRoute = defineRoute({
 A route is a definition to handle a specific HTTP request with a response.
 It defines which method and path it is responding to and an asynchronous function to generate a response.
 
-Both the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
-and [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-are from the web Fetch API (standards based!).
-There is also a `url` (as a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)) of the request and `params`.
+This is using nice standards like
+[Request](https://developer.mozilla.org/en-US/docs/Web/API/Request),
+[Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+and [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern).
+The `params` are strongly-typed based on the pathname you passed too!
+So you'd get a warning if you used a param other than `name`, even if you are only writting JavaScript.
 
-The syntax for the pathname is based on [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern), another standard. This is used to match the request and generate the strongly-typed `params`. In this example `name` is matched in the request URL and is used to process the request.
-
-Finally, **HTTPError** is a custom Gruber primative that the route knows how to handle, you can throw HTTP error codes for the server to respond with.
+You can easily throw a **HTTPError** because Gruber knows how to handle them and return a HTTP response from them.
 
 With that route, let's use it to create a server with **server.js**:
 
@@ -69,33 +69,20 @@ There are a few things going on here too.
 
 ## CLI
 
-Next, we'll need to run out `runServer` method somehow. Let's create a CLI with yargs, **cli.js**
+> Work in progress...
+
+Next, we'll need to run out `runServer` method somehow. Let's create a CLI, **cli.js**
 
 ```js
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-
+import process from "node:process";
 import { runServer } from "./server.js";
 
-const cli = yargs(hideBin(process.argv))
-  .help()
-  .demandCommand(1, "a command is required");
+const [command] = process.args.slice(2);
 
-cli.command(
-  "serve",
-  "run the http server",
-  (yargs) => yargs.option("port", { type: "number", default: 3000 }),
-  (args) => runServer(args),
-);
-
-try {
-  await cli.parseAsync();
-} catch (error) {
-  console.error("Fatal error:", e);
+if (import.meta.main) {
+  if (command === "serve") await runServer();
 }
 ```
-
-This is mostly yargs-specific code, it creates an entry-point so we can run the server and configure the port it runs on.
 
 ## Configuration
 
@@ -111,7 +98,7 @@ We'll break this one down into a few steps, to explain whats going on.
 import { getConfiguration } from "gruber";
 import pkg from "./package.json" with { type: "json" };
 
-// Get a Node.js specific configuration
+// Get a platform specific configuration
 const config = getConfiguration();
 
 // Define the structure of our configuration and how to merge together

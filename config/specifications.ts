@@ -18,7 +18,7 @@ export function getSpecification(
 		: undefined;
 }
 
-export function objectSpec(
+export function _objectSpec(
 	options: Record<string, Structure<unknown>>,
 ): ConfigurationSpecification {
 	return (property: string) => {
@@ -37,7 +37,7 @@ export function objectSpec(
 	};
 }
 
-export function arraySpec(
+export function _arraySpec(
 	options: Structure<unknown>,
 ): ConfigurationSpecification {
 	return (property: string) => {
@@ -58,7 +58,7 @@ export interface PrimativeOptions<T = any> {
 	fallback: T;
 }
 
-export function primativeSpec(type: string, options: PrimativeOptions) {
+export function _primativeSpec(type: string, options: PrimativeOptions) {
 	return (property: string) => ({
 		fallback: options.fallback,
 		fields: [

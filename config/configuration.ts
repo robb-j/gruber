@@ -1,12 +1,12 @@
 import { Structure } from "./structure.ts";
 import { formatMarkdownTable, PromiseList } from "../core/mod.ts";
 import {
-	arraySpec,
+	_arraySpec,
 	type ConfigurationDescription,
 	getSpecification,
-	objectSpec,
+	_objectSpec,
 	type PrimativeOptions,
-	primativeSpec,
+	_primativeSpec,
 } from "./specifications.ts";
 import {
 	_parseBoolean,
@@ -88,7 +88,7 @@ export class Configuration {
 		}
 		const struct = Structure.object(fields);
 		Object.defineProperty(struct, Configuration.spec, {
-			value: objectSpec(fields),
+			value: _objectSpec(fields),
 		});
 		return struct;
 	}
@@ -99,7 +99,7 @@ export class Configuration {
 		}
 		const struct = Structure.array(item);
 		Object.defineProperty(struct, Configuration.spec, {
-			value: arraySpec(item),
+			value: _arraySpec(item),
 		});
 		return struct;
 	}
@@ -151,7 +151,7 @@ export class Configuration {
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
-			value: primativeSpec("string", options),
+			value: _primativeSpec("string", options),
 		});
 
 		return struct;
@@ -167,7 +167,7 @@ export class Configuration {
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
-			value: primativeSpec("number", options),
+			value: _primativeSpec("number", options),
 		});
 
 		return struct;
@@ -183,7 +183,7 @@ export class Configuration {
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
-			value: primativeSpec("boolean", options),
+			value: _primativeSpec("boolean", options),
 		});
 
 		return struct;
@@ -204,7 +204,7 @@ export class Configuration {
 		);
 
 		Object.defineProperty(struct, Configuration.spec, {
-			value: primativeSpec("url", opts2),
+			value: _primativeSpec("url", opts2),
 		});
 
 		return struct;
@@ -270,6 +270,6 @@ export class Configuration {
 	}
 
 	getJSONSchema(struct: Structure<any>) {
-		return struct.getSchema();
+		return struct.getFullSchema();
 	}
 }

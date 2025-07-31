@@ -53,3 +53,6 @@ pre > code {
 .token.property {
 	color: var(--r0b-field);
 }
+.language-json .token.property {
+	color: var(--r0b-function);
+}
