@@ -52,7 +52,7 @@ main.api {
 	flex: 1;
 	padding: var(--s0);
 }
-main.api center-layout h2 {
+main.api center-layout h3 {
 	position: sticky;
 	top: 0;
 	background: var(--background);

@@ -1,7 +1,26 @@
 import type { StandardSchemaV1 } from "./standard-schema.ts";
 import type { Structure } from "./structure.ts";
 
-/** @internal */
+/**
+ * @name Structure.Error
+ * @group Structure
+ *
+ * An error produced from processing a value for a {@link Structure}
+ *
+ * ```js
+ * const error = new Structure.Error("Expected something", ["some", "path"])
+ * ```
+ *
+ * It takes a `message`, `path` & `children` in the constructor.
+ *
+ * You can also iterate over a Structure.Error to walk the tree of errors.
+ *
+ * ```js
+ * for (const error2 of error) {
+ *   console.log(error2.getOneLiner())
+ * }
+ * ```
+ */
 export class _StructError extends Error {
 	path: string[];
 	children: _StructError[];
@@ -17,6 +36,18 @@ export class _StructError extends Error {
 		Error.captureStackTrace(this, _StructError);
 	}
 
+	/**
+	 * @internal
+	 *
+	 * Create a new error with the context added to it
+	 *
+	 * ```js
+	 * const nested = Structure.Error.chain(
+	 * 	new Error("Something went wrong"),
+	 * 	["some", "path"]
+	 * )
+	 * ```
+	 */
 	static chain(error: unknown, context: { path: string[] }): _StructError;
 	static chain(error: unknown, path: string[]): _StructError;
 	static chain(
@@ -42,10 +73,26 @@ export class _StructError extends Error {
 		return chained;
 	}
 
+	/**
+	 * Get a single-line variant, describing the error
+	 *
+	 * ```js
+	 * error.getOneLiner()
+	 * ```
+	 *
+	 * which outputs something like:
+	 *
+	 * ```
+	 * some.path — expected a number
+	 * ```
+	 */
 	getOneLiner() {
 		return (this.path.join(".") || ".") + " — " + this.message;
 	}
 
+	/**
+	 * Loop through child errors including the error itself
+	 */
 	*[Symbol.iterator](): Iterator<_StructError> {
 		if (this.children.length === 0) {
 			yield this;
@@ -56,6 +103,21 @@ export class _StructError extends Error {
 		}
 	}
 
+	/**
+	 * Generate a human-friendly string describing the error and all nested errors
+	 *
+	 * ```js
+	 * error.toFriendlyString()
+	 * ```
+	 *
+	 * which outputs something like:
+	 *
+	 * ```
+	 * Object does not match schema
+	 *   name — expected a string
+	 *   age — expected a number
+	 * ```
+	 */
 	toFriendlyString(): string {
 		const messages = [];
 		for (const child of this) {
@@ -68,6 +130,9 @@ export class _StructError extends Error {
 		].join("\n");
 	}
 
+	/**
+	 * Convert the error to a [StandardSchema](https://standardschema.dev/) issue to be used with that ecosystem.
+	 */
 	getStandardSchemaIssues(): StandardSchemaV1.Issue[] {
 		let issues: StandardSchemaV1.Issue[] = [
 			{ message: this.message, path: this.path },

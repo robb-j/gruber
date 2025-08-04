@@ -34,7 +34,7 @@ layout: html.njk
 							</a>
 						</li>
 						<ul>
-							{% for member in entry[1].members | dictsort %}
+							{% for member in entry[1].children | dictsort %}
 							<li>
 								<a href="#{{ member[1].id | slugify }}">
 									{{ member[1].name }}
@@ -73,7 +73,7 @@ layout: html.njk
 		
 							{{ entry[1].content | renderContent('md') | safe }}
 		
-							{% for member in entry[1].members | dictsort %}
+							{% for member in entry[1].children | dictsort %}
 							<div class="flow apiMember" id="{{ member[1].id | slugify }}">
 								<h4>
 									<!-- {{ entry[0] }}# -->

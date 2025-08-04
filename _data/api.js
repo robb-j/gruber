@@ -1,11 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import createDebug from "debug";
 import slugify from "@sindresorhus/slugify";
-
-// import getDependencies from "@11ty/dependency-tree";
-
+import createDebug from "debug";
 import { Project, SyntaxKind } from "ts-morph";
 
 const debug = createDebug("gruber:api");
@@ -28,20 +22,30 @@ async function generate() {
 	const output = {};
 
 	for (const entrypoint of entrypoints) {
-		const entry = project.getSourceFiles("./" + entrypoint)[0];
-		if (!entry) continue;
+		const source = project.getSourceFiles("./" + entrypoint)[0];
+		if (!source) {
+			debug("entry not found", entrypoint);
+			continue;
+		}
 
 		output[entrypoint] = {};
 
 		debug(entrypoint);
 
-		for (let symbol of entry.getExportSymbols()) {
-			const result = processSymbol(symbol);
-			if (!result) continue;
+		for (let symbol of source.getExportSymbols()) {
+			// for (const doc of processSymbol(symbol)) {
+			// 	debug("found", doc);
+			// }
+			// const result = processSymbol(symbol);
+			// if (!result) continue;
 
-			output[entrypoint][symbol.getEscapedName()] = {
+			const doc = processSymbol(symbol);
+			if (!doc) continue;
+			debug("found", doc.id);
+
+			output[entrypoint][doc.name] = {
 				entrypoint,
-				...result,
+				...doc,
 			};
 		}
 	}
@@ -51,15 +55,59 @@ async function generate() {
 
 /** @param {import("ts-morph").Symbol} symbol */
 function processSymbol(symbol, prefix = "") {
-	if (symbol.getEscapedName().startsWith("_")) {
+	if (symbol.isAlias()) symbol = symbol.getAliasedSymbolOrThrow();
+
+	const doc = getSymbolDocumentation(symbol, prefix);
+	const children = {};
+
+	if (!doc) {
 		debug("skip: " + symbol.getEscapedName());
 		return null;
 	}
 
+	for (let declaration of symbol.getDeclarations()) {
+		const classDecl = declaration.asKind(SyntaxKind.ClassDeclaration);
+
+		if (classDecl) {
+			for (const member of classDecl.getInstanceMembers()) {
+				const child = processSymbol(
+					member.getSymbol(),
+					prefix + symbol.getEscapedName() + "#",
+				);
+				if (!child) continue;
+				// children.push(child);
+				children["#" + child.name] = child;
+			}
+
+			for (const member of classDecl.getStaticMembers()) {
+				const child = processSymbol(
+					member.getSymbol(),
+					prefix + symbol.getEscapedName() + ".",
+				);
+				if (!child) continue;
+				// children.push(child);
+				children["." + child.name] = child;
+			}
+		}
+
+		const ifaceDecl = declaration.asKind(SyntaxKind.InterfaceDeclaration);
+		if (ifaceDecl) {
+			for (const member of ifaceDecl.getMembers()) {
+			}
+		}
+	}
+
+	return {
+		...getSymbolDocumentation(symbol, prefix),
+		children,
+	};
+}
+
+/** @param {import("ts-morph").Symbol} symbol */
+function getSymbolDocumentation(symbol, prefix = "") {
 	if (symbol.isAlias()) symbol = symbol.getAliasedSymbolOrThrow();
 
 	let markdown = [];
-	let members = {};
 
 	for (let declaration of symbol.getDeclarations()) {
 		// https://github.com/dsherret/ts-morph/issues/901
@@ -67,29 +115,11 @@ function processSymbol(symbol, prefix = "") {
 			declaration = declaration.getVariableStatementOrThrow();
 		}
 
-		// TODO: should this use `Node.isJSDocable(decl)` + `node#getJsDocs()` ?
 		for (const range of declaration.getLeadingCommentRanges()) {
 			const match = /\/\*\*([\s\S]+)\*\//.exec(range.getText());
 			if (!match) continue;
 			markdown.push(match[1].replaceAll(/^[ \t]*?@.*$/gm, ""));
 		}
-
-		if (
-			declaration.getKind() === SyntaxKind.ClassDeclaration ||
-			declaration.getKind() === SyntaxKind.InterfaceDeclaration
-		) {
-			for (const child of symbol.getMembers()) {
-				if (child.getValueDeclaration() === undefined) {
-					continue; // Skip type-only members, ie generics
-				}
-				const result = processSymbol(child, symbol.getEscapedName() + "_");
-				if (result) members[child.getEscapedName()] = result;
-			}
-		}
-
-		// if (declaration.getKind() === SyntaxKind.InterfaceDeclaration) {
-		// 	console.log("interface", symbol.getEscapedName());
-		// }
 	}
 
 	const { content, tags } = processMarkdown(markdown.join("\n\n"));
@@ -98,18 +128,19 @@ function processSymbol(symbol, prefix = "") {
 		tags.type = "true";
 	}
 
+	const name = tags.name ?? symbol.getEscapedName();
+
 	// if ((!content.trim() && Object.keys(tags).length === 0) || tags.internal) {
 	// if (!content.trim() && Object.keys(tags).length === 0) {
-	if (!content.trim() || tags.ignore) {
+	if (!content.trim() || tags.ignore || name.startsWith("_")) {
 		return null;
 	}
 
 	return {
 		id: prefix + symbol.getEscapedName(),
-		name: symbol.getEscapedName(),
+		name: name,
 		content,
 		tags,
-		members,
 	};
 }
 
@@ -144,24 +175,4 @@ function replaceLink(match) {
 	return `[${match[1]}](#${id})`;
 }
 
-export default async function () {
-	// try {
-	// 	const cached = JSON.parse(
-	// 		await fs.promises.readFile(
-	// 			new URL("../.cache/api.json", import.meta.url),
-	// 			"utf8",
-	// 		),
-	// 	);
-	// 	return cached;
-	// } catch {}
-
-	const data = await generate();
-	// await fs.promises.mkdir(new URL("../.cache/", import.meta.url), {
-	// 	recursive: true,
-	// });
-	// await fs.promises.writeFile(
-	// 	new URL("../.cache/api.json", import.meta.url),
-	// 	JSON.stringify(data),
-	// );
-	return data;
-}
+export default generate;

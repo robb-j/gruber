@@ -1,9 +1,5 @@
 import type { StandardSchemaV1 } from "./standard-schema.ts";
-import {
-	_nestContext,
-	DEFAULT_CONTEXT,
-	type StructContext,
-} from "./struct-context.ts";
+import { _nestContext, type StructContext } from "./struct-context.ts";
 import { _StructError } from "./struct-error.ts";
 
 // NOTE: Structure types should inline types where possible to expose the raw type to consumers,
@@ -17,7 +13,7 @@ export type Infer<T> = T extends Structure<infer U> ? U : never;
 
 export type InferObject<T> = { [K in keyof T]: Infer<T[K]> };
 
-function _additionalProperties(
+export function _additionalProperties(
 	fields: Record<string, unknown>,
 	input: Record<string, unknown>,
 ) {
@@ -25,6 +21,13 @@ function _additionalProperties(
 	return Array.from(Object.keys(input)).filter((key) => !allowed.has(key));
 }
 
+/**
+ * @group Structure
+ *
+ * **Structure** is a composable primative for processing values to make sure they are what you expect them to be, optionally coercing the value into something else. It's also strongly-typed so values that are validated have the correct TypeScript type too.
+ *
+ * The Structure class also supports [StandardSchema v1](https://standardschema.dev) so you can use it anywhere that supports that standard.
+ */
 export class Structure<T> {
 	static Error = _StructError;
 
@@ -48,9 +51,12 @@ export class Structure<T> {
 		this._process = process;
 	}
 
+	/**
+	 * Execute the structure by passing it a value and getting back the result if it is successful, otherwise a {@link Structure.Error} is thrown
+	 */
 	process(
 		input: unknown = undefined,
-		context: StructContext = DEFAULT_CONTEXT,
+		context: StructContext = { type: "sync", path: [] },
 	) {
 		try {
 			return this._process(input, context);
@@ -59,6 +65,9 @@ export class Structure<T> {
 		}
 	}
 
+	/**
+	 * Get a JSON schema from the structure, where equivalent fields are available.
+	 */
 	getFullSchema(): Schema {
 		return {
 			$schema: "https://json-schema.org/draft/2020-12/schema",
@@ -71,6 +80,14 @@ export class Structure<T> {
 		return this.getFullSchema();
 	}
 
+	/**
+	 * Define a string-based value with an optional `fallback`.
+	 *
+	 * ```js
+	 * Structure.string()
+	 * Structure.string("Geoff Testington")
+	 * ```
+	 */
 	static string(fallback?: string | undefined): Structure<string> {
 		const schema: Schema = { type: "string" };
 		if (fallback !== undefined) schema.default = fallback;
@@ -86,6 +103,15 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a number-based value with an optional `fallback`,
+	 * it will also try to parse floating-point values from strings.
+	 *
+	 * ```js
+	 * Structure.number()
+	 * Structure.number("Geoff Testington")
+	 * ```
+	 */
 	static number(fallback?: number | undefined): Structure<number> {
 		const schema: Schema = { type: "number" };
 		if (fallback !== undefined) schema.default = fallback;
@@ -108,6 +134,14 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a boolean value with an optional `fallback`.
+	 *
+	 * ```js
+	 * Structure.boolean()
+	 * Structure.boolean(false)
+	 * ```
+	 */
 	static boolean(fallback?: boolean | undefined): Structure<boolean> {
 		const schema: Schema = { type: "boolean" };
 		if (fallback !== undefined) schema.default = fallback;
@@ -123,6 +157,16 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a URL value with an optional `fallback`,
+	 * that will be coerced into a `URL`.
+	 *
+	 * ```js
+	 * Structure.url()
+	 * Structure.url("http://example.com")
+	 * Structure.url(new URL("http://example.com"))
+	 * ```
+	 */
 	static url(fallback?: string | URL | undefined): Structure<URL> {
 		const schema: Schema = { type: "string", format: "uri" };
 		if (fallback !== undefined) schema.default = fallback.toString();
@@ -141,6 +185,17 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a group of structures under an object.
+	 * Each field needs to matched their respective Structures and no additionaly fields are allowed.
+	 *
+	 * ```js
+	 * Structure.object({
+	 * 	name: Structure.string(),
+	 * 	age: Structure.number(),
+	 * })
+	 * ```
+	 */
 	static object<T extends Record<string, unknown>>(fields: {
 		[K in keyof T]: Structure<T[K]>;
 	}): Structure<T> {
@@ -193,6 +248,24 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a list of values that each match the same structure.
+	 *
+	 * ```js
+	 * // An array of strings
+	 * Structure.array(
+	 * 	Structure.string()
+	 * )
+	 *
+	 * // An array of objects
+	 * Structure.array(
+	 * 	Structure.object({
+	 * 		name: Structure.string(),
+	 * 		age: Structure.number()
+	 * 	})
+	 * )
+	 * ```
+	 */
 	static array<T extends unknown>(struct: Structure<T>): Structure<Array<T>> {
 		const schema: Schema = {
 			type: "array",
@@ -224,6 +297,16 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a specific value that must be exactly equal.
+	 *
+	 *
+	 * ```js
+	 * Structure.literal("click_event")
+	 * Structure.literal(42)
+	 * Structure.literal(true)
+	 * ```
+	 */
 	static literal<T extends string | number | boolean>(value: T): Structure<T> {
 		const schema = { type: typeof value, const: value };
 
@@ -238,6 +321,21 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a Structure that must match one of a set of Structures
+	 *
+	 * ```js
+	 * Structure.union([
+	 * 	Structure.object({
+	 * 		type: Structure.literal("click"),
+	 * 		element: Structure.string()
+	 * 	}),
+	 * 	Structure.object({
+	 * 		type: Structure.literal("login"),
+	 * 	}),
+	 * ])
+	 * ```
+	 */
 	static union<T extends Structure<unknown>[]>(
 		types: T,
 	): Structure<Infer<T[number]>> {
@@ -262,6 +360,13 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a Structure to validate the value is `null`
+	 *
+	 * ```js
+	 * Structure.null()
+	 * ```
+	 */
 	static null() {
 		return new Structure({ type: "null" }, (value) => {
 			if (value !== null) throw new Error("value is not null");
@@ -269,10 +374,28 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Define a Structure that lets any value through
+	 *
+	 * ```js
+	 * Structure.any()
+	 * ```
+	 */
 	static any() {
 		return new Structure<any>({}, (value) => value);
 	}
 
+	/**
+	 * Create a Structure that validates an object where no or some of the fields match their respective Structures.
+	 * It also does not allow any additional fields to be set.
+	 *
+	 * ```js
+	 * Structure.partial({
+	 * 	name: Structure.string(),
+	 * 	age: Structure.number()
+	 * })
+	 * ```
+	 */
 	static partial<T extends Record<string, unknown>>(fields: {
 		[K in keyof T]: Structure<T[K]>;
 	}): Structure<{ [K in keyof T]?: T[K] }> {
@@ -329,6 +452,14 @@ export class Structure<T> {
 		});
 	}
 
+	/**
+	 * Creates a Structure that validates dates or values that can be turned into dates
+	 * through the [Date constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date).
+	 *
+	 * ```js
+	 * Structure.date()
+	 * ```
+	 */
 	static date(): Structure<Date> {
 		return new Structure({ type: "string", format: "date-time" }, (value) => {
 			if (value instanceof Date) return value;

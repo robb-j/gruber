@@ -86,9 +86,7 @@ if (import.meta.main) {
 
 ## Configuration
 
-The CLI is one way of changing how the application runs by exposing options to configure what the code does. Gruber has a much more in-depth **Configuration** module you can use to declaratively define how all parts of your application are configured.
-
-> Recommended reading [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) - it really inspired the design of configuration
+The CLI is a way of running specific parts of your application and configuring it with command-line flags. Gruber has a much more in-depth **Configuration** module you can use to declaratively define how all parts of your application are configured.
 
 Lets use configuration, create **config.js**:
 
@@ -96,7 +94,6 @@ We'll break this one down into a few steps, to explain whats going on.
 
 ```js
 import { getConfiguration } from "gruber";
-import pkg from "./package.json" with { type: "json" };
 
 // Get a platform specific configuration
 const config = getConfiguration();
@@ -116,11 +113,6 @@ const struct = config.object({
       variable: "SELF_URL",
       fallback: "http://localhost:3000",
     }),
-  }),
-
-  meta: config.object({
-    name: config.string({ variable: "APP_NAME", fallback: pkg.name }),
-    version: config.string({ variable: "APP_VERSION", fallback: pkg.version }),
   }),
 });
 ```

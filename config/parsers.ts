@@ -1,12 +1,21 @@
 import type { ConfigurationOptions } from "./configuration.ts";
 import type { PrimativeOptions } from "./specifications.ts";
 
+/**
+ * @ignore
+ *
+ * A matched value of a configuration value and the source it came from
+ */
 export type ConfigurationResult =
 	| { source: "argument"; value: unknown }
 	| { source: "variable"; value: unknown }
 	| { source: "current"; value: unknown }
 	| { source: "fallback"; value: unknown };
 
+/**
+ * Parse a JavaScript primative like a string, number or boolean,
+ * applying the precedence of argument > variable > file > fallback
+ */
 export function _parsePrimative<T>(
 	config: ConfigurationOptions,
 	options: PrimativeOptions<T>,
@@ -29,6 +38,10 @@ export function _parsePrimative<T>(
 	return { source: "fallback", value: options.fallback };
 }
 
+/**
+ * Parse a floating-point number from a configuration result,
+ * attempting to coerce string values.
+ */
 export function _parseFloat(result: ConfigurationResult): number {
 	if (typeof result.value === "string") {
 		const parsed = Number.parseFloat(result.value);
@@ -52,6 +65,9 @@ const _booleans: Record<string, boolean | undefined> = {
 	no: false,
 };
 
+/**
+ * Parse a boolean from a configuration result, coercing common string values
+ */
 export function _parseBoolean(result: ConfigurationResult): boolean {
 	if (typeof result.value === "boolean") return result.value;
 
@@ -67,6 +83,9 @@ export function _parseBoolean(result: ConfigurationResult): boolean {
 	throw new TypeError("Unknown boolean result");
 }
 
+/**
+ * Parse a URL from a configuration result and create a `URL` from it
+ */
 export function _parseURL(result: ConfigurationResult): URL {
 	if (result.value instanceof URL) return result.value;
 	if (typeof result.value === "string") return new URL(result.value);

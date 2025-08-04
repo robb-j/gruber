@@ -13,9 +13,9 @@ import pkg from "./package.json" with { type: "json" };
 export default function (eleventyConfig) {
 	eleventyConfig.addPlugin(eleventyAlembic, { useLabcoat: true });
 	eleventyConfig.addPlugin(NavigationPlugin);
-	eleventyConfig.addPlugin(IdAttributePlugin, {
-		// checkDuplicates: false,
-	});
+	// eleventyConfig.addPlugin(IdAttributePlugin, {
+	// 	// checkDuplicates: false,
+	// });
 	eleventyConfig.addPlugin(RenderPlugin);
 	eleventyConfig.addPlugin(SyntaxHighlightPlugin);
 	eleventyConfig.addPlugin(HtmlBasePlugin);

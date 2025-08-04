@@ -37,7 +37,6 @@
   - StandardSchemaV1
 - `struct-context.ts`
   - StructContext
-  - DEFAULT_CONTEXT
   - \_nestContext
 - `struct-error.ts`
   - \_StructError
