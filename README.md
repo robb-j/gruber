@@ -98,7 +98,7 @@ import { defineRoute } from "gruber";
 
 Gruber is available at `esm.r0b.io/gruber@{{ pkg.version }}/mod.ts`, add it to your _deno.json_:
 
-> Find different version from [GitHub releases](https://github.com/robb-j/gruber/releases).
+<esm-info endpoint="https://js-modules.ams3.digitaloceanspaces.com"></esm-info>
 
 ```
 {
