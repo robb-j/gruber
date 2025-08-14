@@ -25,6 +25,8 @@ This file documents notable changes to the project
   where it will use `getRequestBody` to get the body then validate it
 - Add `createStoppable` to Node.js module and apply it to `serveHTTP`
 - Add `testing` module with utilities, stubs, fakes and a testing router
+- Add `preventExtraction` and `dangerouslyExpose` to core module
+- (WIP) Attempting to `JSON.stringify` any values from configuration value now throws a TypeError
 
 **improved**
 

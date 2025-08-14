@@ -218,3 +218,74 @@ export class PromiseList {
 		return this.#promises.length;
 	}
 }
+
+/**
+ * Take steps to prevent an object from being extracted from the app,
+ * inspired by crypto.subtle.importKey's [extractable](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#extractable) parameter.
+ *
+ * This will:
+ * - throw an error if the value are passed to JSON.stringify
+ * - it recursively applies to nested objects, arrays and items within arrays
+ * - [seal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/seal) and [freeze](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) the value and all nested objects & arrays
+ *
+ * ```js
+ * const config = preventExtraction({
+ * 	name: "Geoff Testington",
+ * 	pets: [
+ * 		{ name: "Hugo" },
+ * 		{ name: "Helga" },
+ * 	],
+ *  favourite: {
+ * 		mountain: "Cheviot"
+ * 	}
+ * })
+ *
+ * // Any attempt to JSON-ify will result in an error
+ * console.log(JSON.stringify(config)) // throws a TypeError
+ * console.log(JSON.stringify(config.pets)) // throws a TypeError
+ * console.log(JSON.stringify(config.pets[0])) // throws a TypeError
+ * console.log(JSON.stringify(config.pets[1])) // throws a TypeError
+ * console.log(JSON.stringify(config.favourite)) // throws a TypeError
+ * ```
+ *
+ * The value will also be frozen and sealed, so any properties cannot be added, removed or modified.
+ */
+export function preventExtraction<T>(input: T): T {
+	if (typeof input !== "object" || input === null) {
+		throw new TypeError("not an object");
+	}
+
+	Object.defineProperty(input, "toJSON", {
+		writable: false,
+		enumerable: false,
+		configurable: false,
+		value: () => {
+			throw new TypeError("cannot be extracted");
+		},
+	});
+
+	// Stop any extra fields being
+	Object.freeze(input);
+
+	// NOTE: this duplication is on purpose to keep operation as verbose as possible
+	if (Array.isArray(input)) {
+		for (const value of input) {
+			if (typeof value === "object" && value !== null) preventExtraction(value);
+		}
+	} else {
+		for (const value of Object.values(input)) {
+			if (typeof value === "object" && value !== null) preventExtraction(value);
+		}
+	}
+	return input;
+}
+
+/**
+ * @unstable
+ *
+ * **DANGER** undo a {@link preventExtraction} to allow values to be exposed.
+ * This undos all of the precations that `preventExtraction` add.
+ */
+export function dangerouslyExpose<T>(input: T): T {
+	return structuredClone(input);
+}
