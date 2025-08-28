@@ -264,6 +264,12 @@ export function preventExtraction<T>(input: T): T {
 		},
 	});
 
+	Object.defineProperty(input, Symbol.toStringTag, {
+		enumerable: false,
+		configurable: false,
+		get: () => "redacted",
+	});
+
 	// Stop any extra fields being
 	Object.freeze(input);
 

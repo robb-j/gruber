@@ -185,6 +185,13 @@ describe("preventExtraction", () => {
 			'{"name":"Geoff Testington","age":42}',
 		);
 	});
+	it("overrides the string tag", () => {
+		const result = preventExtraction({
+			name: "Geoff Testington",
+			age: 42,
+		});
+		assertEquals(result.toString(), "[object redacted]");
+	});
 });
 
 describe("dangerouslyExpose", () => {
