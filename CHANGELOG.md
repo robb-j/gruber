@@ -45,6 +45,7 @@ This file documents notable changes to the project
 - `Structure.object` sets required fields in schema
 - Internaly use `verbatimModuleSyntax` to be more JavaScript agnostic
 - Remove use of conditional imports in the node polyfil
+- `FetchRouter` internally applies middleware during error handling too
 
 **deprecations**
 

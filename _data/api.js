@@ -69,6 +69,7 @@ function processSymbol(symbol, prefix = "") {
 		const classDecl = declaration.asKind(SyntaxKind.ClassDeclaration);
 
 		if (classDecl) {
+			const className = classDecl.getSymbol().getEscapedName();
 			for (const member of classDecl.getInstanceMembers()) {
 				const child = processSymbol(
 					member.getSymbol(),
@@ -76,7 +77,7 @@ function processSymbol(symbol, prefix = "") {
 				);
 				if (!child) continue;
 				// children.push(child);
-				children["#" + child.name] = child;
+				children[child.name] = child;
 			}
 
 			for (const member of classDecl.getStaticMembers()) {
@@ -86,7 +87,7 @@ function processSymbol(symbol, prefix = "") {
 				);
 				if (!child) continue;
 				// children.push(child);
-				children["." + child.name] = child;
+				children[className + "." + child.name] = child;
 			}
 		}
 

@@ -4,9 +4,10 @@
  * A custom [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
  * subclass that represents an HTTP error to be returned to the user.
  *
- * This allows code to throw specific HTTP errors directly.
+ * This allows routes to throw specific HTTP errors directly and
+ * {@link FetchRouter} knows how to handle them and turn them into HTTP Responses
  *
- * > NOTE: add more error codes as needed
+ *
  *
  * You can use well-known errors like below, you can also pass a [BodyInit](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#body) to customise the response body.
  *
@@ -16,6 +17,8 @@
  * throw HTTPError.notFound()
  * throw HTTPError.internalServerError()
  * throw HTTPError.notImplemented()
+ *
+ * // The plan is to add more error well-known codes as they are needed
  * ```
  *
  * You can also manually construct the error:
@@ -26,35 +29,55 @@
  */
 export class HTTPError extends Error {
 	/**
-	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+	 * [400 Bad Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400)
+	 *
+	 * ```js
+	 * throw HTTPError.badRequest()
+	 * ```
 	 */
 	static badRequest(body: BodyInit | undefined = undefined) {
 		return new HTTPError(400, "Bad Request", body);
 	}
 
 	/**
-	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+	 * [401 Unauthorized](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401)
+	 *
+	 * ```js
+	 * throw HTTPError.unauthorized()
+	 * ```
 	 */
 	static unauthorized(body: BodyInit | undefined = undefined) {
 		return new HTTPError(401, "Unauthorized", body);
 	}
 
 	/**
-	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+	 * [404 Not Found](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404)
+	 *
+	 * ```js
+	 * throw HTTPError.notFound()
+	 * ```
 	 */
 	static notFound(body: BodyInit | undefined = undefined) {
 		return new HTTPError(404, "Not Found", body);
 	}
 
 	/**
-	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+	 * [500 Internal Server Error](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500)
+	 *
+	 * ```js
+	 * throw HTTPError.internalServerError()
+	 * ```
 	 */
 	static internalServerError(body: BodyInit | undefined = undefined) {
 		return new HTTPError(500, "Internal Server Error", body);
 	}
 
 	/**
-	 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/501
+	 * [500 Not Implemented](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/501)
+	 *
+	 * ```js
+	 * throw HTTPError.notImplemented()
+	 * ```
 	 */
 	static notImplemented(body: BodyInit | undefined = undefined) {
 		return new HTTPError(501, "Not Implemented", body);
@@ -87,6 +110,16 @@ export class HTTPError extends Error {
 		Error.captureStackTrace(this, HTTPError);
 	}
 
+	/**
+	 * Convert the HTTPError into a HTTP `Response` object
+	 * taking into account the `status`, `statusText` and `headers` fields on the error.
+	 *
+	 * ```js
+	 * const error = new HTTPError(418, "I'm a teapot");
+	 *
+	 * error.toResponse() // Response
+	 * ```
+	 */
 	toResponse() {
 		return new Response(this.body, {
 			status: this.status,

@@ -4,6 +4,8 @@ import type { AuthzToken, TokenService } from "../core/mod.ts";
 /**
  * Based on deno std
  * https://github.com/denoland/std/blob/065296ca5a05a47f9741df8f99c32fae4f960070/http/cookie.ts#L254C1-L270C2
+ *
+ * NOTE: maybe this should be Map based?
  */
 export function _getCookies(
 	headers: Headers,
@@ -12,22 +14,32 @@ export function _getCookies(
 	if (!cookie) return {};
 
 	const result: Record<string, string | undefined> = {};
+
+	// Split the cookie into individual definitions based on the ";" character
 	for (const kv of cookie.split(";")) {
+		// Find the equals character to determine the boundary between key and value
 		const pivot = kv.indexOf("=");
-		if (pivot === -1) {
-			throw new SyntaxError("Invalid cookie");
-		}
+		if (pivot === -1) throw new SyntaxError("Invalid cookie");
+
+		// Slice out the key and value and assign it to the result
 		result[kv.slice(0, pivot).trim()] = kv.slice(pivot + 1, Infinity);
 	}
 	return result;
 }
 
+/**
+ * For a given HTTP Request, find the token value of a bearer-based Authorization header,
+ * or null if it is not set
+ */
 export function _getRequestBearer(request: Request) {
 	const authz = request.headers.get("authorization");
 	if (!authz) return null;
 	return /^bearer (.+)$/i.exec(authz)?.[1] ?? null;
 }
 
+/**
+ * Get a specific cookie from the HTTP Request, or null if it is not set
+ */
 export function _getRequestCookie(request: Request, cookieName: string) {
 	try {
 		return _getCookies(request.headers)[cookieName] ?? null;
@@ -37,7 +49,16 @@ export function _getRequestCookie(request: Request, cookieName: string) {
 }
 
 /**
- * a:b:c -> [a, a:b, a:b:c]
+ * `a:b:c` -> [`a`, `a:b`, `a:b:c`]
+ *
+ * Take a scope and expand it into all possible parent scopes that have the same permission.
+ *
+ * For example `a:b:c` expands to:
+ * - `a:b:c`
+ * - `a:b`
+ * - `a`
+ *
+ * Then if any of those scopes are present, the request is authorized.
  */
 export function _expandScopes(scope: string) {
 	const prefix = [];
@@ -62,12 +83,22 @@ export function _checkScope(actual: string, expected: string[]) {
  *
  * Check whether a provided scope meets the requirement of the expected scope
  *
+ * The idea is that a parent scope contains all children scopes, recursively.
+ * So if you find all the parents of a given scope, you can test it against a scope that has been provided by a user.
+ *
+ * For example `user:books:read` expands to:
+ * - `user:books:read`
+ * - `user:books`
+ * - `user`
+ *
+ * So if any of those scopes are authorized, access can be granted.
+ *
  * ```js
  * includesScope("user:books:read", "user:books:read"); // true
- * includesScope("user:books", "user:books:read"); // true
- * includesScope("user", "user:books:read"); // true
- * includesScope("user", "user:podcasts"); // true
- * includesScope("user:books", "user:podcasts"); // false
+ * includesScope("user:books", "user:books:read");      // true
+ * includesScope("user", "user:books:read");            // true
+ * includesScope("user", "user:podcasts");              // true
+ * includesScope("user:books", "user:podcasts");        // false
  * ```
  */
 export function includesScope(actual: string, expected: string) {
@@ -124,8 +155,6 @@ export type AuthorizationResult = AssertUserResult | AssertServiceResult;
 /**
  * @group Authorization
  * @unstable
- *
- * ...
  */
 export interface AbstractAuthorizationService {
 	/**
@@ -175,6 +204,7 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		this.tokens = tokens;
 	}
 
+	/** ... */
 	getAuthorization(request: Request) {
 		return (
 			_getRequestBearer(request) ??

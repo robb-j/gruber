@@ -386,8 +386,8 @@ export class Structure<T> {
 	}
 
 	/**
-	 * Create a Structure that validates an object where no or some of the fields match their respective Structures.
-	 * It also does not allow any additional fields to be set.
+	 * Create a Structure that validates an object where some or none of the fields match their respective Structures.
+	 * Only fields specified may be set, nothing additional.
 	 *
 	 * ```js
 	 * Structure.partial({

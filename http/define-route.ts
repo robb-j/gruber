@@ -4,6 +4,11 @@ import {
 	type UnwrapDependencies,
 } from "../core/container.ts";
 
+/**
+ * @ignore
+ *
+ * HTTP methods supported by {@link defineRoute}
+ */
 export type HTTPMethod =
 	| "GET"
 	| "HEAD"
@@ -16,6 +21,11 @@ export type HTTPMethod =
 
 export type RouteResult = Promise<Response | undefined> | Response | undefined;
 
+/**
+ * @ignore
+ *
+ * A utility type to convert a pathname parameters from string into a record to type `params`
+ */
 export type ExtractRouteParams<T extends string> =
 	T extends `${string}*${string}`
 		? string
@@ -61,6 +71,23 @@ export interface RouteDefinition<
 	dependencies: Container<U>;
 }
 
+/**
+ * `defineRoute` is the way of specifying how your server handles a specific bit of web traffic.
+ * It returns the RouteDefinition which can be passed around and used in various places.
+ * Mainly it is passed to a `FetchRouter` to serve web requests.
+ *
+ * ```js
+ * export const helloRoute = defineRoute({
+ * 	method: "GET",
+ * 	pathname: "/hello/:name",
+ * 	handler({ request, url, params }) {
+ * 		return new Response(`Hello, ${params.name}!`);
+ * 	}
+ * })
+ * ```
+ *
+ * @group Routing
+ */
 export function defineRoute<T extends string, U extends Dependencies = {}>(
 	options: RouteOptions<T, U>,
 ): RouteDefinition<T, U> {

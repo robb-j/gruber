@@ -39,24 +39,25 @@ export function getRequestBody(request: Request) {
  * @unstable
  * @group Validation
  *
- * Validate the body of a request against a [StandardSchema](https://standardschema.dev/) (which includes gruber Structures).
+ * Validate the body of a request against a [StandardSchema](https://standardschema.dev/) (including Gruber's own Structure).
  *
  * This will throw nice {@link HTTPError} errors that are caught by gruber and sent along to the user.
  *
  * ```js
  * const struct = Structure.object({ name: Structure.string() })
  *
- * const body1 = await assertRequestBody(struct, new Request('...'))
+ * const body1 = await assertRequestBody(struct, new Request('…'))
  * ```
+ *
+ * > **NOTE** — you need to await the function when passing a `Request`
+ * > because parsing the body is asynchronous
  *
  * or from a JavaScript value:
  *
  * ```js
- * const struct = Structure.object({ name: Structure.string() })
- *
- * const body2 = assertRequestBody(struct, { ... })
- * const body3 = assertRequestBody(struct, new FormData(...))
- * const body3 = assertRequestBody(struct, new URLSearchParams(...))
+ * const body2 = assertRequestBody(struct, { … })
+ * const body3 = assertRequestBody(struct, new FormData(…))
+ * const body3 = assertRequestBody(struct, new URLSearchParams(…))
  * ```
  *
  * you can use any StandardSchema library with this:
