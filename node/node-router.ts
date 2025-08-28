@@ -18,16 +18,18 @@ export interface NodeRouterOptions {
 }
 
 /**
-	A HTTP router for pure Node.js
-
-	```js
-	import http from "node:http";
-
-	const router = new NodeRouter(...)
-	const server = http.createServer(router.forHttpServer())
-	server.listen(3000)
-	```
-*/
+ * @hidden
+ *
+ * A HTTP router for pure Node.js, you should probably use {@link serveHTTP}
+ *
+ * ```js
+ * import http from "node:http";
+ *
+ * const router = new NodeRouter(...)
+ * const server = http.createServer(router.forHttpServer())
+ * server.listen(3000)
+ * ```
+ */
 export class NodeRouter {
 	router: FetchRouter;
 	constructor(options: NodeRouterOptions = {}) {
@@ -58,6 +60,22 @@ export class NodeRouter {
 	}
 }
 
+/**
+ * @group HTTP
+ *
+ * Send a web-standards Response to a Node.js [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse)
+ *
+ * ```js
+ * import http from "node:http"
+ *
+ * http.createServer((req, res) => {
+ * 	applyResponse(
+ * 		Response.json({ msg: "ok" }),
+ * 		res
+ * 	)
+ * })
+ * ```
+ */
 export function applyResponse(response: Response, res: ServerResponse): void {
 	for (const [key, value] of response.headers) {
 		res.appendHeader(key, value);
@@ -65,10 +83,25 @@ export function applyResponse(response: Response, res: ServerResponse): void {
 
 	res.writeHead(response.status, response.statusText);
 
-	if (response.body) getResponseReadable(response).pipe(res);
+	if (response.body) getResponseReadable(response, res).pipe(res);
 	else res.end();
 }
 
+/**
+ * @group HTTP
+ *
+ * Convert a Node.js [IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) into a
+ * web-standards [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ *
+ * ```js
+ * import http from "node:http"
+ *
+ * http.createServer((req, res) => {
+ * 	let request = getFetchRequest(req)
+ * 	// ...
+ * })
+ * ```
+ */
 export function getFetchRequest(req: IncomingMessage) {
 	const url = "http://" + (req.headers.host ?? "localhost") + req.url;
 	const ac = new AbortController();
@@ -83,6 +116,15 @@ export function getFetchRequest(req: IncomingMessage) {
 	});
 }
 
+/**
+ * @group HTTP
+ *
+ * Parse Node.js IncomingHttpHeaders into a web-standards [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object
+ *
+ * ```js
+ * const headers = getFetchHeaders({ accept: "text/plain" }) // Headers
+ * ```
+ */
 export function getFetchHeaders(input: IncomingHttpHeaders) {
 	const result = new Headers();
 	for (const [name, value] of Object.entries(input)) {
@@ -94,6 +136,20 @@ export function getFetchHeaders(input: IncomingHttpHeaders) {
 
 const noHttpBody = new Set(["HEAD", "GET", "OPTIONS", "TRACE"]);
 
+/**
+ * @group HTTP
+ *
+ * Convert the body of a Node.js [IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) into a Streams API ReadableStream
+ *
+ * ```js
+ * import http from "node:http"
+ *
+ * http.createServer((req, res) => {
+ * 	let stream = getIncomingMessageBody(req)
+ * 	// ...
+ * })
+ * ```
+ */
 export function getIncomingMessageBody(
 	req: IncomingMessage,
 ): BodyInit | undefined {
@@ -102,6 +158,22 @@ export function getIncomingMessageBody(
 	return Readable.toWeb(req) as ReadableStream;
 }
 
+/**
+ * @group HTTP
+ *
+ * Convert a Streams API ReadableStream into a Readable to later be piped to a Node.js [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse)
+ *
+ * ```js
+ * import http from "node:http"
+ *
+ * http.createServer((req, res) => {
+ * 	const webResponse = Response.json({ msg: "OK" })
+ * 	getResponseReadable(webResponse, res).pipe(res)
+ * })
+ * ```
+ *
+ * Pass the second, `res` parameter if you'd like to terminate the web Response if Node.js is terminated.
+ */
 export function getResponseReadable(response: Response, res?: ServerResponse) {
 	const ac = new AbortController();
 
@@ -127,7 +199,42 @@ export interface ServeHTTPHandler {
 	(request: Request): MaybePromise<Response>;
 }
 
-/** @unstable A node version of Deno.serve now all the polyfills are in place */
+/**
+ * @unstable
+ * @group HTTP
+ *
+ * A simple abstraction for creating a HTTP server, converting Node.js primatives into Fetch API objects and handling requests through a FetchRouter.
+ *
+ * ```js
+ * const server = await serveHTTP({ port: 3000 }, async (request) => {
+ * 	return new Response('Hello, There!')
+ * })
+ * ```
+ *
+ * This method returns a `node:http` Server after waiting for it to start listening.
+ * The server has an extra `stop` method and also implements `[Symbol.asyncDispose]`.
+ *
+ * When stop is called, or it is dispoed with the `using` keyword, it will attempt to gracefully shutdown the HTTP server,
+ * attempting to terminate each connection. If you created the server with a `grace` option,
+ * it will wait for that maximum time before forcing every connection to close.
+ * To quote the author of stoppable, this is "the way you probably expected it to work by default".
+ *
+ * ```js
+ * async function main() {
+ * 	await using server = await serveHTTP(
+ * 		{ port: 3000, grace: 5000 },
+ * 		() => new Response('ok')
+ * 	)
+ * }
+ *
+ * await main()
+ * ```
+ *
+ * When main function exits, it will automatically close the server with a 5 second grace period.
+ *
+ * The stop method is also useful when used with a [Terminator](/core/#terminator).
+ *
+ */
 export async function serveHTTP(
 	options: ServeHTTPOptions,
 	handler: ServeHTTPHandler,
@@ -171,7 +278,13 @@ export interface Stoppable {
 	stop(): Promise<boolean>;
 }
 
-// Adapted from https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
+/**
+ * @hidden
+ *
+ * A port of stoppable.js, ported to Gruber to reduce external dependencies.
+ *
+ * Adapted from https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
+ */
 export function createStoppable(
 	server: Server,
 	options: StopServerOptions = {},

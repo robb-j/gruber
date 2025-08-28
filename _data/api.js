@@ -9,7 +9,7 @@ const entrypoints = [
 	"core/mod.ts",
 	// "deno/mod.ts",
 	"http/mod.ts",
-	// "node/mod.ts",
+	"node/mod.ts",
 	"postgres/mod.ts",
 	"testing/mod.ts",
 ];

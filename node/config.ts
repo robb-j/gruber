@@ -4,8 +4,18 @@ import util from "node:util";
 
 import { Configuration, type ConfigurationOptions } from "../config/mod.ts";
 
-export * from "../config/mod.ts";
-
+/**
+ * Generate standardish options to create a Configuration from the Node.js environment that reads JSON files.
+ *
+ * - It uses parseArgs from `node:util` to parse CLI arguments
+ * - It uses promises.readFile from `node:fs` to read text files
+ * - It reads environment variables from `node:process`
+ * - It parses and stringifies configuration using `JSON`
+ *
+ * ```js
+ * const options = getConfigurationOptions()
+ * ```
+ */
 export function getConfigurationOptions(): ConfigurationOptions {
 	const args = util.parseArgs({
 		args: process.argv,
@@ -35,7 +45,12 @@ export function getConfigurationOptions(): ConfigurationOptions {
 }
 
 /**
- * This is a syntax sugar for `new Configuration(getConfigurationOptions(options))`
+ * Create a standardish Node.js Configuration.
+ * It creates a new Configuration object using {@link getConfigurationOptions}.
+ *
+ * ```js
+ * const config = getConfiguration()
+ * ```
  */
 export function getConfiguration() {
 	return new Configuration(getConfigurationOptions());

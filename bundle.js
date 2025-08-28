@@ -13,16 +13,19 @@ const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
 
+const gruberModules = ["config", "core", "http", "postgres", "testing"];
+
 async function node() {
 	// Setup directory
 	nuke("bundle/node");
 
 	// Copy in source and clear out node_modules
-	cp("node/", "bundle/node/source");
+	cp("config/", "bundle/node/config");
 	cp("core/", "bundle/node/core");
 	cp("http/", "bundle/node/http");
+	cp("node/", "bundle/node/node");
+	cp("postgres/", "bundle/node/postgres");
 	cp("testing/", "bundle/node/testing");
-	cp("config/", "bundle/node/config");
 	nuke("bundle/node/source/node_modules");
 
 	// Setup the bundle's package.json
@@ -39,7 +42,11 @@ async function node() {
 	};
 	writeJson("bundle/node/package.json", pkg);
 
-	await addEntrypoints("node", "bundle/node", ".ts", ".ts");
+	await addEntrypointsV2("bundle/node", "node", [
+		"express-router.ts",
+		"koa-router.ts",
+		"polyfill.ts",
+	]);
 
 	// Setup the bundle's package-lock.json
 	const lock = readJson("node/package-lock.json");
@@ -114,6 +121,23 @@ async function addEntrypoints(
 		const newName = stat.name.replace(inputExtension, outputExtension);
 		write(`${outputDir}/${newName}`, `export * from "./source/${newName}"`);
 	}
+}
+
+async function addEntrypointsV2(outputDir, moduleName, extraModules = []) {
+	// Create a special entry-point at the root of the bundle for any extra modules
+	for (const filename of extraModules) {
+		write(
+			`${outputDir}/${filename}`,
+			`export * from "./${moduleName}/${filename}"`,
+		);
+	}
+
+	// Create the root mod.ts, importing all modules and the platform itself
+	const modFile = gruberModules
+		.map((module) => `export * from "./${module}/mod.ts"`)
+		.concat(`export * from "./${moduleName}/mod.ts"`);
+
+	write(`${outputDir}/mod.ts`, modFile.join("\n") + "\n");
 }
 
 async function website() {

@@ -21,6 +21,19 @@ export interface PostgresMigratorOptions {
 	directory: URL;
 }
 
+/**
+ * Create a standardish Postgres Migrator based on the filesystem and an sql connection from [postgres.js](https://github.com/porsager/postgres)
+ *
+ * ```js
+ * const sql = postgres(…)
+ *
+ * const migrator = getPostgresMigratorOptions({
+ * 	sql,
+ * 	directory: new URL("./migrations/", import.meta.url)
+ * })
+ *
+ * ```
+ */
 export function getPostgresMigratorOptions({
 	sql,
 	directory,

@@ -51,6 +51,10 @@ export class PostgresStore implements Store {
 		};
 	}
 
+	async dispose(): Promise<void> {}
+
+	async [Symbol.asyncDispose](): Promise<void> {}
+
 	async get<T>(key: string): Promise<T | undefined> {
 		const [record = null] = await this.sql<PostgresStoreValue[]>`
 			SELECT name, key, expiry

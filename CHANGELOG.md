@@ -46,6 +46,7 @@ This file documents notable changes to the project
 - Internaly use `verbatimModuleSyntax` to be more JavaScript agnostic
 - Remove use of conditional imports in the node polyfil
 - `FetchRouter` internally applies middleware during error handling too
+- node - terminate the stream if the ServerResponse is cancelled
 
 **deprecations**
 
