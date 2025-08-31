@@ -25,7 +25,16 @@ Gruber is available at `esm.r0b.io/gruber@{{ pkg.version }}/mod.ts`, add it to y
 }
 ```
 
-Then use it like this:
+Then use it these entrypoints:
+
+- `gruber/mod.ts`
+- `gruber/config/mod.ts`
+- `gruber/core/mod.ts`
+- `gruber/http/mod.ts`
+- `gruber/postgres/mod.ts`
+- `gruber/testing/mod.ts`
+
+For example:
 
 ```js
 import { defineRoute } from "gruber/mod.ts";
