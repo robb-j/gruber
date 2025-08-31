@@ -52,13 +52,13 @@ main.api {
 	flex: 1;
 	padding: var(--s0);
 }
-main.api center-layout h3 {
+/* main.api center-layout h3 {
 	position: sticky;
 	top: 0;
 	background: var(--background);
 	padding-bottom: 0.5rem;
 	margin-bottom: -0.5rem;
-}
+} */
 @media (min-width: 768px) {
 	main.api > sidebar-layout > nav {
 		max-height: 100vh;
@@ -88,4 +88,12 @@ a[data-variant="subtle"] {
 	color: var(--color);
 	text-decoration: underline dashed var(--border);
 	font-weight: bold;
+}
+
+.sticky {
+	position: sticky;
+	top: 0;
+	background: var(--background);
+	padding-bottom: 0.5rem;
+	margin-bottom: -0.5rem;
 }

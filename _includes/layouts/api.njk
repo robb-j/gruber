@@ -66,7 +66,7 @@ layout: html.njk
 
 						{% for entry in entries | sort(false, false, '1') %}
 						<div class="flow apiEntry" id="{{ entry[1].id | slugify }}">
-							<h3 class="symbolName">
+							<h3 class="symbolName sticky">
 								{{ entry[0] }}
 								{{ labels(entry[1].tags) }}
 							</h3>

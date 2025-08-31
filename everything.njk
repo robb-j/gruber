@@ -1,0 +1,47 @@
+---
+layout: simple.njk
+---
+
+<h1>Everything</h1>
+
+<p>This page lists all that is exported so you can see it all in once place.</p>
+
+{% for entry, apiModule in api %}
+
+{% set groups = apiModule | entries | groupby('1.tags.group') %}
+{% set moduleName = entry.slice(0, -7) %}
+
+<h2 class="sticky">{{ entry }}</h2>
+
+{% for group, apiEntries in groups %}
+
+<ul>
+	<li>
+		<a href="/{{ moduleName }}/#group-{{ group | slugify }}">
+			{{ group }}
+		</a>
+		<ul>
+			{% for entry in apiEntries | sort(false, false, '1') %}
+			<li>
+				<a href="/{{ moduleName }}/#{{ entry[1].id | slugify }}">
+					{{ entry[0] }}
+				</a>
+				<ul>
+					{% for member in entry[1].children | dictsort %}
+					<li>
+						<a href="/{{ moduleName }}/#{{ member[1].id | slugify }}">
+							{{ member[0] }}
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</li>
+			{% endfor %}
+		</ul>
+	</li>
+</ul>
+
+{% endfor %}
+
+{% endfor %}
+
