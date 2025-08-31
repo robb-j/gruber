@@ -66,7 +66,7 @@ layout: html.njk
 
 						{% for entry in entries | sort(false, false, '1') %}
 						<div class="flow apiEntry" id="{{ entry[1].id | slugify }}">
-							<h3>
+							<h3 class="symbolName">
 								{{ entry[0] }}
 								{{ labels(entry[1].tags) }}
 							</h3>
@@ -75,7 +75,7 @@ layout: html.njk
 		
 							{% for member in entry[1].children | dictsort %}
 							<div class="flow apiMember" id="{{ member[1].id | slugify }}">
-								<h4>
+								<h4 class="symbolName">
 									<!-- {{ entry[0] }}# -->
 									{{ member[0] }}
 									{{ labels(member[1].tags) }}

@@ -283,7 +283,7 @@ export interface Stoppable {
  *
  * A port of stoppable.js, ported to Gruber to reduce external dependencies.
  *
- * Adapted from https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js
+ * Adapted from [stoppable.js](https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js)
  */
 export function createStoppable(
 	server: Server,

@@ -83,11 +83,12 @@ async function deno() {
 	nuke("bundle/deno");
 
 	// Copy in source files
-	cp("deno/", "bundle/deno/source");
-	cp("core/", "bundle/deno/core");
-	cp("http/", "bundle/deno/http");
-	cp("testing/", "bundle/deno/testing");
 	cp("config/", "bundle/deno/config");
+	cp("core/", "bundle/deno/core");
+	cp("deno/", "bundle/deno/deno");
+	cp("http/", "bundle/deno/http");
+	cp("postgres/", "bundle/deno/postgres");
+	cp("testing/", "bundle/deno/testing");
 
 	// Create the meta file
 	const project = readJson("package.json");
@@ -102,7 +103,9 @@ async function deno() {
 	// 	if (!stat.name.endsWith(".ts")) continue;
 	// 	write(`bundle/deno/${stat.name}`, `export * from "./source/${stat.name}"`);
 	// }
-	await addEntrypoints("deno", "bundle/deno", ".ts", ".ts");
+	// await addEntrypoints("deno", "bundle/deno", ".ts", ".ts");
+
+	await addEntrypointsV2("bundle/deno", "deno");
 
 	// Copy static files
 	cp("README.md", "bundle/deno/README.md");

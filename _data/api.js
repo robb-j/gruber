@@ -7,7 +7,7 @@ const debug = createDebug("gruber:api");
 const entrypoints = [
 	"config/mod.ts",
 	"core/mod.ts",
-	// "deno/mod.ts",
+	"deno/mod.ts",
 	"http/mod.ts",
 	"node/mod.ts",
 	"postgres/mod.ts",
@@ -22,13 +22,13 @@ async function generate() {
 	const output = {};
 
 	for (const entrypoint of entrypoints) {
+		output[entrypoint] = {};
+
 		const source = project.getSourceFiles("./" + entrypoint)[0];
 		if (!source) {
-			debug("entry not found", entrypoint);
+			debug("[ERROR] entry not found or failed to load", entrypoint);
 			continue;
 		}
-
-		output[entrypoint] = {};
 
 		debug(entrypoint);
 

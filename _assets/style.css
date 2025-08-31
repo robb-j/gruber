@@ -80,7 +80,7 @@ main.api center-layout h3 {
 	padding-block: var(--s-2);
 	border-left: var(--border-thin) solid var(--border);
 }
-main.api :is(h2, h3) {
+.symbolName {
 	font-family: var(--font-mono);
 }
 
