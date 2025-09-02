@@ -67,11 +67,11 @@ I'll look into ways of contributing them back to the library.
 
 ## Principles
 
-- **Standardised & Compatible** — use existing standards, migrated towards and don't break things
+- **Standardised & Compatible** — use existing standards, migrate towards them and try not to break things
 - **Agnostic** — a library, framework or runtime shouldn't be forced upon you
 - **Patterns** — optional best-practises for how to use modules
 - **Composability** — logic should be composed together rather than messily intertwined
-- **Minimal & Deliberate** — only what is necessary
+- **Minimal & Deliberate** — carefully add only what's is necessary
 - **Holistic** — complete ownership and careful abstractions creates unique opportunities for integration
 - **No magic** — it's confusing when you don't know what's going on
 
@@ -82,6 +82,12 @@ Here is a non-exclusive list of standards that Gruber uses or is interested in.
 - [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) — used extensively in the HTTP module
 - [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) — is used within `FetchRouter`
 - [StandardSchema V1](https://standardschema.dev/) — is supported by `Structure` and `assertRequestBody`
+- [JSONSchema](https://json-schema.org/) — is used inside `Structure` and can be generated.
+
+Maybe
+
+- [OpenAPI](https://swagger.io/specification/)
+- Open CLI?
 
 ## Get Started
 

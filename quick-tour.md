@@ -7,8 +7,8 @@ eleventyNavigation:
 
 # Quick tour
 
-To see what Gruber does, let's make a simple **Node.js** server.
-This is pure JavaScript, you can get a lot of benefits of Gruber's TypeScript without needing to use it directly.
+To see what Gruber does, let's make a simple **Node.js** server with JavaScript.
+You get a lot of TypeScript benefits using Gruber's without needing to use it directly.
 
 ```bash
 npm install gruber
@@ -32,17 +32,17 @@ export const helloRoute = defineRoute({
 });
 ```
 
-A route is a definition to handle a specific HTTP request with a response.
-It defines which method and path it is responding to and an asynchronous function to generate a response.
+A route is a definition of how to handle a certain HTTP requests by serving them with a response.
+It defines which HTTP method and path to respond to and an asynchronous function to generate a response.
 
-This is using nice standards like
+This is uses nice standards like
 [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request),
 [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 and [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern).
-The `params` are strongly-typed based on the pathname you passed too!
-So you'd get a warning if you used a param other than `name`, even if you are only writting JavaScript.
+Those `params` are strongly-typed based on the pathname you passed too!
+So you'd get a warning if you used a param other than `name`, even if you are only writing JavaScript.
 
-You can easily throw a **HTTPError** because Gruber knows how to handle them and return a HTTP response from them.
+You can easily throw a **HTTPError** and Gruber knows how to handle them.
 
 With that route, let's use it to create a server with **server.js**:
 
@@ -59,11 +59,11 @@ export async function runServer(options = { port: 3000 }) {
 }
 ```
 
-There are a few things going on here too.
+**FetchRouter** is a runtime-agnostic routing library, based on the definitions from `defineRoute`.
+You give it a set of RouteDefinitions and it processes them.
 
-**FetchRouter** is a runtime-agnostic routing library, based on the definitions from `defineRoute`
-
-**serveHTTP** is a Node.js helper to quickly start a server using Fetch API Request & Response primitives, rather than the native [IncomingMessage](https://nodejs.org/api/http.html#class-httpincomingmessage) and [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse). You pass it a function that returns a Response. Inspired by `Deno.serve`.
+**serveHTTP** is a Node.js helper to quickly start a server using the Fetch API, wrapping Node.js primitives.
+You pass it options and a function that returns a Response. Inspired by `Deno.serve`.
 
 [More about HTTP →](/http/)
 
@@ -84,13 +84,18 @@ if (import.meta.main) {
 }
 ```
 
+> There is something Gruber-shaped here, but it is TBD ~ [#54](https://github.com/robb-j/gruber/issues/54)
+
 ## Configuration
 
-The CLI is a way of running specific parts of your application and configuring it with command-line flags. Gruber has a much more in-depth **Configuration** module you can use to declaratively define how all parts of your application are configured.
+A CLI controls which code is run and provides arguments and options to configure how it works.
+Applications often need to use user-defined values or secrets,
+so the same app can run in different environments or perform the same operation on different things.
+
+Gruber has an in-depth **Configuration** module you can use to declaratively define how all parts of the application are configured
+and how to load that configuration from the environment.
 
 Lets use configuration, create **config.js**:
-
-We'll break this one down into a few steps, to explain whats going on.
 
 ```js
 import { getConfiguration } from "gruber";
@@ -117,9 +122,12 @@ const struct = config.object({
 });
 ```
 
-First we create our `config` value, this is an opinionated platform-specific value of how to load configuration, parse environment variables and CLI arguments. You can completely customise this, check out the configuration module for more.
+First we create our `config` value, this is an opinionated instance of the `Configuration` class.
+It's used to load JSON files, parse environment variables and look up CLI arguments.
+You can create your own instance to completely customise this.
 
-Next, we define our configuration schema. This is both definition of the shape and how to parse the configuration. Configuration works with a precedence of **cli argument** > **environment variable** > **configuration file** > **fallback**.
+Next, we use it to define the application's configuration.
+This is a definition of the shape of, and how to parse the configuration. Configuration works with a precedence of **cli argument** > **environment variable** > **configuration file** > **fallback**.
 
 The idea is that you always have a strongly-typed configuration available to use, so other parts of your app can rely on it. For each value in the configuration you specify its fallback and optionally how to pull a value from the CLI or environment variables.
 
@@ -141,10 +149,12 @@ export async function loadConfiguration(path) {
 }
 ```
 
-The next part is it defines a common `appConfig` for the rest of the app to use.
+The next part is to load the configuration into a value, `appConfig`, for the rest of the app to use.
 This is only a **pattern**, you may not want to always load configuration when the file is imported.
 
-The second part of loading configuration is there is space for extra checks for validity, for example here it checks the `server.url` has been set when running in production. This is another **pattern**.
+When loading configuration, there is space for extra checks.
+For example, here it checks the `server.url` has been set when running in production.
+This is another **pattern**.
 
 ```js
 // Output the configuration and how to use it
@@ -208,20 +218,18 @@ import { outputConfiguration } from "./config.js";
 
 // previous code ...
 
-cli.command(
-  "config",
-  "outputs current configuration and usage information",
-  (yargs) => yargs,
-  (args) => outputConfiguration(),
-);
+if (import.meta.main) {
+  if (command === "serve") await runServer();
+  if (command === "config") await outputConfiguration();
+}
 ```
 
 ## Migrations
 
 Migrations are another Gruber primitive for safely transitioning between states of your application.
 
-Migrations are a directory of JavaScript that are designed to be run in alphabetical order.
-A migration is made up of an "up" and "down" function, one to do the change, one to undo it later.
+Migrations are a directory of JavaScript files that are designed to be run in alphabetical order.
+A migration is made up of an "up" and "down" function, one to do the change, one to undo it.
 Each migration will only be ran once, so you don't try to create the same table twice.
 
 First, lets create a migration, **migrations/001-add-people.js**:
@@ -248,7 +256,7 @@ export default defineMigration({
 });
 ```
 
-> `defineMigration` is generic but there is `definePostgresMigration` too
+> `defineMigration` is a generic method but there is `definePostgresMigration` as part of the [Postgres](/postgres) module
 
 Now we need to set up our database and use it in **database.js**
 
@@ -258,52 +266,44 @@ import { loader, getPostgresMigrator } from "gruber";
 import { appConfig } from "./config.js";
 
 export const useDatabase = loader(() => {
-  // You could do some retries/backoffs here
   return postgres(appConfig.database.url);
 });
 
-export async function getMigrator() {
-  return getPostgresMigrator({
+export async function runMigrations(dir = "up") {
+  const migrator = await getPostgresMigrator({
     directory: new URL("./migrations/", import.meta.url),
     sql: await useDatabase(),
   });
+
+  if (dir === "up") return migrator.up();
+  if (dir === "down") return migrator.down();
 }
 ```
 
-`Migrator` is an agnostic primitive for migrating there is also a bespoke integration with [postgres.js](https://github.com/porsager/postgres).
-When used agnostically, it facilitates the preparation and running of migrations.
+`Migrator` is an agnostic primitive for migrating anything.
+The **Postgres** module provides a bespoke version for running database migrations.
+The agnostic version facilitates the preparation and running of migrations.
 With postgres, it uses that facilitation to add a `migrations` table to track which have been run and execute new ones.
 
 > `loader` is a utility to run a function once and cache the result for subsequent calls, it's a very basic "memo".
 > It returns a method that either calls the factory function or returns the cached result.
 > The name could be better.
+>
+> This might be a "dependency"-esk module in the future, maybe `defineDependency`
 
 Let's add a command that runs our migrations to **cli.js**
 
 ```js
-import { getMigrator } from "./database.js";
+import { runMigrations } from "./database.js";
 
 // previous code ...
 
-cli.command(
-  "migrate up",
-  "migrates the database to match code",
-  (yargs) => yargs,
-  async (args) => {
-    const migrator = await getMigrator();
-    await migrator.up();
-  },
-);
-
-cli.command(
-  "migrate down",
-  "nukes the database",
-  (yargs) => yargs,
-  async (args) => {
-    const migrator = await getMigrator();
-    await migrator.down();
-  },
-);
+if (import.meta.main) {
+  if (command === "serve") await runServer();
+  if (command === "config") await outputConfiguration();
+  if (command === "migrate-up") await runMigrations("up");
+  if (command === "migrate-down") await runMigrations("down");
+}
 ```
 
 Now we can run and un-run our migrations from the command line.
@@ -312,7 +312,7 @@ Now we can run and un-run our migrations from the command line.
 
 ## Testing
 
-> WIP
+> Coming soon
 
 The basic principle is to call your routes directly from tests with `TestingRouter` and you can also override `dependencies` to mock/stub so you don't use your actual database.
 
