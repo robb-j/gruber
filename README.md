@@ -21,7 +21,8 @@ An isomorphic JavaScript library for creating web apps.
 
 ## About
 
-Gruber is a collection of modules for creating isomorphic JavaScript applications, using the web standards on the backend.
+Gruber is a collection of modules for creating isomorphic JavaScript applications. 
+That means using the same web standards developed for the browser in backend runtimes.
 Web-standards aren't going to change, so apps based on them are less likely break in the future.
 There's also a hope that [WinterTG](https://wintertc.org/work) works some stuff out.
 
