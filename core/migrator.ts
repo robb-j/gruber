@@ -1,7 +1,7 @@
 import type { MaybePromise } from "./types.ts";
 
 /**
- * @group Migrator
+ * @ignore
  *
  * Options for defining some sort of migration
  *
@@ -18,7 +18,7 @@ export interface MigrationOptions<T = unknown> {
 }
 
 /**
- * @group Migrator
+ * @ignore
  *
  * A definition for a migration, it's basically a `MigrationOptions` with a unique name
  *
@@ -37,7 +37,7 @@ export interface MigrationDefinition<T = unknown> {
 }
 
 /**
- * @group Migrator
+ * @ignore
  *
  * A record of a migration that has been performed
  *
@@ -52,8 +52,8 @@ export interface MigrationRecord {
 /**
  * @group Migrator
  *
- * Define a generic migration, this is a generic wrapper around creating a `MigrationOptions`
- * which within TypeScript you can specify the `<T>` once, rather than for each action.
+ * Define a generic migration, this is a wrapper around creating a `MigrationOptions`
+ * which within TypeScript means you can specify the `<T>` once, rather than for each action.
  *
  * ```js
  * const migration = defineMigration({
@@ -73,9 +73,34 @@ export function defineMigration<T>(
 
 export type MigrateDirection = "up" | "down";
 
+/**
+ * @group Migrator
+ *
+ * MigratorOptions lets your create your own migrator that performs migrations in different ways.
+ * For instance you could create one that loads a JSON "migrations" file from the filesystem.
+ */
 export interface MigratorOptions<T> {
+	/**
+	 * Get or generate the all migration definitions
+	 *
+	 * ```js
+	 * return { name: '001-something.js', up() {}, down() {} }
+	 * ```
+	 */
 	getDefinitions(): Promise<MigrationDefinition<T>[]>;
+
+	/**
+	 * Query which migrations have already been performed
+	 *
+	 * ```js
+	 * return [{ name: '001-something.js }]
+	 * ```
+	 */
 	getRecords(): Promise<MigrationRecord[]>;
+
+	/**
+	 * Perform or reverse a migration and update any required state
+	 */
 	execute(
 		def: MigrationDefinition<T>,
 		direction: "up" | "down",

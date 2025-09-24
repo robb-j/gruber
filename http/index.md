@@ -34,7 +34,7 @@ export const helloRoute = defineRoute({
 ```
 
 Once you have a few routes, they can be passed to a [FetchRouter](#fetchrouter)
-to easily serve them.
+to serve them.
 
 ```js
 import { FetchRouter } from "gruber";

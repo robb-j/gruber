@@ -93,7 +93,14 @@ function processSymbol(symbol, prefix = "") {
 
 		const ifaceDecl = declaration.asKind(SyntaxKind.InterfaceDeclaration);
 		if (ifaceDecl) {
+			// const ifaceName = ifaceDecl.getSymbol().getEscapedName();
 			for (const member of ifaceDecl.getMembers()) {
+				const child = processSymbol(
+					member.getSymbol(),
+					prefix + symbol.getEscapedName() + "#",
+				);
+				if (!child) continue;
+				children[child.name] = child;
 			}
 		}
 	}

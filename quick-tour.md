@@ -40,9 +40,7 @@ This is uses nice standards like
 [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 and [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern).
 Those `params` are strongly-typed based on the pathname you passed too!
-So you'd get a warning if you used a param other than `name`, even if you are only writing JavaScript.
-
-You can easily throw a **HTTPError** and Gruber knows how to handle them.
+You can also easily throw a **HTTPError** and Gruber knows what to do with them.
 
 With that route, let's use it to create a server with **server.js**:
 
@@ -88,12 +86,11 @@ if (import.meta.main) {
 
 ## Configuration
 
-A CLI controls which code is run and provides arguments and options to configure how it works.
+A CLI nicely controls which code is run and can provide arguments to configure how it works.
 Applications often need to use user-defined values or secrets,
 so the same app can run in different environments or perform the same operation on different things.
 
-Gruber has an in-depth **Configuration** module you can use to declaratively define how all parts of the application are configured
-and how to load that configuration from the environment.
+Gruber has an in-depth **Configuration** module to declaratively define how all parts of the application are configured based on the from the environment they run in.
 
 Lets use configuration, create **config.js**:
 
@@ -127,34 +124,35 @@ It's used to load JSON files, parse environment variables and look up CLI argume
 You can create your own instance to completely customise this.
 
 Next, we use it to define the application's configuration.
-This is a definition of the shape of, and how to parse the configuration. Configuration works with a precedence of **cli argument** > **environment variable** > **configuration file** > **fallback**.
+This is a definition of the shape of, and how to generate it from the runtime environment.
+Here there are three values:
+
+- `env` — a string configured with the `NODE_ENV` environment variable that defaults to `development`.
+- `server.port` — the port to listen on, set via the `APP_PORT` variable, `--port` argument or just 3000.
+- `server.url` — the url which the server is accessible set with `SELF_URL` or falling back to localhost.
+
+Any combination of these could also be set from a configuration and Gruber will merge all the values together into a strongly-typed value, for example:
+
+```json
+{ "env": "production", "server": { "port": 8000 } }
+```
 
 The idea is that you always have a strongly-typed configuration available to use, so other parts of your app can rely on it. For each value in the configuration you specify its fallback and optionally how to pull a value from the CLI or environment variables.
 
 ```js
+// Load and validate configuration from a file
+export async function loadConfiguration(path) {
+  return config.load(path, struct);
+}
+
 // Load and expose a shared configuration value
 export const appConfig = await loadConfiguration(
   new URL("./config.json", import.meta.url),
 );
-
-// Load and validate configuration from a file
-export async function loadConfiguration(path) {
-  const value = await config.load(path, struct);
-  if (value.env === "production") {
-    if (value.server.url.hostname === "localhost") {
-      throw new Error("server.url not set");
-    }
-  }
-  return value;
-}
 ```
 
 The next part is to load the configuration into a value, `appConfig`, for the rest of the app to use.
 This is only a **pattern**, you may not want to always load configuration when the file is imported.
-
-When loading configuration, there is space for extra checks.
-For example, here it checks the `server.url` has been set when running in production.
-This is another **pattern**.
 
 ```js
 // Output the configuration and how to use it
@@ -189,27 +187,11 @@ Default:
     "version": "1.2.3"
   }
 }
-
-
-Current:
-{
-  "env": "development",
-  "server": {
-    "port": 3000,
-    "url": "http://localhost:3000/"
-  },
-  "meta": {
-    "name": "my-app",
-    "version": "1.2.3"
-  }
-}
 ```
 
 You get a markdown table of the configuration and how to use it,
 what the default value is if you want to create a local file
 and the currently configured value is.
-
-[More about Configuration →](/config/)
 
 We could now add an extra command to our **cli.js**:
 
@@ -224,13 +206,15 @@ if (import.meta.main) {
 }
 ```
 
+[More about Configuration →](/config/)
+
 ## Migrations
 
-Migrations are another Gruber primitive for safely transitioning between states of your application.
+Migrations are Gruber primitive for safely transitioning between states of your application.
 
-Migrations are a directory of JavaScript files that are designed to be run in alphabetical order.
-A migration is made up of an "up" and "down" function, one to do the change, one to undo it.
-Each migration will only be ran once, so you don't try to create the same table twice.
+They are a directory of JavaScript files that are designed to be run in alphabetical order.
+Each migration is made up of an "up" and "down" function, one to perform the change, one to reverse it.
+Migrations will only be ran once, so you don't try to create the same table twice.
 
 First, lets create a migration, **migrations/001-add-people.js**:
 
@@ -256,7 +240,7 @@ export default defineMigration({
 });
 ```
 
-> `defineMigration` is a generic method but there is `definePostgresMigration` as part of the [Postgres](/postgres) module
+> You might want `definePostgresMigration` which is part of the [Postgres module](/postgres)
 
 Now we need to set up our database and use it in **database.js**
 
@@ -265,6 +249,7 @@ import postgres from "postgres";
 import { loader, getPostgresMigrator } from "gruber";
 import { appConfig } from "./config.js";
 
+// This is a WIP syntax
 export const useDatabase = loader(() => {
   return postgres(appConfig.database.url);
 });
@@ -308,7 +293,7 @@ if (import.meta.main) {
 
 Now we can run and un-run our migrations from the command line.
 
-[More about Migrations →](/core/#migrations)
+[More about Migrations →](/core/#group-migrator)
 
 ## Testing
 

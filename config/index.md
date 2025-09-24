@@ -16,8 +16,6 @@ The goal of the **Configuration** module is to let you declaratively define how 
 - **have precident** — cli flags > environment variables > configuration files > fallbacks, in that order
 - **always valid** — once declared, your value should always match that structure so there are no unexpected errors
 
-> Recommended reading [12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c) - it really inspired the design of configuration
-
 Things you might want to configure:
 
 - How much logging to do
@@ -25,6 +23,15 @@ Things you might want to configure:
 - Which features to turn on or off
 - Tokens for thirdy-party APIs
 - Who to send emails from
+
+This module was heavily inspired by
+[12 fractured apps](https://medium.com/@kelseyhightower/12-fractured-apps-1080c73d481c)
+and [superstruct](https://docs.superstructjs.org/) which has a lovely API.
+
+- Load in from the runtime environment and/or configuration files
+- Have sensible defaults so it does not fail if environment variables or configuration files are missing
+- Apply a precedence between different sources
+- Always be structurally valid so the rest of you code can rely on that
 
 You define your configuration like this:
 
@@ -50,7 +57,7 @@ const struct = config.object({
 });
 ```
 
-You can start to see the shape of your configuration, at the top-level there is `env` which pulls from the NODE_ENV environment variable and falls back to "development" if not set.
+You can start to see the shape of your configuration, at the top-level there is `env` which pulls from the `NODE_ENV` environment variable and falls back to "development" if not set.
 
 There is also a `server` object with a `port` number and `url` field, each pulling different variables or flags and providing their own fallbacks. Fallbacks are important so you don't have to specify every single argument when you set up a fresh environment.
 
@@ -86,7 +93,7 @@ export const appConfig = await loadConfiguration(
 
 You use [config.load](#configuration-load) to process the configuration against given file and the environment itself.
 
-A nice **pattern** to use is to also export the `appConfig` so it is easy to access everywhere and strongly-typed.
+A nice **Pattern** to use is to also export the `appConfig` so it is easy to access everywhere and strongly-typed.
 
 You can do more with configuration, its useful to see how your app is currently configured and what options are available:
 
@@ -119,13 +126,13 @@ Default:
   },
   "server": {
     "port":
-  },
+  }
 }
 ```
 
 Running this from the CLI is very useful to see what is going on,
 if you pass the second parameter to `getConfigurationUsage` it will show you how it is configured too.
-The default value is also useful for initially creating your configuration.
+The default value is useful for initially creating your configuration too.
 
 From this you can see that you can set the port by either specifying the `PORT` environment variable, using the `--port` CLI flag or setting `server.port` field in the configuration file.
 
@@ -137,8 +144,9 @@ and you forget to set it, what is the implication?
 
 If you use something like `dotenv`, ensure it has already loaded before creating the configuration.
 
-You can add extra checks to `loadConfiguration` to ensure things are correct in production,
-this can be done like so:
+A **Pattern** is to add extra checks to `loadConfiguration` to ensure things are correct in production,
+so only well-configured apps will successfully deploy.
+This can be done like so:
 
 ```js
 export function loadConfiguration(path) {

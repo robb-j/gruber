@@ -21,7 +21,7 @@ An isomorphic JavaScript library for creating web apps.
 
 ## About
 
-Gruber is a collection of modules for creating isomorphic JavaScript applications. 
+Gruber is a collection of modules for creating isomorphic JavaScript applications.
 That means using the same web standards developed for the browser in backend runtimes.
 Web-standards aren't going to change, so apps based on them are less likely break in the future.
 There's also a hope that [WinterTG](https://wintertc.org/work) works some stuff out.
@@ -30,12 +30,12 @@ Gruber acknowledges that web-standards don't do everything we want (at least yet
 For this reason, Gruber tries to be as agnostic as possible and makes building blocks on top of them.
 There are **integrations** with specific runtimes & libraries and **modules** that build around those common primitives.
 
-Gruber itself is a library and can be used however you like. The rest are **patterns** which you can apply if you like.
+Gruber itself is a library and can be used however you like.
+There are also **patterns** which you can apply if you like.
 Patterns are ways of structuring your code if you don't already have opinions on the matter.
 They also help to explain why Gruber is made in the way it is.
 
 There is a lot not in Gruber too. By design it tries to be as minimal as possible.
-For examples, there is a development CORs implementation but a production app should be run behind a reverse proxy and that can do those things for you.
 
 ## Terms
 
@@ -46,6 +46,7 @@ here is what they mean in the context of Gruber:
 - **modules** — code built around web-standards and the common core
 - **integrations** — a module integrating with a specific JavaScript runtime or library
 - **patterns** — optional but recommended best-practices you can adopt
+- **isomorphic** — running the same JavaScript on the front and backend
 
 ## Background
 
@@ -63,13 +64,13 @@ especially for small projects and teams.
 
 I'd prefer a style of **move slow and deliberate**.
 So I use Gruber in a project and develop features within that project.
-Then if the features are really useful or I find myself copy-pasting them between projects,
+Then if I find myself copy-pasting those modules between projects,
 I'll look into ways of contributing them back to the library.
 
 ## Principles
 
 - **Standardised & Compatible** — use existing standards, migrate towards them and try not to break things
-- **Agnostic** — a library, framework or runtime shouldn't be forced upon you
+- **Agnostic** — libraries, frameworks or runtimes shouldn't be forced upon you
 - **Patterns** — optional best-practises for how to use modules
 - **Composability** — logic should be composed together rather than messily intertwined
 - **Minimal & Deliberate** — carefully add only what's is necessary
@@ -89,6 +90,18 @@ Maybe
 
 - [OpenAPI](https://swagger.io/specification/)
 - Open CLI?
+
+## Direction
+
+Here are places I want to explore next.
+
+- [CLI](https://github.com/robb-j/gruber/issues/54) — declaratively define command line interfaces
+- Frontend configuration — using the `config` module on the front-end
+- SQL — an abstraction over database communication
+- Open API, HTTP documentation & JS client generation
+- Dependencies — a system for defining interdependent modules and controlling their lifecycle
+- Events — ways of broadcasting and consuming them with different topologies
+- [Even more →](https://github.com/robb-j/gruber/issues)
 
 ## Get Started
 
