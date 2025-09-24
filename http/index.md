@@ -10,7 +10,7 @@ api:
 # HTTP
 
 The HTTP module is all about the integration with a platform's HTTP server.
-It creates a common standards-based layer to create agnostic servers
+It creates a common standards-based layer for agnostic servers
 and also provides nice abstractions for other parts of Gruber to consume.
 
 The module is based around route definitions created with [defineRoute](#defineroute).
@@ -54,4 +54,4 @@ Other notable parts of the HTTP module are:
 - [ServerSentEventStream](#serversenteventstream) — for streaming [Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) responses using the [Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
 - [HTTPError](#httperror) — a custom error subclass for throwing HTTP errors directly in routes
 
-There is also the **unstable** [AuthorizationService](#authorizationservice) checking request authorization
+There is an **unstable** [AuthorizationService](#authorizationservice) for checking request authorization.

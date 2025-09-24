@@ -8,25 +8,24 @@ import type { TimerService } from "./timers.ts";
  *
  * ```js
  * const options = {
- *   // How long to wait in the terminating state so loadbalancers can process it
  *   timeout: 5_000,
- *
- *   // Which OS signals to listen for
  *   signals: ['SIGINT', 'SIGTERM'],
- *
- *   // Register each signal with the OS and call the handler
  *   startListeners(signals, handler) {},
- *
- *   // Exit the process with a given code and optionaly log an error
  *   exitProcess(statusCode, error) {},
  * }
  * ```
  */
 export interface TerminatorOptions {
+	/** How long to wait in the terminating state so loadbalancers can process it (milliseconds) */
 	timeout: number;
+
+	/** Which OS signals to listen for */
 	signals: string[];
 
+	/** Register each signal with the OS and call the handler */
 	startListeners: (signals: string[], block: TerminatorAction) => void;
+
+	/** Exit the process with a given code and optionaly log an error */
 	exitProcess: (statusCode: number, error?: unknown) => void;
 }
 
@@ -119,5 +118,23 @@ export class Terminator {
 			status: this.state === "running" ? 200 : 503,
 			statusText: this.state === "running" ? "OK" : "Service Unavailable",
 		});
+	}
+
+	/**
+	 * @unstable
+	 *
+	 * Experimental, wait for a terminator with promises
+	 *
+	 * ```js
+	 * using store = useStore()
+	 * using server = serveHTTP(…)
+	 *
+	 * await arnie.waitForSignals()
+	 *
+	 * // Automatic disposal!
+	 * ```
+	 */
+	async waitForSignals() {
+		await new Promise<void>((resolve) => this.start(resolve));
 	}
 }

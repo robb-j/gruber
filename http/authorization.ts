@@ -79,7 +79,7 @@ export function _checkScope(actual: string, expected: string[]) {
 }
 
 /**
- * @group Authorization
+ * // @group Authorization
  *
  * Check whether a provided scope meets the requirement of the expected scope
  *
@@ -204,7 +204,6 @@ export class AuthorizationService implements AbstractAuthorizationService {
 		this.tokens = tokens;
 	}
 
-	/** ... */
 	getAuthorization(request: Request) {
 		return (
 			_getRequestBearer(request) ??

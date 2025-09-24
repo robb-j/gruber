@@ -87,29 +87,30 @@ export function loader<T>(factory: () => T): () => T {
 }
 
 /**
-
-`trimIndentation` takes a template literal (with values) and takes out the common whitespace.
-Very heavily based on [dedent](https://github.com/dmnd/dedent/tree/main)
-
-```js
-import { trimIndentation } from "gruber";
-
-console.log(
-	trimIndentation`
-		Hello there!
-		My name is Geoff
-	`,
-);
-```
-
-Which will output this, without any extra whitespace:
-
-```
-Hello there!
-My name is Geoff
-```
-
-*/
+ * @internal
+ *
+ * `trimIndentation` takes a template literal (with values) and takes out the common whitespace.
+ * Very heavily based on [dedent](https://github.com/dmnd/dedent/tree/main)
+ *
+ * ```js
+ * import { trimIndentation } from "gruber";
+ *
+ * console.log(
+ * 	trimIndentation`
+ * 		Hello there!
+ * 		My name is Geoff
+ * 	`,
+ * );
+ * ```
+ *
+ * Which will output this, without any extra whitespace:
+ *
+ * ```
+ * Hello there!
+ * My name is Geoff
+ * ```
+ *
+ */
 export function trimIndentation(
 	input: string | TemplateStringsArray,
 	...args: unknown[]
@@ -138,6 +139,23 @@ export function trimIndentation(
 		.trim();
 }
 
+/**
+ * @internal
+ *
+ * Turn arguments from a string template literal back into a string
+ *
+ * ```js
+ * // 'I have 2 dogs'
+ * reconstructTemplateString(['I have ', ' dogs'], 2)
+ * ```
+ *
+ * or via template tags
+ *
+ * ```js
+ * // 'I have 2 dogs'
+ * reconstructTemplateString`I have ${2} dogs`
+ * ```
+ */
 export function reconstructTemplateString(
 	input: string | TemplateStringsArray,
 	...args: unknown[]
@@ -151,28 +169,28 @@ export function reconstructTemplateString(
 }
 
 /**
-@internal
-
-A dynamic list of promises that are automatically removed when they resolve
-
-```js
-const list = new PromiseList()
-
-// Add a promise that waits for 5 seconds
-list.push(async () => {
-	await new Promise(r => setTimeout(r, 5_000))
-
-	// Add dependant promises too
-	list.push(async () => {
-		await somethingElse()
-	})
-})
-
-// Wait for all promises and dependants to resolve in one go
-await promises.all()
-
-```
-*/
+ * @internal
+ *
+ * A dynamic list of promises that are automatically removed when they resolve
+ *
+ * ```js
+ * const list = new PromiseList()
+ *
+ * // Add a promise that waits for 5 seconds
+ * list.push(async () => {
+ * 	await new Promise(r => setTimeout(r, 5_000))
+ *
+ * 	// Add dependant promises too
+ * 	list.push(async () => {
+ * 		await somethingElse()
+ * 	})
+ * })
+ *
+ * // Wait for all promises and dependants to resolve in one go
+ * await promises.all()
+ *
+ * ```
+ */
 export class PromiseList {
 	#promises: Promise<unknown>[] = [];
 
@@ -220,6 +238,8 @@ export class PromiseList {
 }
 
 /**
+ * @unstable
+ *
  * Take steps to prevent an object from being extracted from the app,
  * inspired by crypto.subtle.importKey's [extractable](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#extractable) parameter.
  *
@@ -290,7 +310,15 @@ export function preventExtraction<T>(input: T): T {
  * @unstable
  *
  * **DANGER** undo a {@link preventExtraction} to allow values to be exposed.
- * This undos all of the precations that `preventExtraction` add.
+ * This removes all of the precations that `preventExtraction` add.
+ *
+ * ```js
+ * console.log(
+ * 	JSON.stringify(
+ * 		dangerouslyExpose(appConfig.meta)
+ * 	)
+ * )
+ * ```
  */
 export function dangerouslyExpose<T>(input: T): T {
 	return structuredClone(input);

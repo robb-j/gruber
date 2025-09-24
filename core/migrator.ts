@@ -84,7 +84,9 @@ export interface MigratorOptions<T> {
 	 * Get or generate the all migration definitions
 	 *
 	 * ```js
-	 * return { name: '001-something.js', up() {}, down() {} }
+	 * function getDefinitions () {
+	 * 	return { name: 001-something.js', up() {}, down() {} }
+	 * }
 	 * ```
 	 */
 	getDefinitions(): Promise<MigrationDefinition<T>[]>;
@@ -93,13 +95,23 @@ export interface MigratorOptions<T> {
 	 * Query which migrations have already been performed
 	 *
 	 * ```js
-	 * return [{ name: '001-something.js }]
+	 * function getRecords () {
+	 * 	return [{ name: '001-something.js' }]
+	 * }
 	 * ```
 	 */
 	getRecords(): Promise<MigrationRecord[]>;
 
 	/**
 	 * Perform or reverse a migration and update any required state
+	 *
+	 * ```js
+	 * function execute(definition, direction) {
+	 * 	console.log('running', definition.name, direction)
+	 * 	if (direction === 'up') definition.up()
+	 * 	if (direction === 'down') definition.down()
+	 * }
+	 * ```
 	 */
 	execute(
 		def: MigrationDefinition<T>,
@@ -115,16 +127,14 @@ export interface MigratorOptions<T> {
  * works with a specific feature they want to add migrations around, e.g. a Postgres database.
  *
  * ```js
- * async function getRecords() {}
- *
- * async function getDefinitions() {}
- *
- * async function execute() {}
- *
- * const migrator = new Migrator({ getRecords, getDefinitions, execute })
+ * const migrator = new Migrator({
+ * 	async getRecords() {},
+ * 	async getDefinitions() {},
+ * 	async execute(definition, direction) {}
+ * })
  * ```
  *
- * See [examples/node-fs-migrator](/examples/node-fs-migrator/node-fs-migrator.js)
+ * See [examples/node-fs-migrator](https://github.com/robb-j/gruber/tree/main/examples/node-fs-migrator)
  */
 export class Migrator<T = unknown> {
 	options: MigratorOptions<T>;

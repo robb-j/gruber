@@ -23,6 +23,16 @@ export interface SignTokenOptions {
  * @group Tokens
  *
  * A service for signing and verifying access tokens
+ *
+ * ```js
+ * let service // TokenService
+ *
+ * // { userId: 42, scope: "user" }
+ * const decoded = await service.verify("some-secret-token")
+ *
+ * // "some-secret-token"
+ * const token = await service.sign("user", { userId: 42 })
+ * ```
  */
 export interface TokenService {
 	verify(token: string): Promise<AuthzToken | null>;

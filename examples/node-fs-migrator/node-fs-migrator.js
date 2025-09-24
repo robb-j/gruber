@@ -1,5 +1,6 @@
 // A toy Node.js filesystem-based migrator:
 import fs from "node:fs/promises";
+import process from "node:process";
 import { Migrator } from "gruber";
 
 async function getRecords() {
@@ -38,3 +39,6 @@ async function execute(definition, direction) {
 }
 
 const migrator = new Migrator({ getRecords, getDefinitions, execute });
+
+if (process.argv.includes("up")) await migrator.up();
+if (process.argv.includes("down")) await migrator.down();

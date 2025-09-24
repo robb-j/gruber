@@ -1,7 +1,6 @@
 import type { TimerService } from "./timers.ts";
 import type { RedisDependency } from "./types.ts";
 
-/** @unstable */
 export interface StoreSetOptions {
 	/** milliseconds */
 	maxAge?: number;
@@ -13,37 +12,61 @@ export interface StoreSetOptions {
  * Store is an async abstraction around a key-value engine like Redis or a JavaScript Map
  * with extra features for storing things for set-durations
  *
+ * Store implements Disposable so you can use Explicit Resource Management
+ *
  * ```js
- * const store // Store
- *
- * // Store Geoff for 5 minutes
- * await store.set(
- *   'users/geoff',
- *   { name: "Geoff Testington"},
- *   { maxAge: 5 * 60 * 1_000 }
- * )
- *
- * // Retrieve Geoff
- * const value = await store.get('users/geoff')
- *
- * // Remove Geoff
- * await store.delete('users/geoff')
- *
- * // Close the store
- * await store.dispose()
- *
- * // Use Explicit Resource Management to automatically dispose the store
  * async function main() {
- *   using store = new MemoryStore(...)
+ *   await using store = new MemoryStore(…)
  *
- *   await store.set('users/geoff', ...)
+ *   await store.set('users/geoff', …)
  * }
  * ```
  */
 export interface Store {
+	/**
+	 * Retrieve the value from the store
+	 *
+	 * ```js
+	 * const value = await store.get("users/geoff")
+	 * ```
+	 */
 	get<T>(key: string): Promise<T | undefined>;
+
+	/**
+	 * Put a value into the store
+	 *
+	 * ```js
+	 * await store.set(
+	 *   'users/geoff',
+	 *   { name: "Geoff Testington"},
+	 * )
+	 *
+	 * // Store jess for 5 minutes
+	 * await store.set(
+	 *   "users/jess",
+	 *   { name: "Jess Smith" },
+	 *   { maxAge: 5 * 60 * 1_000 }
+	 * )
+	 * ```
+	 */
 	set<T>(key: string, value: T, options?: StoreSetOptions): Promise<void>;
+
+	/**
+	 * Remove a value from the store
+	 *
+	 * ```js
+	 * await store.remove("users/geoff")
+	 * ```
+	 */
 	delete(key: string): Promise<void>;
+
+	/**
+	 * Close the store
+	 *
+	 * ```js
+	 * await store.dispose()
+	 * ```
+	 */
 	dispose(): Promise<void>;
 	[Symbol.asyncDispose](): Promise<void>;
 
