@@ -27,6 +27,8 @@ This file documents notable changes to the project
 - Add `testing` module with utilities, stubs, fakes and a testing router
 - Add `preventExtraction` and `dangerouslyExpose` to core module
 - (WIP) Attempting to `JSON.stringify` any values from configuration value now throws a TypeError
+- Add experimental wildcard HTTP methods
+- Add HTTP OPTIONS requests when enabling cors
 
 **improved**
 

@@ -19,15 +19,19 @@ const encoder = new TextEncoder();
  * ```
  */
 export interface ServerSentEventMessage {
-	/** Ignored by the client. */
+	/** Ignored by the client, can be used to prevent connections from timing out */
 	comment?: string;
-	/** A string identifying the type of event described. */
+
+	/** A string identifying the type of event described. If specified this event is triggered, otherwise a "message" will be dispatched. */
 	event?: string;
+
 	/** The data field for the message. Split by new lines. */
 	data?: string;
+
 	/** The event ID to set the `EventSource` object's last event ID value. */
 	id?: string | number;
-	/** The reconnection time. */
+
+	/** The reconnection time. If the connection to the server is lost, the browser will wait for the specified time before attempting to reconnect. */
 	retry?: number;
 }
 
@@ -75,7 +79,9 @@ export function _stringify(message: ServerSentEventMessage): string {
 
 /**
  * Transforms server-sent message objects into strings for the client.
- * [more info](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
+ * [more info](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events).
+ *
+ * You can then write {@link ServerSentEventMessage} to that stream over time.
  *
  * ```js
  * const data = [{ data: "hello there" }]

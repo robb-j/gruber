@@ -56,7 +56,7 @@ export class PostgresStore implements Store {
 	async [Symbol.asyncDispose](): Promise<void> {}
 
 	async get<T>(key: string): Promise<T | undefined> {
-		const [record = null] = await this.sql<PostgresStoreValue[]>`
+		const [record = null] = await this.sql.execute<PostgresStoreValue>`
 			SELECT name, key, expiry
 			FROM ${this.tableName}
 			WHERE key = ${key}
@@ -86,7 +86,7 @@ export class PostgresStore implements Store {
 	}
 
 	async delete(key: string): Promise<void> {
-		await this.sql`
+		await this.sql.execute`
 			DELETE FROM ${this.tableName} WHERE key = ${key}
 		`;
 	}

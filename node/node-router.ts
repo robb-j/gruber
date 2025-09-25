@@ -25,7 +25,7 @@ export interface NodeRouterOptions {
  * ```js
  * import http from "node:http";
  *
- * const router = new NodeRouter(...)
+ * const router = new NodeRouter(…)
  * const server = http.createServer(router.forHttpServer())
  * server.listen(3000)
  * ```
@@ -281,9 +281,15 @@ export interface Stoppable {
 /**
  * @hidden
  *
- * A port of stoppable.js, ported to Gruber to reduce external dependencies.
+ * A port of [stoppable.js](https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js),
+ * ported to Gruber to reduce external dependencies and simplify.
  *
- * Adapted from [stoppable.js](https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js)
+ * ```js
+ * import http from 'node:http'
+ *
+ * const server = http.createServer(…)
+ * const stop = createStoppable(server, { grace: 10_000 })
+ * ```
  */
 export function createStoppable(
 	server: Server,

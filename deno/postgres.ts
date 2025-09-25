@@ -4,14 +4,13 @@ import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-	type PostgresService,
 } from "../postgres/mod.ts";
 import { extname } from "./deps.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
 
 export interface PostgresMigratorOptions {
-	sql: PostgresService;
+	sql: unknown;
 	directory: URL;
 }
 
@@ -21,11 +20,11 @@ export function getPostgresMigratorOptions({
 }: PostgresMigratorOptions): MigratorOptions<SqlDependency> {
 	return {
 		getRecords() {
-			return getPostgresMigrations(sql);
+			return getPostgresMigrations(sql as SqlDependency);
 		},
 
 		execute(def, direction) {
-			return executePostgresMigration(def, direction, sql);
+			return executePostgresMigration(def, direction, sql as SqlDependency);
 		},
 
 		async getDefinitions() {

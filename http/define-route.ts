@@ -55,7 +55,7 @@ export interface RouteHandler<T extends string, U> {
 }
 
 export interface RouteOptions<T extends string, U extends Dependencies> {
-	method: HTTPMethod;
+	method: HTTPMethod | "*";
 	pathname: T;
 	handler: RouteHandler<T, UnwrapDependencies<U>>;
 	dependencies?: U;
@@ -65,7 +65,7 @@ export interface RouteDefinition<
 	T extends string = string,
 	U extends Dependencies = {},
 > {
-	method: HTTPMethod;
+	method: HTTPMethod | "*";
 	pattern: URLPattern;
 	handler: RouteHandler<T, UnwrapDependencies<U>>;
 	dependencies: Container<U>;

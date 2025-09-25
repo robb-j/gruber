@@ -3,8 +3,8 @@ import {
 	type MigrateDirection,
 	type MigrationDefinition,
 	type MigrationRecord,
+	type SqlDependency,
 } from "../core/mod.ts";
-import { type PostgresService } from "./postgres-service.ts";
 
 /**
  * A record in a postgres database containing information about a migration that has been run.
@@ -26,15 +26,15 @@ export interface PostgresMigrationRecord {
  * Returning an array of `PostgresMigrationRecord`.
  *
  * ```js
- * const sql // PostgresService
+ * const sql // SqlDependency
  * const records = await getPostgresMigrations(sql)
  * ```
  */
 export async function getPostgresMigrations(
-	pg: PostgresService,
+	sql: SqlDependency,
 ): Promise<MigrationRecord[]> {
 	try {
-		const rows = await pg.execute<PostgresMigrationRecord>`
+		const rows = await sql<PostgresMigrationRecord[]>`
 			SELECT name, created
 			FROM migrations
 		`;
@@ -58,24 +58,24 @@ export async function getPostgresMigrations(
  * > because that migration deletes the migration table itself so would be pointless.
  *
  * ```js
- * const sql // PostgresService
+ * const sql // SqlDependency
  * const definition = definePostgresMigration(...)
  *
  * await executePostgresMigration(definition, "up", sql)
  * ```
  */
 export function executePostgresMigration(
-	def: MigrationDefinition<PostgresService>,
+	def: MigrationDefinition<SqlDependency>,
 	direction: MigrateDirection,
-	sql: PostgresService,
+	sql: SqlDependency,
 ): Promise<void> {
-	return sql.transaction(async (sql) => {
+	return sql.begin(async (sql) => {
 		console.log("migrate %s", direction, def.name);
 
 		if (direction === "up") {
 			await def.up(sql);
 
-			await sql.execute`
+			await sql`
 				INSERT INTO migrations (name) VALUES (${def.name})
 			`;
 			return;
@@ -85,7 +85,7 @@ export function executePostgresMigration(
 			await def.down(sql);
 
 			if (def.down !== postgresBootstrapMigration.down) {
-				await sql.execute`
+				await sql`
 					DELETE FROM migrations WHERE name = ${def.name}
 				`;
 			}
@@ -101,9 +101,9 @@ export function executePostgresMigration(
  * It sets up the initial "migrations" table that all other
  * migrations will be recorded in.
  */
-export const postgresBootstrapMigration = defineMigration<PostgresService>({
+export const postgresBootstrapMigration = defineMigration<SqlDependency>({
 	async up(sql) {
-		await sql.execute`
+		await sql`
 			CREATE TABLE "migrations" (
 				"name" varchar(255) PRIMARY KEY,
 				"created" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -111,9 +111,9 @@ export const postgresBootstrapMigration = defineMigration<PostgresService>({
 		`;
 	},
 	async down(sql) {
-		await sql.execute`
-				DROP TABLE "migrations"
-			`;
+		await sql`
+			DROP TABLE "migrations"
+		`;
 	},
 });
 
@@ -138,4 +138,4 @@ export const postgresBootstrapMigration = defineMigration<PostgresService>({
  * })
  * ```
  */
-export const definePostgresMigration = defineMigration<PostgresService>;
+export const definePostgresMigration = defineMigration<SqlDependency>;

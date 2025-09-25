@@ -1,3 +1,5 @@
+import type { SqlDependency } from "../core/types.ts";
+
 /**
  * `PostgresService` is an abstraction around a connection to a running postgres database.
  * Originally it was a shallow interface for [postgres.js](https://github.com/porsager/postgres),
@@ -109,19 +111,30 @@ export interface PostgresService {
 
 	[Symbol.asyncDispose](): Promise<void>;
 
-	//
-	// Deprecations ~ old `SqlDependency`
-	//
+	// //
+	// // Deprecations ~ old `SqlDependency`
+	// //
 
-	/** @deprecated use {@link PostgresService.prepare} */
-	(): Promise<void>;
+	// /** @deprecated use {@link PostgresService.prepare} */
+	// (): Promise<void>;
 
-	/** @deprecated use {@link PostgresService.execute} */
-	<T = any[]>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>;
+	// /** @deprecated use {@link PostgresService.execute} */
+	// <T = any[]>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>;
 
-	/** @deprecated use {@link PostgresService.transaction} */
-	begin<T>(block: (sql: PostgresService) => T): Promise<Awaited<T>>;
+	// /** @deprecated use {@link PostgresService.transaction} */
+	// begin<T>(block: (sql: PostgresService) => T): Promise<Awaited<T>>;
 
-	/** @deprecated use {@link PostgresService.dispose} */
-	end(): Promise<void>;
+	// /** @deprecated use {@link PostgresService.dispose} */
+	// end(): Promise<void>;
+}
+
+export function _wrapSqlDependency(sql: SqlDependency): PostgresService {
+	return {
+		transaction: (fn) => sql.begin((trx) => fn(_wrapSqlDependency(trx))),
+		execute: (strings, ...values) => sql(strings, ...values),
+		prepare: (value) => sql(value),
+		json: (value) => sql.json(value),
+		dispose: () => sql.end(),
+		[Symbol.asyncDispose]: () => sql.end(),
+	};
 }

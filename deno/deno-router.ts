@@ -5,6 +5,7 @@ export interface DenoRouterOptions {
 	routes?: RouteDefinition<any, any>[];
 }
 
+/** @deprecated */
 export class DenoRouter {
 	router: FetchRouter;
 

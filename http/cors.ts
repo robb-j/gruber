@@ -27,6 +27,10 @@ export interface CorsOptions {
 	credentials?: boolean;
 }
 
+export interface ApplyCorsOptions {
+	methods?: string[];
+}
+
 /**
  * @unstable
  *
@@ -68,14 +72,14 @@ export class Cors {
 		this.origins = new Set(options.origins ?? ["*"]);
 	}
 
-	apply(request: Request, response: Response) {
+	apply(request: Request, response: Response, options: ApplyCorsOptions = {}) {
 		const headers = new Headers(response.headers);
 
 		// HTTP methods
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Methods
 		headers.set(
 			"Access-Control-Allow-Methods",
-			"GET, HEAD, PUT, PATCH, POST, DELETE",
+			options.methods?.join(", ") ?? "GET, HEAD, PUT, PATCH, POST, DELETE",
 		);
 
 		// Headers

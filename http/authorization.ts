@@ -79,14 +79,12 @@ export function _checkScope(actual: string, expected: string[]) {
 }
 
 /**
- * // @group Authorization
- *
  * Check whether a provided scope meets the requirement of the expected scope
  *
  * The idea is that a parent scope contains all children scopes, recursively.
  * So if you find all the parents of a given scope, you can test it against a scope that has been provided by a user.
  *
- * For example `user:books:read` expands to:
+ * For example `user:books:read` will match against:
  * - `user:books:read`
  * - `user:books`
  * - `user`

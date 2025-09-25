@@ -9,12 +9,13 @@ import { HTTPError } from "./http-error.ts";
  *
  * ```js
  *
- * // Parse a application/x-www-form-urlencoded or multipart/form-data request
+ * // Parse a application/x-www-form-urlencoded
+ * // or multipart/form-data request
  * const formData = await getRequestBody(
  *   new Request('http://localhost:8000', { body: new FormData() })
  * )
  *
- * // Parse a JSON request
+ * // Parse an application/json request
  * const json = await getRequestBody(
  *   new Request('http://localhost:8000', {
  *     body: JSON.stringify({ hello: 'world' }),
@@ -39,8 +40,7 @@ export function getRequestBody(request: Request) {
  * @unstable
  * @group Validation
  *
- * Validate the body of a request against a [StandardSchema](https://standardschema.dev/) (including Gruber's own Structure).
- *
+ * Validate the body of a request against a [StandardSchema](https://standardschema.dev/) or `Structure`.
  * This will throw nice {@link HTTPError} errors that are caught by gruber and sent along to the user.
  *
  * ```js
@@ -50,7 +50,6 @@ export function getRequestBody(request: Request) {
  * ```
  *
  * > **NOTE** — you need to await the function when passing a `Request`
- * > because parsing the body is asynchronous
  *
  * or from a JavaScript value:
  *
@@ -109,12 +108,12 @@ export function assertRequestBody<T extends StandardSchemaV1>(
 
 	if (result.issues) {
 		throw HTTPError.badRequest(
-			"Invalid request body:\n • " +
-				result.issues
-					.map(({ path = [], message }) =>
-						path.length > 0 ? `${path.join(".")} - ${message}` : message,
-					)
-					.join("\n • "),
+			[
+				"Invalid request body:",
+				...result.issues.map(({ path = [], message }) =>
+					path.length > 0 ? `${path.join(".")} - ${message}` : message,
+				),
+			].join("\n • "),
 		);
 	}
 

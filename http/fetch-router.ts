@@ -1,8 +1,9 @@
 import { Cors } from "./cors.ts";
-import type {
-	RouteContext,
-	RouteDefinition,
-	RouteResult,
+import {
+	defineRoute,
+	type RouteContext,
+	type RouteDefinition,
+	type RouteResult,
 } from "./define-route.ts";
 import { HTTPError } from "./http-error.ts";
 
@@ -34,6 +35,15 @@ export interface FetchRouterOptions {
 	cors?: Cors;
 }
 
+// NOTE: could this lookup routes to only return if it is a match?
+export function _corsOptionRoute(cors: Cors, router: FetchRouter) {
+	return defineRoute({
+		method: "OPTIONS",
+		pathname: "*",
+		handler: (ctx) => cors.apply(ctx.request, new Response()),
+	});
+}
+
 /**
  * `FetchRouter` is a web-native router for routes defined with `defineRoute`.
  *
@@ -50,16 +60,16 @@ export interface FetchRouterOptions {
  * the router will handle a request based on the first route that matches.
  * So order is important.
  *
- * `errorHandler` is called if a non-`HTTPError` or a 5xx `HTTPError` is thrown.
+ * `errorHandler(error, request)` is called if a 5xx `HTTPError` is caught, including unknown errors.
  * It is called with the offending error and the request it is associated with.
  *
  * > NOTE: The `errorHandler` could do more in the future,
  * > like create it's own Response or mutate the existing response.
  * > This has not been designed and is left open to future development if it becomes important.
  *
- * `log` is an **unstable** option to turn on HTTP logging, it can be a boolean or middleware function.
+ * `log` is an **unstable** option to turn on HTTP logging, it can be a boolean or middleware function. It also logs HTTP errors if not already configured through `errorHandler`.
  *
- * `cors` is an **unstable** option to apply a {@link CORS} instance to all requests
+ * `cors` is an **unstable** option to apply a {@link CORS} instance to all requests and adds an `OPTIONS` route handler
  *
  * @group Routing
  */
@@ -73,12 +83,23 @@ export class FetchRouter {
 
 		this.errorHandler = options.errorHandler ?? undefined;
 
-		if (options.log === true) this._middleware.push(_defaultLogger);
+		const logger =
+			typeof options.log === "function"
+				? options.log
+				: options.log === true
+					? _defaultLogger
+					: null;
 
-		if (typeof options.log === "function") this._middleware.push(options.log);
+		if (logger) {
+			this._middleware.push(logger);
+			this.errorHandler ??= (err, req) => {
+				console.error("[http error] %s %s", req.method, req.url, err);
+			};
+		}
 
 		if (options.cors) {
 			this._middleware.push((req, res) => options.cors!.apply(req, res));
+			this.routes.push(_corsOptionRoute(options.cors, this));
 		}
 	}
 
@@ -97,7 +118,7 @@ export class FetchRouter {
 		const url = new URL(request.url);
 
 		for (const route of this.routes) {
-			if (request.method !== route.method) continue;
+			if (request.method !== route.method && route.method !== "*") continue;
 
 			const result = route.pattern.exec(url);
 			if (!result) continue;
@@ -107,10 +128,16 @@ export class FetchRouter {
 	}
 
 	/**
+	 * @internal
+	 *
 	 * Take an iterator of route matches and convert them into a HTTP Response
 	 * by executing the route's handler.
 	 * It will return the first route to return a `Response` object
 	 * or throw a `HTTPError` if no routes matched.
+	 *
+	 * ```js
+	 * const response = await router.processMatches(request, matches)
+	 * ```
 	 */
 	async processMatches(request: Request, matches: Iterable<_RouteMatch>) {
 		for (const { route, result, url } of matches) {
@@ -141,6 +168,10 @@ export class FetchRouter {
 	 * The HTTPError is then used to convert the error into a HTTP `Response`.
 	 *
 	 * If the error is server-based it will trigger the `FetchRouter`'s `errorHandler`.
+	 *
+	 * ```js
+	 * const response = router.handleError(request, new Error("Something went wrong"))
+	 * ```
 	 */
 	handleError(request: Request, error: unknown): Response {
 		// Get or create a HTTP error based on the one thrown
@@ -155,7 +186,7 @@ export class FetchRouter {
 	}
 
 	/**
-	 * @ignore
+	 * @internal
 	 *
 	 * Apply all configured middleware to a request/response pair in turn
 	 */
