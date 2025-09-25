@@ -160,7 +160,7 @@ export function loadConfiguration(path) {
     // more checks ...
   }
 
-  return appConfig;
+  return preventExtraction(appConfig);
 }
 ```
 
@@ -169,3 +169,7 @@ This checks the default value for `database.url` is not used when in production 
 A **Pattern** I follow is to assume the app is in `development` mode,
 then when I build the app as a container set the `NODE_ENV` variable to production.
 When running as a container it assumes it is in production and runs the extra checks.
+
+While a **Pattern**, it is strongly recommended to call [preventExtraction](/core/#preventextraction) on your configuration value
+to prevent any accidental exposure of your credentials. If credentials are console.log-ed or passed to JSON.stringify it will throw an error isntead.
+This is likely to happen under the hood in the 1.0 release.
