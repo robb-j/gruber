@@ -1,14 +1,7 @@
 import { Configuration, type ConfigurationOptions } from "../config/mod.ts";
 import { parseArgs } from "./deps.ts";
 
-export * from "../config/mod.ts";
-
-// deno-lint-ignore no-empty-interface
-export interface DenoConfigurationOptions {}
-
-export function getConfigurationOptions(
-	_options: DenoConfigurationOptions = {},
-): ConfigurationOptions {
+export function getConfigurationOptions(): ConfigurationOptions {
 	const args = parseArgs(Deno.args);
 	return {
 		async readTextFile(url: URL | string) {
@@ -35,8 +28,8 @@ export function getConfigurationOptions(
 }
 
 /** This is a syntax sugar for `new Configuration(getDenoConfigOptions(options))` */
-export function getConfiguration(options: DenoConfigurationOptions = {}) {
-	return new Configuration(getConfigurationOptions(options));
+export function getConfiguration() {
+	return new Configuration(getConfigurationOptions());
 }
 
 /** @deprecated use {@link getConfigurationOptions} */
