@@ -1,5 +1,8 @@
 import type { SqlDependency } from "../core/types.ts";
 
+// TODO: this interface could be a lot simpler if JSON/escaping logic was taken out and
+// instead provided as a global import, e.g. `import { sqlEscape, sqlJson } from "gruber"` or similar
+
 /**
  * `PostgresService` is an abstraction around a connection to a running postgres database.
  * Originally it was a shallow interface for [postgres.js](https://github.com/porsager/postgres),
