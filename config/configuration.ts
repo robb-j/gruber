@@ -1,5 +1,9 @@
 import { Structure } from "./structure.ts";
-import { formatMarkdownTable, PromiseList } from "../core/mod.ts";
+import {
+	dangerouslyExpose,
+	formatMarkdownTable,
+	PromiseList,
+} from "../core/mod.ts";
 import {
 	_arraySpec,
 	type ConfigurationDescription,
@@ -416,7 +420,12 @@ export class Configuration {
 		];
 
 		if (currentValue) {
-			lines.push("", "", "Current:", JSON.stringify(currentValue, null, 2));
+			lines.push(
+				"",
+				"",
+				"Current:",
+				JSON.stringify(dangerouslyExpose(currentValue), null, 2),
+			);
 		}
 
 		return lines.join("\n");
