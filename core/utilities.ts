@@ -321,5 +321,39 @@ export function preventExtraction<T>(input: T): T {
  * ```
  */
 export function dangerouslyExpose<T>(input: T): T {
+	// Custom cloning:
+	if (input instanceof URL) return new URL(input) as T;
+
+	// UNSTABLE:
+	if ((input as any)?.[dangerouslyExpose.custom]) {
+		return (input as any)[dangerouslyExpose.custom](input);
+	}
+
+	if (Array.isArray(input)) {
+		return input.map((v) => dangerouslyExpose(v)) as T;
+	}
+	if (input instanceof Map) {
+		return new Map(
+			Array.from(input.entries()).map(([key, value]) => [
+				dangerouslyExpose(key),
+				dangerouslyExpose(value),
+			]),
+		) as T;
+	}
+	if (input instanceof Set) {
+		return new Set(Array.from(input).map((v) => dangerouslyExpose(v))) as T;
+	}
+	if (typeof input === "object" && input !== null) {
+		return Object.fromEntries(
+			Object.entries(input as any).map(([key, value]) => [
+				key,
+				dangerouslyExpose(value),
+			]),
+		) as any;
+	}
+
 	return structuredClone(input);
 }
+
+/** @unstable — there needs to be a gruber symbol registry */
+dangerouslyExpose.custom = Symbol.for("gruber.dangerouslyExpose");

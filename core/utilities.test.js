@@ -1,4 +1,10 @@
-import { assertEquals, assertThrows, describe, it } from "./test-deps.js";
+import {
+	assertEquals,
+	assert,
+	assertThrows,
+	describe,
+	it,
+} from "./test-deps.js";
 import {
 	dangerouslyExpose,
 	formatMarkdownTable,
@@ -195,7 +201,7 @@ describe("preventExtraction", () => {
 });
 
 describe("dangerouslyExpose", () => {
-	it("allows values to be exposed", () => {
+	it("allows objects to be stringified", () => {
 		const result = preventExtraction({
 			name: "Geoff Testington",
 			age: 42,
@@ -204,5 +210,110 @@ describe("dangerouslyExpose", () => {
 			JSON.stringify(dangerouslyExpose(result)),
 			'{"name":"Geoff Testington","age":42}',
 		);
+	});
+	it("works with objects & primatives", () => {
+		const input = preventExtraction({
+			name: "Geoff Testington",
+			age: 42,
+			isCool: true,
+			notSure: undefined,
+		});
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different object");
+		assertEquals(result, {
+			name: "Geoff Testington",
+			age: 42,
+			isCool: true,
+			notSure: undefined,
+		});
+	});
+	it("works with arrays", () => {
+		const input = preventExtraction(["Geoff Testington", "Jess Assertly"]);
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different array");
+		assertEquals(result, ["Geoff Testington", "Jess Assertly"]);
+	});
+	it("works with sets", () => {
+		const input = preventExtraction(
+			new Set(["Geoff Testington", "Jess Assertly"]),
+		);
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different set");
+		assertEquals(result, new Set(["Geoff Testington", "Jess Assertly"]));
+	});
+	it("works with maps", () => {
+		const input = preventExtraction(
+			new Map([
+				["geoff", 42],
+				["jess", 64],
+			]),
+		);
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different map");
+		assertEquals(
+			result,
+			new Map([
+				["geoff", 42],
+				["jess", 64],
+			]),
+		);
+	});
+	it("works with URLs", () => {
+		const input = preventExtraction(new URL("https://duck.com"));
+		const result = dangerouslyExpose(input);
+
+		assertEquals(result, new URL("https://duck.com"));
+	});
+	it("allows custom", () => {
+		const input = preventExtraction({
+			[dangerouslyExpose.custom]: () => 42,
+		});
+		const result = dangerouslyExpose(input);
+
+		assertEquals(result, 42);
+	});
+	it("works with nested objects", () => {
+		const input = preventExtraction({
+			first: {
+				second: {
+					third: {},
+				},
+			},
+		});
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different object");
+		assert(result.first !== input.first, "should be a different object");
+		assert(
+			result.first.second !== input.first.second,
+			"should be a different object",
+		);
+		assert(
+			result.first.second.third !== input.first.second.third,
+			"should be a different object",
+		);
+
+		assertEquals(result, {
+			first: {
+				second: {
+					third: {},
+				},
+			},
+		});
+	});
+	it("works with nested arrays", () => {
+		const input = preventExtraction([[[[1, 2, 3]]]]);
+		const result = dangerouslyExpose(input);
+
+		assert(result !== input, "should be a different array");
+		assert(result[0] !== input[0], "should be a different array");
+		assert(result[0][0] !== input[0][0], "should be a different array");
+		assert(result[0][0][0] !== input[0][0][0], "should be a different array");
+
+		assertEquals(result, [[[[1, 2, 3]]]]);
 	});
 });
