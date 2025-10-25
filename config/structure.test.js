@@ -1,6 +1,7 @@
 import {
 	assertEquals,
 	assertInstanceOf,
+	assertIsError,
 	assertThrows,
 	describe,
 	it,
@@ -202,11 +203,8 @@ describe("Structure", () => {
 				() => struct.process("a string", { path: ["some", "path"] }),
 				Structure.Error,
 			);
-			assertEquals(
-				error,
-				new Structure.Error("Expected a boolean", ["some", "path"]),
-				"should throw a Structure.Error and capture the context",
-			);
+			assertIsError(error, Structure.Error, "Not a boolean");
+			assertEquals(error.path, ["some", "path"]);
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.boolean(false);
@@ -455,11 +453,8 @@ describe("Structure", () => {
 				() => struct.process(69, { path: ["some", "path"] }),
 				Structure.Error,
 			);
-			assertEquals(
-				error,
-				new Structure.Error("Expected number literal: 42", ["some", "path"]),
-				"should throw a Structure.Error and capture the context",
-			);
+			assertIsError(error, Structure.Error, "Expected number literal: 42");
+			assertEquals(error.path, ["some", "path"]);
 		});
 		it("throws for different types", () => {
 			const struct = Structure.literal(42);
@@ -468,11 +463,8 @@ describe("Structure", () => {
 				() => struct.process("nice", { path: ["some", "path"] }),
 				Structure.Error,
 			);
-			assertEquals(
-				error,
-				new Structure.Error("Expected number literal: 42", ["some", "path"]),
-				"should throw a Structure.Error and capture the context",
-			);
+			assertIsError(error, Structure.Error, "Expected number literal: 42");
+			assertEquals(error.path, ["some", "path"]);
 		});
 		it("throws for missing values", () => {
 			const struct = Structure.literal(42);
@@ -481,11 +473,9 @@ describe("Structure", () => {
 				() => struct.process(undefined, { path: ["some", "path"] }),
 				Structure.Error,
 			);
-			assertEquals(
-				error,
-				new Structure.Error("Missing value", ["some", "path"]),
-				"should throw a Structure.Error and capture the context",
-			);
+
+			assertIsError(error, Structure.Error, "Missing value");
+			assertEquals(error.path, ["some", "path"]);
 		});
 	});
 

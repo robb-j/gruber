@@ -1,4 +1,9 @@
-import { assertEquals, describe, it } from "../core/test-deps.js";
+import {
+	assertEquals,
+	assertIsError,
+	describe,
+	it,
+} from "../core/test-deps.js";
 import { _StructError } from "./mod.ts";
 
 describe("Structure.Error", () => {
@@ -23,29 +28,29 @@ describe("Structure.Error", () => {
 				new _StructError("error message", ["another", "path"]),
 				ctx,
 			);
+			assertIsError(result, _StructError, "error message");
 			assertEquals(
-				result,
-				new _StructError("error message", ["another", "path"]),
+				result.path,
+				["another", "path"],
 				"returns the StructError without modifying the path",
 			);
 		});
 		it("wraps Errors", () => {
 			const ctx = { path: ["some", "path"] };
 			const result = _StructError.chain(new Error("error message"), ctx);
-			assertEquals(
-				result,
-				new _StructError("error message", ["some", "path"]),
-				"creates a StructError and sets the path from the context",
-			);
+			assertIsError(result, _StructError, "error message");
+			assertEquals(result.path, ["some", "path"]);
 		});
 		it("wraps non-Errors", () => {
 			const ctx = { path: ["some", "path"] };
 			const result = _StructError.chain("unknown", ctx);
-			assertEquals(
+			assertIsError(
 				result,
-				new _StructError("Unknown error", ["some", "path"]),
+				_StructError,
+				"Unknown error",
 				"creates a generic StructError",
 			);
+			assertEquals(result.path, ["some", "path"]);
 		});
 	});
 

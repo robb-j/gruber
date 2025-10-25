@@ -189,7 +189,7 @@ describe("FetchRouter", () => {
 			assertEquals(await result.text(), "hello there");
 		});
 	});
-	describe("handleError", async () => {
+	describe("handleError", () => {
 		const router = new FetchRouter();
 
 		it("converts to HTTPError", () => {
