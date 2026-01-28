@@ -1,0 +1,54 @@
+---
+layout: html.njk
+---
+
+<main>
+	<sidebar-layout sideWidth="25ch" noStretch>
+		<nav>
+			<div class="flow">
+				<a href="/proposals/">← All proposals</a>
+
+				{% if collections['proposal-sketch'].length > 0 %}
+				<section>
+					<p>Sketches</p>
+					<ul>
+						{% for proposal in collections['proposal-sketch'] %}
+						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
+						{% endfor %}
+					</ul>
+				</section>
+				{% endif %}
+
+				{% if collections['proposal-complete'].length > 0 %}
+				<section>
+					<p>Complete</p>
+					<ul>
+						{% for proposal in collections['proposal-complete'] %}
+						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
+						{% endfor %}
+					</ul>
+				</section>
+				{% endif %}
+
+				{% if collections['proposal-archive'].length > 0 %}
+				<section>
+					<p>Archive</p>
+					<ul>
+						{% for proposal in collections['proposal-archive'] %}
+						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
+						{% endfor %}
+					</ul>
+				</section>
+				{% endif %}
+
+			</div>
+		</nav>
+		<div>
+			<center-layout>
+				<div class="flow">
+					{{ content | safe }}
+				</div>
+			</center-layout>
+		</div>
+	</sidebar-layout>
+</main>
