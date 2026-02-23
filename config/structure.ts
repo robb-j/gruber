@@ -425,6 +425,47 @@ export class Structure<T> {
 	}
 
 	/**
+	 * @unstable
+	 *
+	 * Creates a Structure for arrays where each index has a different validation
+	 *
+	 * ```js
+	 * Structure.tuple([Structure.string(), Structure.number()])
+	 * ```
+	 */
+	static tuple<const T extends Structure<any>[]>(
+		types: T,
+	): Structure<InferObject<T>> {
+		const schema = {
+			type: "array",
+			prefixItems: types.map((t) => t.schema),
+		};
+		return new Structure(schema, (value, context) => {
+			if (!Array.isArray(value)) throw new Error("Not an array");
+			if (value.length !== types.length) throw new Error("Incorrect length");
+
+			let output: InferObject<T> = [] as any;
+			let errors: any[] = [];
+			for (let i = 0; i < types.length; i++) {
+				const childContext = _nestContext(context, `${i}`);
+				try {
+					output.push(types[i].process(value[i], childContext));
+				} catch (error) {
+					errors.push(Structure.Error.chain(error, childContext));
+				}
+			}
+			if (errors.length > 0) {
+				throw new Structure.Error(
+					"Tuple value does not match schema",
+					context.path,
+					errors,
+				);
+			}
+			return output;
+		});
+	}
+
+	/**
 	 * Define a Structure to validate the value is `null`
 	 *
 	 * ```js

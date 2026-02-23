@@ -25,6 +25,7 @@ This file documents notable changes to the project
 **unstable**
 
 - Add `Structure.fromJSONSchema`
+- Add `Structure.tuple`
 
 ## 0.9
 

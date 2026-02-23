@@ -567,6 +567,28 @@ describe("Structure", () => {
 		});
 	});
 
+	describe("tuple", () => {
+		const struct = Structure.tuple([
+			Structure.string(),
+			Structure.number(),
+			Structure.literal("magic"),
+		]);
+
+		it("allows matching arrays", () => {
+			assertEquals(struct.process(["Geoff T", 42, "magic"]), [
+				"Geoff T",
+				42,
+				"magic",
+			]);
+		});
+		it("blocks subsets", () => {
+			assertThrows(() => struct.process(["Geoff T", 42]));
+		});
+		it("blocks invalid", () => {
+			assertThrows(() => struct.process([42, "Geoff T", new Date()]));
+		});
+	});
+
 	describe("null", () => {
 		const struct = Structure.null();
 
