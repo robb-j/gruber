@@ -29,17 +29,20 @@ export type RouteResult = Promise<Response | undefined> | Response | undefined;
 export type ExtractRouteParams<T extends string> =
 	T extends `${string}*${string}`
 		? string
-		: T extends `${string}:${infer Param}/${infer Rest}`
-			? Param | ExtractRouteParams<Rest>
-			: T extends `${string}:${infer Param}`
-				? Param
-				: never;
+		: T extends `${string}?${string}`
+			? string
+			: T extends `${string}:${infer Param}/${infer Rest}`
+				? Param | ExtractRouteParams<Rest>
+				: T extends `${string}:${infer Param}`
+					? Param
+					: never;
 
 // type A = ExtractRouteParams<"/">;
 // type B = ExtractRouteParams<"/:name">;
 // type C = ExtractRouteParams<"/path/:name">;
 // type D = ExtractRouteParams<"/path/:name/another/:thing">;
 // type E = ExtractRouteParams<"*">;
+// type F = ExtractRouteParams<"*">;
 
 export type RouteParams<T extends string> = {
 	params: Record<ExtractRouteParams<T>, string>;
