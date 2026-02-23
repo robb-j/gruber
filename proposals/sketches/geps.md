@@ -1,14 +1,11 @@
 ---
 title: Gruber enhancement proposals
+date: 2026-01-23
 ---
 
-# Gruber Enhancement Proposals proposal
-
-> Rob Anderson, 23 Jan 2026
+# Gruber Enhancement Proposals
 
 This is the a proposal for Gruber to set up a system to introduce, track, iterate & implement new features within Gruber.
-
-## Description
 
 As more features are added to Gruber, it has become a bit messy to keep track of them all and implement them consistently. Larger projects have "enhancement proposals" systems to track and manage this better. This proposal explores that in the context of Gruber.
 
@@ -47,7 +44,7 @@ As more features are added to Gruber, it has become a bit messy to keep track of
 
 ### Stages
 
-0. `IDEA` — General ideas for features, this could just be a text list
+0. `IDEA` — General ideas for features, this could just be a text list or GitHub issues
 1. `SKETCH` — The start of a proposal and it is assigned a number e.g. `001`
 2. `COMPLETE` — The change made it into Gruber
 3. `ABANDONED` — The change was not taken further
@@ -65,11 +62,12 @@ As more features are added to Gruber, it has become a bit messy to keep track of
 ### Template
 
 ```
-# 000 - {PROPOSAL_NAME}
+---
+title: {PROPOSAL_NAME}
+date: {CURRENT_DATE}
+---
 
-{PROPOSAL_STAGE} — {AUTHORS_LIST}
-
-## Description
+# {PROPOSAL_NAME}
 
 > What problem does this proposal address?
 > What benefit is there to adding/changing this?
@@ -81,9 +79,9 @@ As more features are added to Gruber, it has become a bit messy to keep track of
 
 ## References
 
-> What project(s) contributed to this proposal?
-> Link to external resources
-> Link to related standards
+> Which project(s) contributed to this proposal?
+> Related standards?
+> External resources?
 
 ## Implementation
 
@@ -113,7 +111,7 @@ As more features are added to Gruber, it has become a bit messy to keep track of
 ## Implementation
 
 - [x] Initial Sketch
-- [x] Design finalised
+- [ ] Design finalised
 - [ ] Changes implemented
 - [ ] Documentation created
 - [ ] Testing completed

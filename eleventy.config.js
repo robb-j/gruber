@@ -9,6 +9,8 @@ import {
 
 import pkg from "./package.json" with { type: "json" };
 
+const shortDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "short" });
+
 /** @param {import("@11ty/eleventy").UserConfig} eleventyConfig */
 export default function (eleventyConfig) {
 	eleventyConfig.addPlugin(eleventyAlembic, { useLabcoat: true });
@@ -24,6 +26,10 @@ export default function (eleventyConfig) {
 	eleventyConfig.addWatchTarget("**/*.ts");
 	eleventyConfig.addFilter("entries", (v) => Object.entries(v));
 	eleventyConfig.addFilter("keys", (v) => Object.keys(v));
+	eleventyConfig.addFilter("newestFirst", (arr) =>
+		arr.toSorted((a, b) => b.date - a.date),
+	);
+	eleventyConfig.addFilter("shortDate", (v) => shortDate.format(v));
 }
 
 export const config = {

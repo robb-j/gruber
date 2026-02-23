@@ -22,10 +22,10 @@ This is the proposal system to introduce, track, iterate & implement new feature
 
 1. Things are created that use Gruber as-is
 2. (optional) A proposal is created to track the feature — `IDEA`
-3. Changes are implemented in those things
-4. Those changes are iterated on within that thing
-5. Changes are copied to use in other things
-6. The proposal is updated to reference the new thing(s) — `SKETCH`
+3. Changes are implemented within that thing
+4. Those changes are iterated on in the thing that implemented it
+5. Changes are shared/copied to use in other things
+6. The proposal is created to reference new things — `SKETCH`
 7. The proposal is iterated to find a stable API
 8. The proposal is implemented, tested & documented
 9. Things are update to use the beta implementation
@@ -34,23 +34,20 @@ This is the proposal system to introduce, track, iterate & implement new feature
 
 ## Stages
 
-0. `IDEA` — General ideas for features, this could just be a text list
-1. `SKETCH` — The start of a proposal
+0. `IDEA` — General ideas, this could just be a text list or GitHub issues
+1. `SKETCH` — The start of a proposal and it is assigned a number e.g. `001`
 2. `COMPLETE` — The change made it into Gruber
-3. `ARCHIVE` — The change was not taken further
+3. `ABANDONED` — The change was not taken further
 
 ## Template
 
 ```
 ---
 title: {PROPOSAL_NAME}
+date: {CURRENT_DATE}
 ---
 
 # {PROPOSAL_NAME}
-
-> {AUTHORS_LIST}, {CREATED_DATE}
-
-## Description
 
 > What problem does this proposal address?
 > What benefit is there to adding/changing this?
@@ -62,23 +59,18 @@ title: {PROPOSAL_NAME}
 
 ## References
 
-> What project(s) contributed to this proposal?
-> Link to external resources
-> Link to related standards
+> Which project(s) contributed to this proposal?
+> Related standards?
+> External resources?
 
 ## Implementation
 
+- [ ] Initial Sketch
 - [ ] Design finalised
 - [ ] Changes implemented
 - [ ] Documentation created
 - [ ] Testing completed
 - [ ] Released
 ```
-
-## Ideas
-
-These are informal ideas for features that haven't been sketched out.
-
-- ???
 
 {% include "proposals.njk" %}

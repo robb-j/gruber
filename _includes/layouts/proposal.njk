@@ -6,13 +6,13 @@ layout: html.njk
 	<sidebar-layout sideWidth="25ch" noStretch>
 		<nav>
 			<div class="flow">
-				<a href="/proposals/">← All proposals</a>
+				<a href="/proposals/">← Proposals</a>
 
 				{% if collections['proposal-sketch'].length > 0 %}
 				<section>
 					<p>Sketches</p>
 					<ul>
-						{% for proposal in collections['proposal-sketch'] %}
+						{% for proposal in collections['proposal-sketch'] | newestFirst %}
 						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
 						{% endfor %}
 					</ul>
@@ -23,7 +23,7 @@ layout: html.njk
 				<section>
 					<p>Complete</p>
 					<ul>
-						{% for proposal in collections['proposal-complete'] %}
+						{% for proposal in collections['proposal-complete'] | newestFirst %}
 						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
 						{% endfor %}
 					</ul>
@@ -34,7 +34,7 @@ layout: html.njk
 				<section>
 					<p>Archive</p>
 					<ul>
-						{% for proposal in collections['proposal-archive'] %}
+						{% for proposal in collections['proposal-archive'] | newestFirst %}
 						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
 						{% endfor %}
 					</ul>

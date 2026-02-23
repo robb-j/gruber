@@ -1,12 +1,9 @@
 ---
 title: Shared symbol registry
+date: 2026-01-28
 ---
 
 # Shared symbol registry
-
-> Rob Anderson, 28 Jan 2026
-
-## Description
 
 If more symbols are used it would be a good idea to have a registry of them within the project. This would provide a standard way of customising gruber behaviour.
 
@@ -31,6 +28,7 @@ export const GruberSymbol = Object.seal({
 
 ## Implementation
 
+- [ ] Initial Sketch
 - [ ] Design finalised
 - [ ] Changes implemented
 - [ ] Documentation created

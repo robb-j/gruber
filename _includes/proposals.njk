@@ -1,8 +1,11 @@
 {% if collections['proposal-sketch'].length > 0 %}
 <h2>Sketches</h2>
 <ul>
-	{% for proposal in collections['proposal-sketch'] %}
-	<li><a href="{{ proposal.url }}">{{ proposal.data.title }} →</a></li>
+	{% for proposal in collections['proposal-sketch'] | newestFirst %}
+	<li>
+		<span class="subtleDate">[{{ proposal.date | shortDate }}]</span>
+		<a href="{{ proposal.url }}">{{ proposal.data.title }} →</a>
+	</li>
 	{% endfor %}
 </ul>
 {% endif %}
@@ -10,8 +13,11 @@
 {% if collections['proposal-complete'].length > 0 %}
 <h2>Complete</h2>
 <ul>
-	{% for proposal in collections['proposal-complete'] %}
-	<li><a href="{{ proposal.url }}">{{ proposal.data.title }} →</a></li>
+	{% for proposal in collections['proposal-complete'] | newestFirst %}
+	<li>
+		<span class="subtleDate">[{{ proposal.date | shortDate }}]</span>
+		<a href="{{ proposal.url }}">{{ proposal.data.title }} →</a>
+	</li>
 	{% endfor %}
 </ul>
 {% endif %}
@@ -19,8 +25,11 @@
 {% if collections['proposal-archive'].length > 0 %}
 <h2>Archive</h2>
 <ul>
-	{% for proposal in collections['proposal-archive'] %}
-	<li><a href="{{ proposal.url }}">{{ proposal.data.title }} →</a></li>
+	{% for proposal in collections['proposal-archive'] | newestFirst %}
+	<li>
+		<span class="subtleDate">[{{ proposal.date | shortDate }}]</span>
+		<a href="{{ proposal.url }}">{{ proposal.data.title }} →</a>
+	</li>
 	{% endfor %}
 </ul>
 {% endif %}
