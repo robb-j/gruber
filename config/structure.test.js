@@ -516,6 +516,57 @@ describe("Structure", () => {
 		});
 	});
 
+	describe("fromJSONSchema", () => {
+		it("parses constants", () => {
+			const result = Structure.fromJSONSchema({ const: 42 });
+			assertEquals(result.process(42), 42);
+		});
+		it("parses strings", () => {
+			const result = Structure.fromJSONSchema({ type: "string" });
+			assertEquals(result.process("Geoff Testington"), "Geoff Testington");
+		});
+		it("parses numbers", () => {
+			const result = Structure.fromJSONSchema({ type: "number" });
+			assertEquals(result.process(42), 42);
+		});
+		it("parses booleans", () => {
+			const result = Structure.fromJSONSchema({ type: "boolean" });
+			assertEquals(result.process(false), false);
+		});
+		it("parses arrays", () => {
+			const result = Structure.fromJSONSchema({
+				type: "array",
+				items: { type: "string" },
+			});
+			assertEquals(result.process(["A", "B", "C"]), ["A", "B", "C"]);
+		});
+		it("parses objects", () => {
+			const result = Structure.fromJSONSchema({
+				type: "object",
+				properties: { name: { type: "string" } },
+				required: ["name"],
+			});
+			assertEquals(result.process({ name: "Geoff" }), { name: "Geoff" });
+		});
+		it("parses objects with optionals", () => {
+			const result = Structure.fromJSONSchema({
+				type: "object",
+				properties: { name: { type: "string" } },
+			});
+			assertEquals(result.process({}), {});
+		});
+		it("parses unions", () => {
+			const result = Structure.fromJSONSchema({
+				anyOf: [{ type: "string" }, { type: "number" }],
+			});
+			assertEquals(result.process("Geoff Testington"), "Geoff Testington");
+			assertEquals(result.process(42), 42);
+		});
+		it("throws for unknown", () => {
+			assertThrows(() => Structure.fromJSONSchema({}));
+		});
+	});
+
 	describe("null", () => {
 		const struct = Structure.null();
 

@@ -361,6 +361,70 @@ export class Structure<T> {
 	}
 
 	/**
+	 * @unstable
+	 *
+	 * Attempts to create a Structure from a parsed [JSON Schema](https://json-schema.org/specification) value.
+	 * This is implemented on a as-needed bases, currently it supports:
+	 * - "const" → `Structure.literal`
+	 * - type=string → `Structure.string`
+	 * - type=number → `Structure.number`
+	 * - type=boolean → `Structure.boolean`
+	 * - type=array → "items" are recursively parsed and put into a `Structure.array`
+	 * - type=object → "properties" are recursively parsed and put into a `Structure.object`
+	 * - anyOf → `Structure.union`
+	 *
+	 * ```js
+	 * Structure.fromJSONSchema({ type: "string" })
+	 * Structure.fromJSONSchema({ type: "number" })
+	 * Structure.fromJSONSchema({ type: "boolean" })
+	 * Structure.fromJSONSchema({
+	 *   type: "object",
+	 *   properties: {
+	 *     name: { type:"string" },
+	 *     age: { type: "number" }
+	 *   },
+	 *   required: ["name"]
+	 * })
+	 * Structure.fromJSONSchema({ type: "array", items: { type: "string" } })
+	 * Structure.fromJSONSchema({
+	 *   anyOf: [
+	 *     { type: "string" },
+	 *     { type: "number" }
+	 *   ]
+	 * });
+	 * ```
+	 *
+	 * notes
+	 * - array "prefixItems" are not supported, maybe they could be mapped to tuples?
+	 */
+	static fromJSONSchema(schema: any): Structure<any> {
+		if (schema.const) return Structure.literal(schema.const);
+		if (schema.type === "string") return Structure.string(schema.default);
+		if (schema.type === "number") return Structure.number(schema.default);
+		if (schema.type === "boolean") return Structure.boolean(schema.default);
+		if (schema.type === "array") {
+			return Structure.array(Structure.fromJSONSchema(schema.items));
+		}
+		if (schema.type === "object" && typeof schema.properties === "object") {
+			const fields: any = {};
+			const required = new Set(schema.required ?? []);
+			for (const [key, childSchema] of Object.entries(schema.properties)) {
+				const childStruct = Structure.fromJSONSchema(childSchema);
+				fields[key] = required.has(key)
+					? childStruct
+					: Structure.optional(childStruct);
+			}
+			return Structure.object(fields);
+		}
+		if (Array.isArray(schema.anyOf)) {
+			return Structure.union(
+				schema.anyOf.map((t: any) => Structure.fromJSONSchema(t)),
+			);
+		}
+		throw new TypeError("Unknown schema");
+	}
+
+	/**
 	 * Define a Structure to validate the value is `null`
 	 *
 	 * ```js

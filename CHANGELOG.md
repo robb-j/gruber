@@ -22,6 +22,10 @@ This file documents notable changes to the project
 
 - short-circuit optional-parameters during TypeScript URL param parsing
 
+**unstable**
+
+- Add `Structure.fromJSONSchema`
+
 ## 0.9
 
 **features**
