@@ -69,7 +69,7 @@ async function node() {
 		},
 	});
 	exec("npx tsc", {
-		cwd: new URL("./bundle/node", import.meta.url),
+		cwd: new URL("../bundle/node", import.meta.url),
 		stdio: "inherit",
 	});
 
