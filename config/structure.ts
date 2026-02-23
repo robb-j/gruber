@@ -473,4 +473,15 @@ export class Structure<T> {
 			throw new Error("not a Date");
 		});
 	}
+
+	/**
+	 * Creates a utility Structure that validates a value is either another structure or a null value
+	 *
+	 * ```js
+	 * Structure.nullable(Structure.string())
+	 * ```
+	 */
+	static nullable<T>(input: Structure<T>) {
+		return Structure.union([Structure.null(), input]);
+	}
 }
