@@ -484,4 +484,15 @@ export class Structure<T> {
 	static nullable<T>(input: Structure<T>) {
 		return Structure.union([Structure.null(), input]);
 	}
+
+	/**
+	 * Create a Structure that validates a value is one of a set of literals
+	 *
+	 * ```js
+	 * Structure.enum(['a string', 42, false])
+	 * ```
+	 */
+	static enum<T extends (string | number | boolean)[]>(values: T) {
+		return Structure.union(values.map((v) => Structure.literal(v)));
+	}
 }
