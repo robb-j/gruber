@@ -475,7 +475,7 @@ export class Structure<T> {
 	}
 
 	/**
-	 * Creates a utility Structure that validates a value is either another structure or a null value
+	 * Creates a Structure that validates a value is either another structure or a null value
 	 *
 	 * ```js
 	 * Structure.nullable(Structure.string())
@@ -486,7 +486,7 @@ export class Structure<T> {
 	}
 
 	/**
-	 * Create a Structure that validates a value is one of a set of literals
+	 * Creates a Structure that validates a value is one of a set of literals
 	 *
 	 * ```js
 	 * Structure.enum(['a string', 42, false])
@@ -494,5 +494,30 @@ export class Structure<T> {
 	 */
 	static enum<T extends (string | number | boolean)[]>(values: T) {
 		return Structure.union(values.map((v) => Structure.literal(v)));
+	}
+
+	/**
+	 * Creates a Structure that validates a value is the `undefined` value
+	 *
+	 * ```js
+	 * Structure.undefined()
+	 * ```
+	 */
+	static undefined() {
+		return new Structure<undefined>({}, (value) => {
+			if (value !== undefined) throw new Error('value is not "undefined"');
+			else return undefined;
+		});
+	}
+
+	/**
+	 * Creates a Structure that validates another structure or is not defined
+	 *
+	 * ```js
+	 * Structure.optional(Structure.string())
+	 * ```
+	 */
+	static optional<T>(input: Structure<T>) {
+		return Structure.union([input, Structure.undefined()]);
 	}
 }

@@ -357,3 +357,44 @@ export function dangerouslyExpose<T>(input: T): T {
 
 /** @unstable — there needs to be a gruber symbol registry */
 dangerouslyExpose.custom = Symbol.for("gruber.dangerouslyExpose");
+
+/**
+ * Create a subset of an object by picking off specific keys
+ *
+ * ```js
+ * const object = {
+ *   name: "Geoff Testington",
+ *   age: 42,
+ *   pets: ["Hugo", "Florence"]
+ * }
+ * pickProperties(object, ["name", "age"])
+ * ```
+ */
+export function pickProperties<const T, const K extends keyof T>(
+	object: T,
+	properties: K[],
+): { [P in K]: T[P] } {
+	const output: { [P in K]: T[P] } = {} as any;
+	for (const key of properties) output[key] = object[key];
+	return output;
+}
+
+/**
+ * Polyfil for [Map#getOrInsert](https://github.com/tc39/proposal-upsert)
+ *
+ * ```js
+ * let preferences = new Map()
+ * let darkMode = getOrInsert(preferences, "use_dark_mode", true)
+ *
+ * let groups = new Map()
+ * for (let value of array) {
+ *   getOrInsert(groups, value.theme, []).push(value)
+ * }
+ * ```
+ */
+export function getOrInsert<K, V>(map: Map<K, V>, key: K, defaultValue: V): V {
+	if (!map.has(key)) {
+		map.set(key, defaultValue);
+	}
+	return map.get(key)!;
+}

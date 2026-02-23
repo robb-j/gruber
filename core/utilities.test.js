@@ -8,6 +8,8 @@ import {
 import {
 	dangerouslyExpose,
 	formatMarkdownTable,
+	getOrInsert,
+	pickProperties,
 	preventExtraction,
 	reconstructTemplateString,
 	trimIndentation,
@@ -315,5 +317,32 @@ describe("dangerouslyExpose", () => {
 		assert(result[0][0][0] !== input[0][0][0], "should be a different array");
 
 		assertEquals(result, [[[[1, 2, 3]]]]);
+	});
+});
+
+describe("pickProperties", () => {
+	it("picks properties", () => {
+		assertEquals(
+			pickProperties(
+				{
+					name: "Geoff Testington",
+					age: 42,
+					pets: ["Hugo", "Florence"],
+				},
+				["name", "age"],
+			),
+			{ name: "Geoff Testington", age: 42 },
+		);
+	});
+});
+
+describe("getOrInsert", () => {
+	it("returns the existing value", () => {
+		const map = new Map([["the_answer", 42]]);
+		assertEquals(getOrInsert(map, "the_answer", 100), 42);
+	});
+	it("returns sets missing values", () => {
+		const map = new Map();
+		assertEquals(getOrInsert(map, "the_answer", 100), 100);
 	});
 });

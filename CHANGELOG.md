@@ -7,6 +7,21 @@ layout: simple.njk
 
 This file documents notable changes to the project
 
+## next
+
+**features**
+
+- Add `Structure.nullable`
+- Add `Structure.enum`
+- Add `Structure.undefined`
+- Add `Structure.optional`
+- Add `pickProperties` utility
+- Add `getOrInsert` utility
+
+**improved**
+
+- short-circuit optional-parameters during TypeScript URL param parsing
+
 ## 0.9
 
 **features**
