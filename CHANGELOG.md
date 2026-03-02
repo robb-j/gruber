@@ -7,7 +7,7 @@ layout: simple.njk
 
 This file documents notable changes to the project
 
-## next
+## 0.9.2
 
 **fixes**
 
