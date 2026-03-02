@@ -466,6 +466,57 @@ export class Structure<T> {
 	}
 
 	/**
+	 * @unstable
+	 *
+	 * Creates a Structure for objects that map a key to a common type of value
+	 *
+	 * ```js
+	 * Structure.record(Structure.string(), Structure.number())
+	 * Structure.record(
+	 *   Structure.string(),
+	 *   Structure.object({ name: Structure.string() })
+	 * )
+	 * Structure.record(
+	 *   Structure.enum(["name", "address", "emailAddress"]),
+	 *   Structure.string()
+	 * )
+	 * ```
+	 */
+	static record<K extends string, V>(
+		keyStruct: Structure<K>,
+		valueStruct: Structure<V>,
+	): Structure<Record<K, V>> {
+		const schema = {
+			type: "object",
+		};
+		return new Structure<Record<K, V>>(schema, (value, context) => {
+			if (typeof value !== "object") throw new Error("Not an object");
+
+			const output: any = {};
+			const errors: any[] = [];
+			for (const entry of Object.entries(value as any)) {
+				try {
+					const ctx = _nestContext(context, entry[0]);
+					output[keyStruct.process(entry[0], ctx)] = valueStruct.process(
+						entry[1],
+						ctx,
+					);
+				} catch (error) {
+					errors.push(error as Error);
+				}
+			}
+			if (errors.length > 0) {
+				throw new Structure.Error("Invalid record", context.path, errors);
+			}
+			for (const key in output) {
+				if (output[key] === undefined) delete output[key];
+			}
+
+			return output;
+		});
+	}
+
+	/**
 	 * Define a Structure to validate the value is `null`
 	 *
 	 * ```js

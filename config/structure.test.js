@@ -589,6 +589,44 @@ describe("Structure", () => {
 		});
 	});
 
+	describe("record", () => {
+		it("allows matching key-value pairs", () => {
+			const struct = Structure.record(Structure.string(), Structure.number());
+			const value = struct.process({ age: 42 });
+			assertEquals(value, { age: 42 });
+		});
+		it("allows enum keys", () => {
+			const struct = Structure.record(
+				Structure.enum(["name", "pet"]),
+				Structure.string(),
+			);
+			const value = struct.process({ name: "Geoff T" });
+			assertEquals(value, { name: "Geoff T" });
+		});
+		it("blocks invalid keys", () => {
+			const struct = Structure.record(
+				Structure.literal("name"),
+				Structure.string(),
+			);
+
+			assertThrows(
+				() => struct.process({ pet: "Hugo" }),
+				(error) => error instanceof Structure.Error,
+			);
+		});
+		it("blocks invalid values", () => {
+			const struct = Structure.record(
+				Structure.literal("name"),
+				Structure.string(),
+			);
+
+			assertThrows(
+				() => struct.process({ name: 119 }),
+				(error) => error instanceof Structure.Error,
+			);
+		});
+	});
+
 	describe("null", () => {
 		const struct = Structure.null();
 

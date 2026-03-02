@@ -13,6 +13,10 @@ This file documents notable changes to the project
 
 - `Terminator#waitForSignals` no longer exits the process
 
+**unstable**
+
+- Add `Structure.record`
+
 ## 0.9.1
 
 **features**
