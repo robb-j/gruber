@@ -7,6 +7,12 @@ layout: simple.njk
 
 This file documents notable changes to the project
 
+## next
+
+**fixes**
+
+- `Terminator#waitForSignals` no longer exits the process
+
 ## 0.9.1
 
 **features**

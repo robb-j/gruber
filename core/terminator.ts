@@ -135,6 +135,14 @@ export class Terminator {
 	 * ```
 	 */
 	async waitForSignals() {
-		await new Promise<void>((resolve) => this.start(resolve));
+		await new Promise<void>((resolve) => {
+			this.options.startListeners(this.options.signals, () => resolve());
+		});
+
+		this.state = "terminating";
+
+		await new Promise<void>((resolve) => {
+			this.timers.setTimeout(resolve, this.options.timeout);
+		});
 	}
 }
