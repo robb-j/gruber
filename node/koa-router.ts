@@ -8,6 +8,8 @@ import {
 } from "./node-router.ts";
 
 /** 
+	@deprecated use {@link koaMiddleware}
+
 	A HTTP router for Koa applications
 
 	```js
@@ -61,7 +63,18 @@ export class KoaRouter {
 	}
 }
 
-/** @unstable */
+/**
+ * Create a middleware to use a `FetchRouter` in a Koa app
+ *
+ * ```js
+ * const router = new FetchRouter(…)
+ *
+ * const app = new Koa()
+ *   .use(...)
+ *   .use(koaMiddleware(router));
+ *   .use(...)
+ * ```
+ */
 export function koaMiddleware(router: FetchRouter): Middleware {
 	const koa = new KoaRouter();
 	koa.router = router;

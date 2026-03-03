@@ -7,6 +7,13 @@ layout: simple.njk
 
 This file documents notable changes to the project
 
+## next
+
+**deprecations**
+
+- `KoaRouter` → `koaMiddleware`
+- `ExpressRouter` → `expressMiddleware`
+
 ## 0.9.2
 
 **fixes**

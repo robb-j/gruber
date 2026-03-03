@@ -11,7 +11,7 @@ import {
 } from "./node-router.ts";
 
 /**
-	A HTTP router for Express applications
+	@deprecated use {@link expressMiddleware}
 
 	```js
 	const router = new ExpressRouter(...)
@@ -53,7 +53,18 @@ export class ExpressRouter {
 	}
 }
 
-/** @unstable */
+/**
+ * Create an middleware to use a `FetchRouter` in a Express app
+ *
+ * ```js
+ * const router = new FetchRouter(…)
+ *
+ * const app = express()
+ *   .use(...)
+ *   .use(expressMiddleware(router));
+ *   .use(...)
+ * ```
+ */
 export function expressMiddleware(router: FetchRouter): ExpressRequestHandler {
 	const express = new ExpressRouter();
 	express.router = router;
