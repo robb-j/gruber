@@ -20,6 +20,8 @@ export interface NodeRouterOptions {
 /**
  * @hidden
  *
+ * @deprecated use {@link serveHTTP}
+ *
  * A HTTP router for pure Node.js, you should probably use {@link serveHTTP}
  *
  * ```js
@@ -190,8 +192,6 @@ export interface ServeHTTPOptions {
 	port: number;
 	hostname?: string;
 	grace?: number;
-	// signal?: AbortSignal;
-	// terminator?: Terminator;
 }
 
 /** @unstable */
@@ -225,6 +225,7 @@ export interface ServeHTTPHandler {
  * 		{ port: 3000, grace: 5000 },
  * 		() => new Response('ok')
  * 	)
+ * 	// …
  * }
  *
  * await main()
@@ -233,7 +234,6 @@ export interface ServeHTTPHandler {
  * When main function exits, it will automatically close the server with a 5 second grace period.
  *
  * The stop method is also useful when used with a [Terminator](/core/#terminator).
- *
  */
 export async function serveHTTP(
 	options: ServeHTTPOptions,
@@ -260,13 +260,6 @@ export async function serveHTTP(
 
 	const stop = createStoppable(server, { grace: options.grace });
 
-	// options.terminator?._enqueue({
-	// 	[Symbol.asyncDispose]: () => stop() as Promise<void>,
-	// });
-
-	// NOTE: AbortSignal? ~ it loses the async-ness
-	// options.signal?.addEventListener("abort", () => stop());
-
 	return Object.assign(server, { stop, [Symbol.asyncDispose]: stop });
 }
 
@@ -289,7 +282,15 @@ export interface Stoppable {
  *
  * const server = http.createServer(…)
  * const stop = createStoppable(server, { grace: 10_000 })
+ *
+ * // …
+ *
+ * const wasGraceful = await stop()
  * ```
+ *
+ * It keeps a record of all sockets connecting to the server so they can be gracefully closed
+ * when the server is stopped. If they aren't closed after the `grace` period,
+ * they're forcefully closed instead.
  */
 export function createStoppable(
 	server: Server,
