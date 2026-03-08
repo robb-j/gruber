@@ -100,4 +100,16 @@ a[data-variant="subtle"] {
 
 .subtleDate {
 	opacity: 0.7;
+	font-variant: tabular-nums;
+}
+
+li:has(a[aria-current="page"]) {
+	text-decoration: none;
+	font-weight: bold;
+	background: var(--highlight);
+	padding-inline-end: var(--s-1);
+	border-right: var(--border-thin) solid currentColor;
+}
+a[aria-current="page"] {
+	color: currentColor;
 }

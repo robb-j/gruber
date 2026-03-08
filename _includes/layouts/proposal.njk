@@ -13,7 +13,11 @@ layout: html.njk
 					<p>Sketches</p>
 					<ul>
 						{% for proposal in collections['proposal-sketch'] | newestFirst %}
+						{% if proposal.url == page.url %}
+						<li><a href="{{ proposal.url }}" aria-current="page">{{ proposal.data.title }}</a></li>
+						{% else %}
 						<li><a href="{{ proposal.url }}">{{ proposal.data.title }}</a></li>
+						{% endif %}
 						{% endfor %}
 					</ul>
 				</section>

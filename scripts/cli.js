@@ -43,7 +43,7 @@ function proposal(name = "", rawDate = Date.now()) {
 		"utf8",
 	);
 
-	const template = /```(?<body>[\s\S]+)```/gm.exec(index).groups.body;
+	const template = /```\n(?<body>[\s\S]+)```/gm.exec(index).groups.body;
 	const filename = new URL(
 		"../proposals/sketches/" + name.toLowerCase().replace(/\s+/, "-") + ".md",
 		import.meta.url,
