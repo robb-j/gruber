@@ -14,6 +14,10 @@ This file documents notable changes to the project
 - `KoaRouter` → `koaMiddleware`
 - `ExpressRouter` → `expressMiddleware`
 
+**unstable**
+
+- Add `Structure.type`
+
 ## 0.9.2
 
 **fixes**

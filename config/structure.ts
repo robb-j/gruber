@@ -249,6 +249,52 @@ export class Structure<T> {
 	}
 
 	/**
+	 * @unstable
+	 *
+	 * Define an interface over an object that plucks off known values and ignores the rest.
+	 *
+	 * ```js
+	 * Structure.type({
+	 * 	name: Structure.string(),
+	 * 	age: Structure.number(),
+	 * })
+	 * ```
+	 */
+	static pick<T extends Record<string, unknown>>(fields: {
+		[K in keyof T]: Structure<T[K]>;
+	}) {
+		const schema = {
+			type: "object",
+			properties: {} as Record<string, unknown>,
+			default: {},
+			additionalProperties: false,
+			required: Object.keys(fields),
+		};
+
+		return new Structure<T>(schema, (value, context) => {
+			if (!value || typeof value !== "object") {
+				throw new Error("not an object");
+			}
+
+			const output: any = {} as T;
+			const errors: Error[] = [];
+
+			for (const property in fields) {
+				try {
+					output[property] = fields[property].process(
+						(value as T)[property],
+						_nestContext(context, property),
+					);
+				} catch (error) {
+					errors.push(Structure.Error.chain(error, context));
+				}
+			}
+
+			return output;
+		});
+	}
+
+	/**
 	 * Define a list of values that each match the same structure.
 	 *
 	 * ```js

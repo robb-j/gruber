@@ -392,6 +392,28 @@ describe("Structure", () => {
 		});
 	});
 
+	describe("type", () => {
+		it("creates a structure", () => {
+			const struct = Structure.pick({});
+			assertInstanceOf(struct, Structure);
+		});
+		it("plucks keys off the input", () => {
+			const struct = Structure.pick({
+				name: Structure.string("name"),
+				age: Structure.number("age"),
+			});
+			const value = struct.process({
+				name: "Geoff",
+				age: 42,
+				pets: ["Hugo"],
+			});
+			assertEquals(value, {
+				name: "Geoff",
+				age: 42,
+			});
+		});
+	});
+
 	describe("array", () => {
 		it("creates a structure", () => {
 			const struct = Structure.array(Structure.string());
