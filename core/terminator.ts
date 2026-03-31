@@ -89,6 +89,7 @@ export class Terminator {
 	 * ```
 	 */
 	async terminate(block: TerminatorAction) {
+		if (this.state === "terminating") return;
 		this.state = "terminating";
 
 		await new Promise<void>((resolve) => {

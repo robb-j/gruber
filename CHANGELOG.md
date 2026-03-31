@@ -9,6 +9,10 @@ This file documents notable changes to the project
 
 ## next
 
+**fixes**
+
+- Only call "terminate" method once
+
 **deprecations**
 
 - `KoaRouter` → `koaMiddleware`
