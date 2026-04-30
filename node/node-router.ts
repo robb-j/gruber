@@ -296,7 +296,7 @@ export function createStoppable(
 	server: Server,
 	options: StopServerOptions = {},
 ): Stoppable["stop"] {
-	const timeout = typeof options.grace === "number" ? options.grace : Infinity;
+	const timeout = typeof options.grace === "number" ? options.grace : 5_000;
 	const socketRequests = new Map<Socket, number>();
 
 	let stopping = false;

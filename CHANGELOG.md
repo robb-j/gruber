@@ -12,6 +12,7 @@ This file documents notable changes to the project
 **fixes**
 
 - Only call "terminate" method once
+- More sensible default grace for serveHTTP/createStoppable (5s)
 
 **deprecations**
 
