@@ -45,7 +45,7 @@ function proposal(name = "", rawDate = Date.now()) {
 
 	const template = /```\n(?<body>[\s\S]+)```/gm.exec(index).groups.body;
 	const filename = new URL(
-		"../proposals/sketches/" + name.toLowerCase().replace(/\s+/, "-") + ".md",
+		"../proposals/sketches/" + name.toLowerCase().replace(/\s+/g, "-") + ".md",
 		import.meta.url,
 	);
 
