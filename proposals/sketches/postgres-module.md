@@ -6,7 +6,7 @@ date: 2026-03-08
 # Postgres Module
 
 This module provides an abstraction around a connection to a Postgres database so that other modules can consume a common API.
-There is currently the `SqlDependency` type which is used to interface between [postgres.js](https://github.com/porsager/postgres)
+There is currently the `SqlDependency` type which is used to interface to [postgres.js](https://github.com/porsager/postgres)
 but I think if new features start to depend on this it'll quickly get messy.
 A light wrapper around that which is owned by Gruber would be better going forwards
 and hopefully it'll mean that the implementation could be swapped out for other dependencies in the future.
@@ -18,11 +18,10 @@ I think it is best to keep this scoped as "postgres" rather than trying to also 
 The `Postgres` class wraps the connection to a postgres database and allows you to query and perform transactions.
 
 ```ts
-import postgres from "postgres";
-import { getPostgres } from "gruber";
+import { getPostgresClient } from "gruber";
 
-const postgres = getPostgres({
-  client: postgres("postgres://user:secret@localhost:5342/database_name"),
+const postgres = getPostgresClient({
+  client: new URL("postgres://user:secret@localhost:5342/database_name"),
 });
 
 interface UserRecord {
@@ -31,10 +30,11 @@ interface UserRecord {
   name: string;
 }
 
-// Query for records
+// Query for records with automatic SQL escaping
 const users = await postgres.execute<UserRecord>`
   SELECT id, created, name
   FROM users
+  WHERE created > ${new Date("2020-02-02")}
 `;
 
 // Prepare objects / JSON for the query
@@ -49,7 +49,18 @@ await postgres.execute<UserRecord>`
   RETURNING id, created, name
 `;
 
-// Explicit transaction
+// Conditional clauses
+const clause = someCondition
+  ? postgres.clause` age > 42 `
+  : postgres.clause` num_pets < 1 `;
+
+await postgres.execute`
+  SELECT id, created, name, age, num_pets
+  FROM people
+  WHERE ${clause}
+`;
+
+// Explicit transaction ~ automatically comitted on success or rolled back on failure
 async function updateRecords() {
   await using trx = await postgres.transaction();
 
@@ -76,9 +87,9 @@ and help type records you query out of it.
 > These should maybe be a seperate GEP?
 
 ```ts
-import { getPostgres, Table, Structure } from "gruber";
+import { getPostgresClient, Table, Structure } from "gruber";
 
-// …
+const postgres = getPostgresClient("…");
 
 const UserTable = new Table<UserRecord>("users", {
   id: Structure.number(),
@@ -92,6 +103,10 @@ const user = await UserTable.selectOne(postgres, {
 
 // …
 ```
+
+## Follow on
+
+- Handling the connection state with expenential reconnections
 
 ## References
 
