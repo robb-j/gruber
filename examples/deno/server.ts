@@ -4,10 +4,10 @@
 // deno run --allow-net --allow-env examples/deno/server.ts
 
 import {
-	DenoRouter,
 	HTTPError,
 	defineRoute,
 	getTerminator,
+	FetchRouter,
 } from "../../bundle/deno/mod.ts";
 
 const terminator = getTerminator({
@@ -38,8 +38,8 @@ const healthzRoute = defineRoute({
 const routes = [helloRoute, healthzRoute];
 
 function runServer(options: { port: number; hostname: string }) {
-	const router = new DenoRouter({ routes });
-	const server = Deno.serve(options, router.forDenoServe());
+	const router = new FetchRouter({ routes });
+	const server = Deno.serve(options, (r) => router.getResponse(r));
 	terminator.start(async () => {
 		await server.shutdown();
 	});

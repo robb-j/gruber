@@ -1,7 +1,13 @@
 {
 	"private": true,
+	"name": "gruber",
 	"version": "0.9.2",
 	"type": "module",
+	"repository": "robb-j/gruber",
+	"author": {
+		"name": "Rob Anderson",
+		"url": "https://www.r0b.io"
+	},
 	"scripts": {
 		"website": "DEBUG=gruber* eleventy --serve"
 	},
@@ -10,18 +16,18 @@
 		"@11ty/eleventy-navigation": "^1.0.4",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
 		"@openlab/alembic": "^0.4.0",
-		"@sindresorhus/slugify": "^2.2.1",
+		"@sindresorhus/slugify": "^3.0.0",
 		"@types/express": "^5.0.2",
 		"@types/koa": "^2.15.0",
 		"@types/node": "^22.15.21",
 		"dracula-prism": "^2.1.16",
-		"jose": "^5.9.6",
+		"jose": "^6.2.3",
 		"postgres": "^3.4.7",
 		"prettier": "^3.3.3",
-		"redis": "^4.7.0",
-		"ts-morph": "^26.0.0",
+		"redis": "^6.1.0",
+		"ts-morph": "^28.0.0",
 		"tsx": "^4.19.4",
-		"typescript": "^5.8.3",
+		"typescript": "^7.0.2",
 		"urlpattern-polyfill": "^10.1.0"
 	},
 	"prettier": {}

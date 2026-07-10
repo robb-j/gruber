@@ -398,3 +398,11 @@ export function getOrInsert<K, V>(map: Map<K, V>, key: K, defaultValue: V): V {
 	}
 	return map.get(key)!;
 }
+
+// This method may not exist in browsers, it seems to though
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/captureStackTrace
+export function captureStackTrace(self: any, constructor: Function) {
+	if ("captureStackTrace" in Error) {
+		(Error as any).captureStackTrace(self, constructor);
+	}
+}

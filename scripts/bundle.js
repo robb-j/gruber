@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import childProcess from "node:child_process";
+import project from "../package.json" with { type: "json" };
 
 const exec = childProcess.execSync;
 const mkdir = (d) => fs.mkdirSync(d, { recursive: true });
@@ -20,33 +21,9 @@ async function node() {
 	nuke("bundle/node");
 
 	// Copy in source and clear out node_modules
-	cp("config/", "bundle/node/config");
-	cp("core/", "bundle/node/core");
-	cp("http/", "bundle/node/http");
+	for (const mod of gruberModules) cp(`${mod}/`, `bundle/node/${mod}`);
 	cp("node/", "bundle/node/node");
-	cp("postgres/", "bundle/node/postgres");
-	cp("testing/", "bundle/node/testing");
-	nuke("bundle/node/source/node_modules");
-
-	// Setup the bundle's package.json
-	const project = readJson("package.json");
-	const pkg = readJson("node/package.json");
-	pkg.version = project.version;
-	pkg.exports = {
-		".": {
-			import: "./mod.js",
-		},
-		"./*.js": {
-			import: "./*.js",
-		},
-	};
-	writeJson("bundle/node/package.json", pkg);
-
-	await addEntrypointsV2("bundle/node", "node", [
-		"express-router.ts",
-		"koa-router.ts",
-		"polyfill.ts",
-	]);
+	nuke("bundle/node/node/node_modules");
 
 	// Setup the bundle's package-lock.json
 	const lock = readJson("node/package-lock.json");
@@ -54,6 +31,7 @@ async function node() {
 	lock.packages[""].version = project.version;
 	writeJson("bundle/node/package-lock.json", lock);
 
+	// Transpile TypeScript into JavaScript
 	writeJson("bundle/node/tsconfig.json", {
 		include: ["*.ts", "**/*.ts"],
 		compilerOptions: {
@@ -83,64 +61,20 @@ async function deno() {
 	nuke("bundle/deno");
 
 	// Copy in source files
-	cp("config/", "bundle/deno/config");
-	cp("core/", "bundle/deno/core");
+	for (const mod of gruberModules) cp(`${mod}/`, `bundle/deno/${mod}`);
 	cp("deno/", "bundle/deno/deno");
-	cp("http/", "bundle/deno/http");
-	cp("postgres/", "bundle/deno/postgres");
-	cp("testing/", "bundle/deno/testing");
 
 	// Create the meta file
-	const project = readJson("package.json");
 	writeJson("bundle/deno/meta.json", {
-		name: "gruber",
+		name: project.name,
 		version: project.version,
 	});
 
-	// Recreate the entry-point scripts (they re-export their target file in source/)
-	// const source = list("deno").filter((f) => f.name.endsWith(".ts"));
-	// for (const stat of source) {
-	// 	if (!stat.name.endsWith(".ts")) continue;
-	// 	write(`bundle/deno/${stat.name}`, `export * from "./source/${stat.name}"`);
-	// }
-	// await addEntrypoints("deno", "bundle/deno", ".ts", ".ts");
-
-	await addEntrypointsV2("bundle/deno", "deno");
+	write("bundle/deno/mod.ts", `export * from "./deno/mod.ts"`);
 
 	// Copy static files
 	cp("README.md", "bundle/deno/README.md");
 	cp("CHANGELOG.md", "bundle/deno/CHANGELOG.md");
-}
-
-async function addEntrypoints(
-	inputDir,
-	outputDir,
-	inputExtension,
-	outputExtension,
-) {
-	// Recreate the entry-point scripts (they re-export their target file in source/)
-	const source = list(inputDir).filter((f) => f.name.endsWith(inputExtension));
-	for (const stat of source) {
-		const newName = stat.name.replace(inputExtension, outputExtension);
-		write(`${outputDir}/${newName}`, `export * from "./source/${newName}"`);
-	}
-}
-
-async function addEntrypointsV2(outputDir, moduleName, extraModules = []) {
-	// Create a special entry-point at the root of the bundle for any extra modules
-	for (const filename of extraModules) {
-		write(
-			`${outputDir}/${filename}`,
-			`export * from "./${moduleName}/${filename}"`,
-		);
-	}
-
-	// Create the root mod.ts, importing all modules and the platform itself
-	const modFile = gruberModules
-		.map((module) => `export * from "./${module}/mod.ts"`)
-		.concat(`export * from "./${moduleName}/mod.ts"`);
-
-	write(`${outputDir}/mod.ts`, modFile.join("\n") + "\n");
 }
 
 async function website() {
@@ -149,8 +83,61 @@ async function website() {
 	exec("npx @11ty/eleventy");
 }
 
-async function main() {
-	await Promise.all([node(), deno(), website()]);
+async function browser() {
+	// Setup directory
+	nuke("bundle/browser");
+
+	// Copy in source files
+	for (const mod of gruberModules) cp(`${mod}/`, `bundle/browser/${mod}`);
+	cp("browser/", "bundle/browser/browser");
+
+	// Transpile TypeScript into JavaScript
+	writeJson("bundle/browser/tsconfig.json", {
+		include: ["*.ts", "**/*.ts"],
+		compilerOptions: {
+			target: "ESNext",
+			module: "ESNext",
+			declaration: true,
+			declarationMap: true,
+			skipLibCheck: true,
+			strict: true,
+			rewriteRelativeImportExtensions: true,
+			erasableSyntaxOnly: true,
+			verbatimModuleSyntax: true,
+		},
+	});
+	exec("npx tsc", {
+		cwd: new URL("../bundle/browser", import.meta.url),
+		stdio: "inherit",
+	});
+
+	// Copy static files
+	cp("README.md", "bundle/browser/README.md");
+	cp("CHANGELOG.md", "bundle/browser/CHANGELOG.md");
 }
 
-main();
+export async function bundle() {
+	writeJson("bundle/package.json", {
+		name: project.name,
+		version: project.version,
+		repository: project.repository,
+		author: project.author,
+		type: "module",
+		exports: {
+			".": {
+				deno: "./deno/deno/mod.js",
+				browser: "./browser/browser/mod.js",
+				node: "./node/node/mod.js",
+			},
+			"./*": {
+				deno: "./deno/deno/*",
+				browser: "./browser/browser/*",
+				node: "./node/node/*",
+			},
+		},
+	});
+
+	await Promise.all([node(), deno(), website(), browser()]);
+}
+
+if (import.meta.main) await bundle();

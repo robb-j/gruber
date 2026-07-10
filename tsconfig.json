@@ -11,12 +11,16 @@
 		"noEmit": true
 	},
 	"include": [
+		"browser",
+		"bundle",
+		"config",
 		"core",
-		"node",
-		"bundle/node",
+		"examples/node-fs-migrator",
 		"examples/node",
 		"http",
-		"testing",
-		"config"
+		"node",
+		"postgres",
+		"scripts",
+		"testing"
 	]
 }

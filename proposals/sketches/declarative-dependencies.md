@@ -52,6 +52,9 @@ const something = dependant({
     // some logic ...
   },
 });
+
+// Clean up dependencies
+await something.dispose();
 ```
 
 ## References

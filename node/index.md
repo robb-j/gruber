@@ -19,7 +19,7 @@ You have to import these with specific paths, they are not included in the defau
 
 Gruber is available through [NPM](https://www.npmjs.com/package/gruber) for Node.js.
 
-```
+```bash
 npm install gruber
 ```
 

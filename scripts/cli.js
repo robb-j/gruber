@@ -2,6 +2,7 @@
 
 import process from "node:process";
 import fs from "node:fs";
+import { bundle } from "./bundle.js";
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -10,7 +11,8 @@ usage:
 	./scripts/cli.js <command>
 
 commands:
-	gep <name> [date]
+	gep <name> [date]   Create a new GEP
+	bundle              Bundle up source code for publishing
 
 options:
 	--help
@@ -61,4 +63,5 @@ function proposal(name = "", rawDate = Date.now()) {
 }
 
 if (command === "gep") proposal(...args);
+if (command === "bundle") await bundle();
 else exitWithError("Unknown command\n", usage);

@@ -1,18 +1,11 @@
 import slugify from "@sindresorhus/slugify";
 import createDebug from "debug";
 import { Project, SyntaxKind } from "ts-morph";
+import fs from "node:fs";
 
 const debug = createDebug("gruber:api");
 
-const entrypoints = [
-	"config/mod.ts",
-	"core/mod.ts",
-	"deno/mod.ts",
-	"http/mod.ts",
-	"node/mod.ts",
-	"postgres/mod.ts",
-	"testing/mod.ts",
-];
+const entrypoints = fs.globSync("*/mod.ts");
 
 async function generate() {
 	const project = new Project({

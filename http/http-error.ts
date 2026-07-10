@@ -1,3 +1,5 @@
+import { captureStackTrace } from "../core/utilities.ts";
+
 /**
  * @group HTTPError
  *
@@ -107,7 +109,7 @@ export class HTTPError extends Error {
 		this.body = body;
 		this.name = "HTTPError";
 		this.headers = new Headers(headers);
-		Error.captureStackTrace(this, HTTPError);
+		captureStackTrace(this, HTTPError);
 	}
 
 	/**

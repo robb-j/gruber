@@ -1,3 +1,4 @@
+import { captureStackTrace } from "../core/mod.ts";
 import type { StandardSchemaV1 } from "./standard-schema.ts";
 import type { Structure } from "./structure.ts";
 
@@ -33,7 +34,7 @@ export class _StructError extends Error {
 		this.path = path;
 		this.children = children;
 		this.name = "Structure.Error";
-		Error.captureStackTrace(this, _StructError);
+		captureStackTrace(this, _StructError);
 	}
 
 	/**
@@ -56,7 +57,7 @@ export class _StructError extends Error {
 	): _StructError {
 		if (!Array.isArray(path)) {
 			const chained = this.chain(error, path.path);
-			Error.captureStackTrace(chained, _StructError.chain);
+			captureStackTrace(chained, _StructError.chain);
 			return chained;
 		}
 
@@ -69,7 +70,7 @@ export class _StructError extends Error {
 		} else {
 			chained = new _StructError("Unknown error", path);
 		}
-		Error.captureStackTrace(chained, _StructError.chain);
+		captureStackTrace(chained, _StructError.chain);
 		return chained;
 	}
 
