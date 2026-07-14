@@ -101,6 +101,15 @@ const UserTable = new Table<UserRecord>("users", {
 
 // prettier-ignore
 const geoff = await postgres.execute(
+  UserTable.insertOne({
+    username: "geoff-testington",
+    email: "geoff@example.com" 
+  })
+  .returnAll()
+);
+
+// prettier-ignore
+const geoff2 = await postgres.execute(
   UserTable.selectOne()
     .where` id = ${42}`
 );
