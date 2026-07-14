@@ -10,7 +10,13 @@ import {
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
+	getPostgresUtility,
 	postgresBootstrapMigration,
+	PostgresClause,
+	PostgresJson,
+	PostgresPrepared,
+	type PostgresClient,
+	type PostgresValue,
 } from "../postgres/mod.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
@@ -84,3 +90,67 @@ export function getPostgresMigrator(options: PostgresMigratorOptions) {
 
 /** @deprecated use {@link getPostgresMigrator} */
 export const getNodePostgresMigrator = getPostgresMigrator;
+
+//
+// V2
+//
+
+/** @unstable */
+export function getPostgres(sql: SqlDependency) {
+	return new PostgresJsClient(sql);
+}
+
+/** @unstable */
+export class PostgresJsClient implements PostgresClient {
+	static json(value: any) {
+		return new PostgresJson(value);
+	}
+	static prepare(value: any) {
+		return new PostgresPrepared(value);
+	}
+	static clause(strings: TemplateStringsArray, ...values: PostgresValue[]) {
+		return new PostgresClause(strings, values);
+	}
+
+	sql;
+	constructor(sql: SqlDependency) {
+		this.sql = sql;
+	}
+
+	execute<T>(
+		strings: TemplateStringsArray,
+		...values: PostgresValue[]
+	): Promise<T[]> {
+		return this.sql(strings, ...values.map((v) => _convert(this.sql, v)));
+	}
+
+	async transaction(): Promise<PostgresClient> {
+		return new Promise((resolve1, reject1) => {
+			this.sql
+				.begin((trx) => {
+					const pg = new PostgresJsClient(trx);
+					const prom = new Promise<void>((r2) => {
+						pg.dispose = async () => r2();
+					});
+					resolve1(pg);
+					return prom;
+				})
+				.catch((err) => reject1(err));
+		});
+	}
+
+	async dispose(): Promise<void> {
+		await this.sql.end();
+	}
+
+	async [Symbol.asyncDispose]() {
+		await this.dispose();
+	}
+}
+
+function _convert(sql: SqlDependency, input: PostgresValue) {
+	if (input instanceof PostgresJson) return sql.json(input);
+	if (input instanceof PostgresPrepared) return sql(input);
+	if (input instanceof PostgresClause) return sql(input);
+	return input;
+}

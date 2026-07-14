@@ -50,9 +50,10 @@ await postgres.execute<UserRecord>`
 `;
 
 // Conditional clauses
-const clause = someCondition
-  ? postgres.clause` age > 42 `
-  : postgres.clause` num_pets < 1 `;
+const clause =
+  totalPets < 13
+    ? postgres.clause` age > 42 `
+    : postgres.clause` num_pets < 1 `;
 
 await postgres.execute`
   SELECT id, created, name, age, num_pets
@@ -95,18 +96,41 @@ const UserTable = new Table<UserRecord>("users", {
   id: Structure.number(),
   created: Structure.date(),
   name: Structure.string(),
+  email: Structure.string(),
 });
 
-const user = await UserTable.selectOne(postgres, {
-  where: { id: 42 },
-});
+// prettier-ignore
+const geoff = await postgres.execute(
+  UserTable.selectOne()
+    .where` id = ${42}`
+);
 
-// …
+// prettier-ignore
+const newestUsers = await postgres.execute(
+  UserTable.select()
+    .orderBy('created', 'desc')
+);
+
+// prettier-ignore
+const updatedUsers = await postgres.execute(
+  UserTable.update()
+    .where`created IS NULL`
+    .set({ created: new Date() })
+    .returning(['id', 'name', 'created']),
+);
+
+// prettier-ignore
+const updatedGeoff = await postgres.execute(
+  UserTable.updateOne()
+    .where`id = ${42} `
+    .set({ email: "geoff2@example.com" })
+    .returnAll(),
+);
 ```
 
 ## Follow on
 
-- Handling the connection state with expenential reconnections
+- Handling the connection state with expenential reconnections / back-off
 
 ## References
 
