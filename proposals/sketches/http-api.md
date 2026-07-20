@@ -157,6 +157,7 @@ Thoughts:
 2. With lots of routes, there might need to be some sort of grouping, perhaps defined through the `api` section?
 3. Should the client be able to expose errors to the user?
 4. Should the client use `null` or `undefined`?
+5. Could these be methods on `FetchRouter` itself? or a new utility like `RouteAPI`?
 
 ## References
 
