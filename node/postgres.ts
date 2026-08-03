@@ -10,11 +10,10 @@ import {
 import {
 	executePostgresMigration,
 	getPostgresMigrations,
-	getPostgresUtility,
 	postgresBootstrapMigration,
 	PostgresClause,
+	PostgresEscaped,
 	PostgresJson,
-	PostgresPrepared,
 	type PostgresClient,
 	type PostgresValue,
 } from "../postgres/mod.ts";
@@ -102,16 +101,6 @@ export function getPostgres(sql: SqlDependency) {
 
 /** @unstable */
 export class PostgresJsClient implements PostgresClient {
-	static json(value: any) {
-		return new PostgresJson(value);
-	}
-	static prepare(value: any) {
-		return new PostgresPrepared(value);
-	}
-	static clause(strings: TemplateStringsArray, ...values: PostgresValue[]) {
-		return new PostgresClause(strings, values);
-	}
-
 	sql;
 	constructor(sql: SqlDependency) {
 		this.sql = sql;
@@ -150,7 +139,7 @@ export class PostgresJsClient implements PostgresClient {
 
 function _convert(sql: SqlDependency, input: PostgresValue) {
 	if (input instanceof PostgresJson) return sql.json(input);
-	if (input instanceof PostgresPrepared) return sql(input);
+	if (input instanceof PostgresEscaped) return sql(input);
 	if (input instanceof PostgresClause) return sql(input);
 	return input;
 }

@@ -33,16 +33,22 @@ describe("_prettyPostgresValue", () => {
 	});
 });
 
+function untemplate(strings: TemplateStringsArray, ...values: any) {
+	return [strings, ...values];
+}
+
 describe("_prettyPostgresQuery", () => {
 	it("formats select queries", () => {
 		const orderBy = Postgres.clause`ORDER BY ${Postgres.escape("name")} DESC`;
 
-		const result = _prettyPostgresQuery`
-			SELECT ${new PostgresEscaped(["id", "name", "created"])}
-			FROM ${new PostgresEscaped("pets")}
-			WHERE id = ${42}
-			${orderBy}
-		`;
+		const result = _prettyPostgresQuery(
+			untemplate`
+				SELECT ${new PostgresEscaped(["id", "name", "created"])}
+				FROM ${new PostgresEscaped("pets")}
+				WHERE id = ${42}
+				${orderBy}
+			`,
+		);
 
 		assert.equal(
 			result,
