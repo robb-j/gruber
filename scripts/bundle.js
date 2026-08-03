@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import path from "node:path";
 import childProcess from "node:child_process";
 import project from "../package.json" with { type: "json" };
 
@@ -14,6 +15,12 @@ const list = (d) => fs.readdirSync(d, { withFileTypes: true });
 const readJson = (f) => JSON.parse(fs.readFileSync(f));
 const writeJson = (f, d) => write(f, JSON.stringify(d, null, 2));
 
+function stripTests(cwd) {
+	for (const file of fs.globSync("**/*.test.ts", { cwd })) {
+		fs.rmSync(path.join(cwd, file));
+	}
+}
+
 const gruberModules = ["config", "core", "http", "postgres", "testing"];
 
 async function node() {
@@ -24,6 +31,7 @@ async function node() {
 	for (const mod of gruberModules) cp(`${mod}/`, `bundle/node/${mod}`);
 	cp("node/", "bundle/node/node");
 	nuke("bundle/node/node/node_modules");
+	stripTests("bundle/node");
 
 	// Setup the bundle's package-lock.json
 	const lock = readJson("node/package-lock.json");
@@ -63,6 +71,7 @@ async function deno() {
 	// Copy in source files
 	for (const mod of gruberModules) cp(`${mod}/`, `bundle/deno/${mod}`);
 	cp("deno/", "bundle/deno/deno");
+	stripTests("bundle/deno");
 
 	// Create the meta file
 	writeJson("bundle/deno/meta.json", {
@@ -90,6 +99,7 @@ async function browser() {
 	// Copy in source files
 	for (const mod of gruberModules) cp(`${mod}/`, `bundle/browser/${mod}`);
 	cp("browser/", "bundle/browser/browser");
+	stripTests("bundle/browser");
 
 	// Transpile TypeScript into JavaScript
 	writeJson("bundle/browser/tsconfig.json", {
@@ -117,6 +127,7 @@ async function browser() {
 }
 
 export async function bundle() {
+	mkdir("bundle");
 	writeJson("bundle/package.json", {
 		name: project.name,
 		version: project.version,

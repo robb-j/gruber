@@ -10,7 +10,8 @@
 	},
 	"scripts": {
 		"website": "DEBUG=gruber* eleventy --serve",
-		"test": "node --test"
+		"test": "node --test",
+		"build": "node scripts/bundle.js"
 	},
 	"devDependencies": {
 		"@11ty/eleventy": "^3.1.0",

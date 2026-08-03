@@ -693,9 +693,15 @@ export class Structure<T> {
 	 * ```js
 	 * Structure.enum(['a string', 42, false])
 	 * ```
+	 *
+	 * NOTE: needs some TypeScript fiddling to get the generics right
 	 */
-	static enum<T extends (string | number | boolean)[]>(values: T) {
-		return Structure.union(values.map((v) => Structure.literal(v)));
+	static enum<const T extends (string | number | boolean)[]>(values: T) {
+		return Structure.union(
+			values.map((v) => Structure.literal(v)) as {
+				[K in keyof T]: Structure<T[K]>;
+			},
+		);
 	}
 
 	/**

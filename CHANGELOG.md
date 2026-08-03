@@ -19,6 +19,7 @@ This file documents notable changes to the project
 
 - Only call "terminate" method once
 - More sensible default grace for serveHTTP/createStoppable (5s)
+- `Structure.enum` generics work correctly
 
 **deprecations**
 
