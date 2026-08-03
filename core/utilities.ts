@@ -112,7 +112,7 @@ export function loader<T>(factory: () => T): () => T {
  *
  */
 export function trimIndentation(
-	input: string | TemplateStringsArray,
+	input: string | TemplateStringsArray | string[],
 	...args: unknown[]
 ): string {
 	if (typeof input !== "string") {
@@ -157,7 +157,7 @@ export function trimIndentation(
  * ```
  */
 export function reconstructTemplateString(
-	input: string | TemplateStringsArray,
+	input: string | TemplateStringsArray | string[],
 	...args: unknown[]
 ): string {
 	let output = "";

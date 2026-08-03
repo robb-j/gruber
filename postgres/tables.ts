@@ -3,192 +3,200 @@ import { Structure } from "../config/mod.ts";
 import {
 	Postgres,
 	PostgresClause,
-	PostgresJson,
+	PostgresOrdering,
 	type PostgresClient,
 	type PostgresValue,
 } from "./postgres-client.ts";
 
-export interface TableOptions<T> {
-	name: string;
-	columns: {
-		[K in keyof T]: Structure<T[K]>;
-	};
+export interface PostgresQuery<T> {
+	run(sql: PostgresClient): Promise<T>;
 }
 
-// class Select<T> {
-// 	table;
-// 	columns;
-// 	// whereStatement = null
-// 	config = {
-// 		where: null,
-// 		order: null,
-// 	};
-// 	constructor(table: string, columns?: string) {
-// 		this.table = table;
-// 		this.columns = columns;
-// 	}
-
-// 	where(statement: any) {
-// 		this.config.where = statement;
-// 		return this;
-// 	}
-
-// 	orderBy(statement: any) {
-// 		this.config.order = statement;
-// 		return this;
-// 	}
-// }
-
-interface PostgresQuery<T> {
-	execute(postgres: PostgresClient): Promise<T>;
+function _orderBy(ordering?: PostgresOrdering) {
+	return ordering
+		? Postgres.clause`ORDER BY ${Postgres.escape(ordering.column)} ${Postgres.escape(ordering.direction)}`
+		: Postgres.clause``;
 }
 
-interface PostgresOrdering<T> {
-	column: T;
-	direction: "ASC" | "DESC";
+function _where(clause?: PostgresClause) {
+	return clause ? Postgres.clause`WHERE ${clause}` : Postgres.clause``;
 }
 
-export class Select<T, K extends keyof T> implements PostgresQuery<
+function _returning(columns?: any[]) {
+	return columns && columns.length > 0
+		? Postgres.clause`RETURNING ${Postgres.escape(columns)}`
+		: Postgres.clause``;
+}
+
+export class SelectQuery<
+	T,
+	K extends keyof T = keyof T,
+> implements PostgresQuery<Pick<T, K>[]> {
+	tableName;
+	columns;
+	constructor(tableName: string, columns: K[]) {
+		this.tableName = tableName;
+		this.columns = columns;
+	}
+
+	clause?: PostgresClause;
+	where(strings: TemplateStringsArray, ...values: PostgresValue[]) {
+		this.clause = new PostgresClause(strings, values);
+		return this;
+	}
+
+	ordering?: PostgresOrdering;
+	orderBy(column: keyof T, direction: "ASC" | "DESC") {
+		this.ordering = new PostgresOrdering(column as string, direction);
+		return this;
+	}
+
+	run(sql: PostgresClient): Promise<Pick<T, K>[]> {
+		return sql.execute`
+      SELECT ${Postgres.escape(this.columns)}
+      FROM ${Postgres.escape(this.tableName)}
+      ${_where(this.clause)}
+      ${_orderBy(this.ordering)}
+    `;
+	}
+}
+
+// NOTE: postgres doesn't support ORDER BY for updates
+export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
 	Pick<T, K>[]
 > {
-	#wheres: PostgresClause[] = [];
-	#orders: PostgresOrdering<keyof T>[] = [];
-
-	#tableName;
-	#columns;
-	constructor(tableName: string, columns: K[]) {
-		this.#tableName = tableName;
-		this.#columns = columns;
+	tableName;
+	constructor(tableName: string) {
+		this.tableName = tableName;
 	}
 
+	clause?: PostgresClause;
 	where(strings: TemplateStringsArray, ...values: PostgresValue[]) {
-		this.#wheres.push(new PostgresClause(strings, values));
+		this.clause = new PostgresClause(strings, values);
 		return this;
 	}
 
-	orderBy(column: keyof T, direction: "ASC" | "DESC") {
-		this.#orders.push({ column, direction });
+	values: Partial<T> = {};
+	set(values: Partial<T>) {
+		Object.assign(this.values, values);
 		return this;
 	}
 
-	async execute(postgres: PostgresClient): Promise<Pick<T, K>[]> {
-		throw new TypeError("not implemented");
+	columns: K[] = [];
+	returning<L extends keyof T>(columns: L[]) {
+		const newThis = this as any as UpdateQuery<T, L>;
+		newThis.columns = columns;
+		return newThis;
+	}
+
+	run(sql: PostgresClient) {
+		if (!this.clause) throw new TypeError("no clause");
+		if (Object.keys(this.values).length === 0) throw new TypeError("no values");
+
+		return sql.execute<Pick<T, K>>`
+			UPDATE ${Postgres.escape(this.tableName)}
+			SET ${Postgres.escape(this.values)}
+			${_where(this.clause)}
+			${_returning(this.columns)}
+		`;
 	}
 }
 
-type Postgresify<T> = {
-	[K in keyof T]: T[K] | PostgresJson;
-};
-
-type UpdateResult<T, K extends undefined | keyof T> = K extends keyof T
-	? Pick<T, K>[]
-	: undefined;
-
-export class Update<T, K extends keyof T | undefined> implements PostgresQuery<
-	UpdateResult<T, K>
+export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
+	Pick<T, K>[]
 > {
-	#wheres: PostgresClause[] = [];
-	#values: Partial<Postgresify<T>> = {};
-
-	#tableName;
-	#columns;
-	constructor(tableName: string, columns: K[]) {
-		this.#tableName = tableName;
-		this.#columns = columns;
+	tableName;
+	constructor(tableName: string) {
+		this.tableName = tableName;
 	}
 
-	where(strings: TemplateStringsArray, ...values: PostgresValue[]) {
-		this.#wheres.push(new PostgresClause(strings, values));
+	records: Partial<T>[] = [];
+	values(records: Partial<T> | Partial<T>[]) {
+		this.records = Array.isArray(records) ? records : [records];
 		return this;
 	}
 
-	set(values: Partial<Postgresify<T>>) {
-		Object.assign(this.#values, values);
-		return this;
+	columns: K[] = [];
+	returning<L extends keyof T>(columns: L[]) {
+		const newThis = this as any as InsertQuery<T, L>;
+		newThis.columns = columns;
+		return newThis;
 	}
 
-	returning<K extends keyof T>(columns: K[]) {
-		const mutated = this as any as Update<T, K>;
-		mutated.#columns = columns;
-		return mutated;
-	}
-
-	async execute(postgres: PostgresClient): Promise<UpdateResult<T, K>> {
-		throw new TypeError("not implemented");
+	async run(sql: PostgresClient) {
+		return sql.execute<Pick<T, K>>`
+      INSERT INTO ${Postgres.escape(this.tableName)}
+      VALUES ${Postgres.escape(this.records)}
+      ${_returning(this.columns)}
+    `;
 	}
 }
+
+export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
+	Pick<T, K>[]
+> {
+	tableName;
+	constructor(tableName: string) {
+		this.tableName = tableName;
+	}
+
+	clause?: PostgresClause;
+	where(strings: TemplateStringsArray, ...values: PostgresValue[]) {
+		this.clause = new PostgresClause(strings, values);
+		return this;
+	}
+
+	columns: K[] = [];
+	returning<L extends keyof T>(columns: L[]) {
+		const newThis = this as any as DeleteQuery<T, L>;
+		newThis.columns = columns;
+		return newThis;
+	}
+
+	run(sql: PostgresClient): Promise<Pick<T, K>[]> {
+		if (!this.clause) throw new TypeError("no clause");
+
+		return sql.execute<Pick<T, K>>`
+      DELETE FROM ${Postgres.escape(this.tableName)}
+      WHERE ${this.clause}
+      ${_returning(this.columns)}
+    `;
+	}
+}
+
+type TableColumns<T> = { [K in keyof T]: Structure<T[K]> };
 
 export class Table<T> {
-	#options;
-	constructor(options: TableOptions<T>) {
-		this.#options = options;
+	name;
+	columns;
+	constructor(name: string, columns: TableColumns<T>) {
+		this.name = name;
+		this.columns = columns;
 	}
 
-	get #tableName() {
-		return this.#options.name;
-	}
-	get #columns() {
-		return Object.keys(this.#options.columns) as (keyof T)[];
+	static define<T>(name: string, columns: TableColumns<T>) {
+		return new Table(name, columns);
 	}
 
-	// async select(pg: PostgresClient, where?: PostgresClause): Promise<T[]> {
-	// 	return pg.execute<T>`
-	// 		SELECT * FROM ${Postgres.prepare(this.#options.name)}
-	// 		${where ?? Postgres.clause``}
-	// 	`;
-	// }
-
-	select<K extends keyof T>(columns?: K[]) {
-		return columns
-			? new Select<T, K>(this.#tableName, columns)
-			: new Select<T, keyof T>(this.#tableName, this.#columns);
+	get columnNames(): (keyof T)[] {
+		return Object.keys(this.columns) as any;
 	}
 
-	selectOne<K extends keyof T>(columns?: K[]) {
-		throw new TypeError("not implemented");
+	select(): SelectQuery<T, keyof T>;
+	select<K extends keyof T = keyof T>(columns?: K[]): SelectQuery<T, K>;
+	select(columns?: any[]): SelectQuery<any, any> {
+		return new SelectQuery(this.name, columns ?? this.columnNames);
 	}
 
-	update() {
-		return new Update<T, never>(this.#tableName, []);
+	update(): UpdateQuery<T> {
+		return new UpdateQuery(this.name);
 	}
 
-	updateOne<K extends keyof T>(columns?: K[]) {
-		throw new TypeError("not implemented");
+	insert(): InsertQuery<T> {
+		return new InsertQuery(this.name);
+	}
+
+	delete(): DeleteQuery<T> {
+		return new DeleteQuery(this.name);
 	}
 }
-
-// --- examples ---
-
-const postgres = {} as any;
-
-// interface UserRecord {
-// 	id: number;
-// 	created_at: Date;
-// 	name: string;
-// 	email: string;
-// }
-
-const Users = new Table({
-	name: "users",
-	columns: {
-		id: Structure.number(),
-		created_at: Structure.date(),
-		name: Structure.string(),
-		email: Structure.string(),
-	},
-});
-
-// prettier-ignore
-Users
-	.select(["id", "name", "email", "created_at"])
-	.orderBy("created_at", "ASC")
-	.execute(postgres);
-
-// prettier-ignore
-Users.update()
-	.set({ name: "Timmy Simith" })
-	.where`id = ${100}`
-	.returning(['id', 'created_at', 'name', 'email'])
-	.execute(postgres);
-
-// const _users = await _Users.select({} as any);

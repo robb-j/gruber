@@ -9,6 +9,12 @@ This file documents notable changes to the project
 
 ## next
 
+**new**
+
+- improved `PostgresClient` interface
+- new `Table` abstraction
+- basic query building for `SELECT`, `UPDATE`, `INSERT` & `DELETE` operations on known tables
+
 **fixes**
 
 - Only call "terminate" method once

@@ -1,18 +1,22 @@
-import type { SqlDependency } from "../core/types.ts";
+import { trimIndentation } from "../core/utilities.ts";
 
-export interface PostgresOptions {
-	url: URL;
-}
-
-/** @unstable */
-export class PostgresPrepared {
+/**
+ * @ignore
+ *
+ * A value being held for a postgres client to be escaped in the query
+ */
+export class PostgresEscaped {
 	raw;
 	constructor(raw: any) {
 		this.raw = raw;
 	}
 }
 
-/** @unstable */
+/**
+ * @ignore
+ *
+ * Holds a JSON object to be put into a postgres query
+ */
 export class PostgresJson {
 	json;
 	constructor(json: any) {
@@ -20,33 +24,59 @@ export class PostgresJson {
 	}
 }
 
-/** @unstable */
+/**
+ * @ignore
+ *
+ * Holds a nested postgres query clause, e.g. for dynamically picking a WHERE statement
+ */
 export class PostgresClause {
 	strings;
 	values;
-	constructor(strings: TemplateStringsArray, values: PostgresValue[]) {
+	constructor(
+		strings: TemplateStringsArray | string[],
+		values: PostgresValue[],
+	) {
 		this.strings = strings;
 		this.values = values;
 	}
 }
 
-/** @unstable */
-export interface PostgresUtility {
-	prepare(value: any): PostgresPrepared;
-	json(value: any): PostgresJson;
-	clause(strings: TemplateStringsArray, ...values: any): PostgresClause;
+export class PostgresOrdering {
+	column;
+	direction;
+	constructor(column: string, direction: "ASC" | "DESC") {
+		this.column = column;
+		this.direction = direction;
+	}
 }
 
+/**
+ * @ignore The allowed types that can be used in a postgres string template
+ */
 export type PostgresValue =
 	| string
 	| number
 	| boolean
 	| Date
 	| URL
-	| PostgresPrepared
+	| null
+	| undefined
+	| PostgresEscaped
 	| PostgresJson
 	| PostgresClause;
 
+/**
+ * Something that manages a connection to a postgres database and performs queries & transactions
+ *
+ * ```js
+ * const pg = {
+ *   execute(strings, ...values) {},
+ *   transaction() {},
+ *   dispose() {},
+ *   [Symbol.asyncDispose]() {}
+ * }
+ * ```
+ */
 export interface PostgresClient extends AsyncDisposable {
 	execute<T>(
 		strings: TemplateStringsArray,
@@ -58,13 +88,56 @@ export interface PostgresClient extends AsyncDisposable {
 	dispose(): Promise<void>;
 }
 
-/** @unstable */
-export function getPostgresUtility(): PostgresUtility {
-	return {
-		prepare: (value) => new PostgresPrepared(value),
-		json: (value) => new PostgresJson(value),
-		clause: (strings, ...values) => new PostgresClause(strings, values),
-	};
+export const Postgres = {
+	escape: (value: any) => new PostgresEscaped(value),
+	json: (value: any) => new PostgresJson(value),
+	clause: (s: TemplateStringsArray, ...v: any[]) => new PostgresClause(s, v),
+};
+
+function _prettyIdentifier(input: string) {
+	return /\s/.test(input) ? JSON.stringify(input) : input;
 }
 
-export const Postgres = getPostgresUtility();
+function _prettyObject(input: any) {
+	return Object.entries(input)
+		.map((entry) => `${entry[0]}=${_prettyLiteral(entry[1])}`)
+		.join(",");
+}
+
+function _prettyLiteral(input: any) {
+	if (input === null) return "NULL";
+	if (typeof input === "string") return `'${input}'`;
+	if (typeof input === "number") return input;
+	if (typeof input === "boolean") return input ? "TRUE" : "FALSE";
+	throw new TypeError("unknown literal");
+}
+
+export function _prettyPostgresValue(value: PostgresValue): any {
+	if (value instanceof PostgresEscaped) {
+		if (Array.isArray(value.raw)) {
+			return value.raw.map((v) => _prettyIdentifier(v)).join(", ");
+		}
+		if (value.raw && typeof value.raw === "object") {
+			return _prettyObject(value.raw);
+		}
+		if (typeof value.raw === "string") return _prettyIdentifier(value.raw);
+		return value.raw;
+	}
+	if (value instanceof PostgresClause) {
+		return trimIndentation(
+			value.strings,
+			...value.values.map((v) => _prettyPostgresValue(v)),
+		);
+	}
+	if (value instanceof PostgresJson) {
+		return `'${JSON.stringify(value.json)}'`;
+	}
+	return value;
+}
+
+export function _prettyPostgresQuery([strings, ...values]: any[]) {
+	return trimIndentation(
+		strings,
+		...values.map((v) => _prettyPostgresValue(v)),
+	);
+}
