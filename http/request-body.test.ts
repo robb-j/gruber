@@ -1,12 +1,11 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
+import * as ark from "arktype";
+import * as zod from "zod";
+import * as valibot from "valibot";
+
 import { Structure } from "../config/mod.ts";
-import {
-	ark,
-	assertEquals,
-	describe,
-	it,
-	valibot,
-	zod,
-} from "../core/test-deps.js";
 import { assertRequestBody, getRequestBody } from "./request-body.ts";
 
 describe("getRequestBody", () => {
@@ -19,7 +18,7 @@ describe("getRequestBody", () => {
 		});
 
 		const result = await getRequestBody(request);
-		assertEquals(result.get("name"), "Geoff Testington");
+		assert.equal(result.get("name"), "Geoff Testington");
 	});
 	it("parses JSON", async () => {
 		const request = new Request("http://testing.local", {
@@ -31,7 +30,7 @@ describe("getRequestBody", () => {
 		});
 
 		const result = await getRequestBody(request);
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 });
 
@@ -44,21 +43,21 @@ describe("assertRequestBody", () => {
 			name: "Geoff Testington",
 		});
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates FormData", () => {
 		const data = new FormData();
 		data.set("name", "Geoff Testington");
 		const result = assertRequestBody(struct, data);
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates URLSearchParams", () => {
 		const data = new URLSearchParams();
 		data.set("name", "Geoff Testington");
 		const result = assertRequestBody(struct, data);
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates a json Request", async () => {
 		const result = await assertRequestBody(
@@ -72,7 +71,7 @@ describe("assertRequestBody", () => {
 			}),
 		);
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates a FormData Request", async () => {
 		const data = new FormData();
@@ -82,7 +81,7 @@ describe("assertRequestBody", () => {
 			new Request("http://testing.local", { method: "POST", body: data }),
 		);
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates with zod", async () => {
 		const schema = zod.object({
@@ -93,7 +92,7 @@ describe("assertRequestBody", () => {
 			name: "Geoff Testington",
 		});
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates with valibot", async () => {
 		const schema = valibot.object({
@@ -104,7 +103,7 @@ describe("assertRequestBody", () => {
 			name: "Geoff Testington",
 		});
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 	it("validates with valibot", async () => {
 		const schema = ark.type({
@@ -115,6 +114,6 @@ describe("assertRequestBody", () => {
 			name: "Geoff Testington",
 		});
 
-		assertEquals(result, { name: "Geoff Testington" });
+		assert.deepEqual(result, { name: "Geoff Testington" });
 	});
 });

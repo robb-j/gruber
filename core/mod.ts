@@ -1,4 +1,3 @@
-export * from "./authentication.ts";
 export * from "./container.ts";
 export * from "./migrator.ts";
 export * from "./random.ts";

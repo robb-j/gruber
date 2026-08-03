@@ -1,4 +1,7 @@
-import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
+import type { ConfigurationOptions } from "./configuration.ts";
 import {
 	_parseBoolean,
 	_parseFloat,
@@ -7,19 +10,18 @@ import {
 } from "./parsers.ts";
 
 describe("_parsePrimative", () => {
-	const env = {
+	const env: any = {
 		MY_VAR: "value-from-env",
 	};
-	const args = {
+	const args: any = {
 		"--option": "value-from-arg",
 	};
 
-	/** @type {import("./configuration.ts").ConfigurationOptions} */
-	const options = {
-		readTextFile() {},
+	const options: ConfigurationOptions = {
+		readTextFile: async () => "",
 		getEnvironmentVariable: (key) => env[key],
 		getCommandArgument: (key) => args[key],
-		stringify(_value) {},
+		stringify: (_value) => "",
 		parse(_value) {},
 	};
 
@@ -29,7 +31,7 @@ describe("_parsePrimative", () => {
 			{ flag: "--option", variable: "MY_VAR", fallback: "value-from-fallback" },
 			"current-value",
 		);
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			source: "argument",
 			value: "value-from-arg",
 		});
@@ -41,7 +43,7 @@ describe("_parsePrimative", () => {
 			"current-value",
 		);
 
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			source: "variable",
 			value: "value-from-env",
 		});
@@ -52,7 +54,7 @@ describe("_parsePrimative", () => {
 			{ fallback: "value-from-fallback" },
 			"current-value",
 		);
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			source: "current",
 			value: "current-value",
 		});
@@ -63,7 +65,7 @@ describe("_parsePrimative", () => {
 			{ fallback: "value-from-fallback" },
 			undefined,
 		);
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			source: "fallback",
 			value: "value-from-fallback",
 		});
@@ -72,21 +74,21 @@ describe("_parsePrimative", () => {
 
 describe("_parseFloat", () => {
 	it("parses strings", () => {
-		assertEquals(
+		assert.deepEqual(
 			_parseFloat({ source: "argument", value: "12.34" }),
 			12.34,
 			"should parse the float from the result",
 		);
 	});
 	it("passes numbers through", () => {
-		assertEquals(
+		assert.deepEqual(
 			_parseFloat({ source: "fallback", value: 98.76 }),
 			98.76,
 			"should preserve number literals",
 		);
 	});
 	it("throws for non-numeric strings", () => {
-		assertThrows(
+		assert.throws(
 			() => _parseFloat({ source: "argument", value: "abcdef" }),
 			TypeError,
 		);
@@ -95,32 +97,32 @@ describe("_parseFloat", () => {
 
 describe("_parseBoolean", () => {
 	it("parses strings", () => {
-		assertEquals(_parseBoolean({ source: "argument", value: "1" }), true);
-		assertEquals(_parseBoolean({ source: "argument", value: "true" }), true);
-		assertEquals(_parseBoolean({ source: "argument", value: "0" }), false);
-		assertEquals(_parseBoolean({ source: "argument", value: "false" }), false);
+		assert.equal(_parseBoolean({ source: "argument", value: "1" }), true);
+		assert.equal(_parseBoolean({ source: "argument", value: "true" }), true);
+		assert.equal(_parseBoolean({ source: "argument", value: "0" }), false);
+		assert.equal(_parseBoolean({ source: "argument", value: "false" }), false);
 	});
 	it("passes booleans through", () => {
-		assertEquals(
+		assert.equal(
 			_parseBoolean({ source: "fallback", value: true }),
 			true,
 			"should preserve boolean literals",
 		);
 	});
 	it("allows empty-string for arguments", () => {
-		assertEquals(_parseBoolean({ source: "argument", value: "" }), true);
+		assert.equal(_parseBoolean({ source: "argument", value: "" }), true);
 	});
 });
 
 describe("_parseURL", () => {
 	it("parses strings", () => {
-		assertEquals(
+		assert.deepEqual(
 			_parseURL({ source: "argument", value: "https://example.com" }),
 			new URL("https://example.com"),
 		);
 	});
 	it("passes URLS through", () => {
-		assertEquals(
+		assert.deepEqual(
 			_parseURL({
 				source: "fallback",
 				value: new URL("https://example.com"),

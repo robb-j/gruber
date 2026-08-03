@@ -1,9 +1,13 @@
-import { Terminator } from "./terminator.ts";
-import { assertEquals, describe, it } from "./test-deps.js";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import { Terminator, type TerminatorOptions } from "./terminator.ts";
+import type { TimerService } from "./timers.ts";
 
 class MockTerminator extends Terminator {
-	constructor(options = {}) {
-		const mock = {};
+	mock;
+	constructor(options: Partial<TerminatorOptions> = {}) {
+		const mock: any = {};
 		options.startListeners = (signals, block) => {
 			mock.listening = { signals, block };
 		};
@@ -15,9 +19,9 @@ class MockTerminator extends Terminator {
 				mock.waited = { ms };
 				block();
 			},
-		};
+		} as TimerService;
 
-		super(options, timers);
+		super(options as any, timers);
 		this.mock = mock;
 	}
 }
@@ -25,8 +29,8 @@ class MockTerminator extends Terminator {
 describe("Terminator", () => {
 	describe("constructor", () => {
 		it("sets the state", () => {
-			const arnie = new Terminator({});
-			assertEquals(arnie.state, "running");
+			const arnie = new MockTerminator({});
+			assert.equal(arnie.state, "running");
 		});
 		it("stores options", () => {
 			const options = {
@@ -35,8 +39,8 @@ describe("Terminator", () => {
 				startListeners() {},
 				exitProcess() {},
 			};
-			const arnie = new Terminator(options);
-			assertEquals(arnie.options, options);
+			const arnie = new MockTerminator(options);
+			assert.deepEqual(arnie.options, options);
 		});
 	});
 
@@ -49,7 +53,7 @@ describe("Terminator", () => {
 
 			arnie.start(blockSpy);
 
-			assertEquals(
+			assert.deepEqual(
 				arnie.mock.listening.signals,
 				["signal-a", "signal-b"],
 				"should call _startListeners with the block",
@@ -61,12 +65,12 @@ describe("Terminator", () => {
 		it("sets the state", async () => {
 			const arnie = new MockTerminator();
 			await arnie.terminate(() => {});
-			assertEquals(arnie.state, "terminating");
+			assert.equal(arnie.state, "terminating");
 		});
 		it("waits", async () => {
 			const arnie = new MockTerminator({ timeout: 1234 });
 			await arnie.terminate(() => {});
-			assertEquals(
+			assert.deepEqual(
 				arnie.mock.waited,
 				{ ms: 1234 },
 				"should wait for the timeout",
@@ -76,18 +80,18 @@ describe("Terminator", () => {
 			const arnie = new MockTerminator();
 			let ran = false;
 			await arnie.terminate(() => (ran = true));
-			assertEquals(ran, true, "should run the original block");
+			assert.equal(ran, true, "should run the original block");
 		});
 		it("runs the block async", async () => {
 			const arnie = new MockTerminator();
 			let ran = false;
 			await arnie.terminate(() => Promise.resolve().then(() => (ran = true)));
-			assertEquals(ran, true, "should run the original block");
+			assert.equal(ran, true, "should run the original block");
 		});
 		it("exits", async () => {
 			const arnie = new MockTerminator();
 			await arnie.terminate(() => {});
-			assertEquals(arnie.mock.exited.statusCode, 0);
+			assert.equal(arnie.mock.exited.statusCode, 0);
 		});
 		it("handles errors", async () => {
 			const arnie = new MockTerminator();
@@ -95,7 +99,7 @@ describe("Terminator", () => {
 			await arnie.terminate(() => {
 				throw error;
 			});
-			assertEquals(
+			assert.deepEqual(
 				arnie.mock.exited,
 				{ statusCode: 1, error },
 				"should indicate the process ended badly",
@@ -108,18 +112,18 @@ describe("Terminator", () => {
 			const arnie = new MockTerminator();
 			const response = arnie.getResponse();
 
-			assertEquals(response.status, 200);
-			assertEquals(response.statusText, "OK");
-			assertEquals(await response.text(), "running");
+			assert.equal(response.status, 200);
+			assert.equal(response.statusText, "OK");
+			assert.equal(await response.text(), "running");
 		});
 		it("returns a 503 when terminating", async () => {
 			const arnie = new MockTerminator();
 			await arnie.terminate(() => {});
 			const response = arnie.getResponse();
 
-			assertEquals(response.status, 503);
-			assertEquals(response.statusText, "Service Unavailable");
-			assertEquals(await response.text(), "terminating");
+			assert.equal(response.status, 503);
+			assert.equal(response.statusText, "Service Unavailable");
+			assert.equal(await response.text(), "terminating");
 		});
 	});
 });

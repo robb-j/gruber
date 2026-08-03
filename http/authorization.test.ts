@@ -1,10 +1,6 @@
-import {
-	assertEquals,
-	assertThrows,
-	describe,
-	fakeTokens,
-	it,
-} from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import {
 	_checkScope,
 	_expandScopes,
@@ -13,11 +9,12 @@ import {
 	_getRequestCookie,
 	AuthorizationService,
 } from "./authorization.ts";
+import { fakeTokens } from "../testing/mod.ts";
 
 describe("_getCookies", () => {
 	it("parses a cookie", () => {
 		const result = _getCookies(new Headers({ Cookie: "some=thing" }));
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			some: "thing",
 		});
 	});
@@ -25,22 +22,22 @@ describe("_getCookies", () => {
 		const result = _getCookies(
 			new Headers({ Cookie: "some=thing; another=value" }),
 		);
-		assertEquals(result, { some: "thing", another: "value" });
+		assert.deepEqual(result, { some: "thing", another: "value" });
 	});
 	it("throws on incomplete", () => {
-		assertThrows(
+		assert.throws(
 			() => _getCookies(new Headers({ Cookie: ";" })),
 			new SyntaxError("Invalid cookie"),
 		);
-		assertThrows(
+		assert.throws(
 			() => _getCookies(new Headers({ Cookie: "; some=thing" })),
 			new SyntaxError("Invalid cookie"),
 		);
-		assertThrows(
+		assert.throws(
 			() => _getCookies(new Headers({ Cookie: ";; some=thing" })),
 			new SyntaxError("Invalid cookie"),
 		);
-		assertThrows(
+		assert.throws(
 			() => _getCookies(new Headers({ Cookie: "; some=thing ;" })),
 			new SyntaxError("Invalid cookie"),
 		);
@@ -49,7 +46,7 @@ describe("_getCookies", () => {
 
 describe("_getRequestBearer", () => {
 	it("returns the bearer token", () => {
-		assertEquals(
+		assert.equal(
 			_getRequestBearer(
 				new Request("https://example.com", {
 					headers: { Authorization: "Bearer abcdef" },
@@ -62,7 +59,7 @@ describe("_getRequestBearer", () => {
 
 describe("_getRequestCookie", () => {
 	it("returns value", () => {
-		assertEquals(
+		assert.equal(
 			_getRequestCookie(
 				new Request("https://example.com", {
 					headers: { Cookie: "my_cookie=abcdef" },
@@ -73,7 +70,7 @@ describe("_getRequestCookie", () => {
 		);
 	});
 	it("does not throw", () => {
-		assertEquals(
+		assert.equal(
 			_getRequestCookie(
 				new Request("https://example.com", {
 					headers: { Cookie: "not_;a-cookie" },
@@ -87,7 +84,7 @@ describe("_getRequestCookie", () => {
 
 describe("_expandScopes", () => {
 	it("expands components", () => {
-		assertEquals(_expandScopes("user:libraries:read"), [
+		assert.deepEqual(_expandScopes("user:libraries:read"), [
 			"user",
 			"user:libraries",
 			"user:libraries:read",
@@ -97,7 +94,7 @@ describe("_expandScopes", () => {
 
 describe("_checkScope", () => {
 	it("passes if included", () => {
-		assertEquals(
+		assert.equal(
 			_checkScope("user:libraries", [
 				"user",
 				"user:libraries",
@@ -107,19 +104,19 @@ describe("_checkScope", () => {
 		);
 	});
 	it("shortcuts admin", () => {
-		assertEquals(
+		assert.equal(
 			_checkScope("admin", ["user", "user:libraries", "user:libraries:read"]),
 			true,
 		);
 	});
 	it("fails underscoped", () => {
-		assertEquals(
+		assert.equal(
 			_checkScope("user:libraries:read", ["user", "user:libraries"]),
 			false,
 		);
 	});
 	it("fails misscoped", () => {
-		assertEquals(
+		assert.equal(
 			_checkScope("user:libraries:read", ["user", "user:libraries:write"]),
 			false,
 		);
@@ -141,7 +138,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: "Bearer test_bearer_token" },
 			});
-			assertEquals(authz.getAuthorization(request), "test_bearer_token");
+			assert.equal(authz.getAuthorization(request), "test_bearer_token");
 		});
 		it("parses cookies", () => {
 			const { authz } = setup();
@@ -149,7 +146,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Cookie: "testing_session=test_cookie_value" },
 			});
-			assertEquals(authz.getAuthorization(request), "test_cookie_value");
+			assert.equal(authz.getAuthorization(request), "test_cookie_value");
 		});
 	});
 
@@ -160,7 +157,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"statuses","userId":1}' },
 			});
-			assertEquals(await authz.from(request), {
+			assert.deepEqual(await authz.from(request), {
 				kind: "user",
 				userId: 1,
 				scope: "statuses",
@@ -172,7 +169,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"coffee-club"}' },
 			});
-			assertEquals(await authz.from(request), {
+			assert.deepEqual(await authz.from(request), {
 				kind: "service",
 				scope: "coffee-club",
 			});
@@ -186,7 +183,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.assert(request), {
+			assert.deepEqual(await authz.assert(request), {
 				kind: "user",
 				scope: "user",
 				userId: 1,
@@ -198,7 +195,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Cookie: 'testing_session={"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.assert(request), {
+			assert.deepEqual(await authz.assert(request), {
 				kind: "user",
 				scope: "user",
 				userId: 1,
@@ -210,7 +207,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"coffee-club"}' },
 			});
-			assertEquals(await authz.assert(request), {
+			assert.deepEqual(await authz.assert(request), {
 				kind: "service",
 				scope: "coffee-club",
 			});
@@ -223,7 +220,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Authorization: 'Bearer {"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.assertUser(request, { scope: "user" }), {
+			assert.deepEqual(await authz.assertUser(request, { scope: "user" }), {
 				kind: "user",
 				userId: 1,
 				scope: "user",
@@ -234,7 +231,7 @@ describe("AuthorizationService", () => {
 			const request = new Request("https://example.com", {
 				headers: { Cookie: 'testing_session={"scope":"user","userId":1}' },
 			});
-			assertEquals(await authz.assertUser(request, { scope: "user" }), {
+			assert.deepEqual(await authz.assertUser(request, { scope: "user" }), {
 				kind: "user",
 				userId: 1,
 				scope: "user",

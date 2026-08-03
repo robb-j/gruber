@@ -1,9 +1,6 @@
-import {
-	describe,
-	it,
-	assertEquals,
-	assertInstanceOf,
-} from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { defineRoute, FetchRouter, HTTPError, Cors } from "./mod.ts";
 
 describe("FetchRouter", () => {
@@ -17,26 +14,26 @@ describe("FetchRouter", () => {
 				}),
 			];
 			const result = new FetchRouter({ routes });
-			assertEquals(result.routes, routes);
+			assert.deepEqual(result.routes, routes);
 		});
 		it("stores errorHandler", () => {
 			const errorHandler = () => {};
 			const result = new FetchRouter({ errorHandler });
-			assertEquals(result.errorHandler, errorHandler);
+			assert.deepEqual(result.errorHandler, errorHandler);
 		});
 		it("adds default logger", () => {
 			const result = new FetchRouter({ log: true });
-			assertEquals(result._middleware.length, 1);
+			assert.equal(result._middleware.length, 1);
 		});
 		it("adds custom loggers", () => {
-			const log = () => {};
+			const log: any = () => {};
 			const result = new FetchRouter({ log });
-			assertEquals(result._middleware, [log]);
+			assert.deepEqual(result._middleware, [log]);
 		});
 		it("adds cors", () => {
 			const cors = new Cors();
 			const result = new FetchRouter({ cors });
-			assertEquals(result._middleware.length, 1);
+			assert.equal(result._middleware.length, 1);
 		});
 	});
 
@@ -60,15 +57,15 @@ describe("FetchRouter", () => {
 				...router.findMatches(new Request("http://testing.local/")),
 			];
 
-			assertEquals(result.length, 1, "should match 1 route");
+			assert.equal(result.length, 1, "should match 1 route");
 		});
 		it("parses the URL", () => {
 			const result = [
 				...router.findMatches(new Request("http://testing.local/")),
 			];
 
-			assertEquals(result.length, 1, "should match 1 route");
-			assertInstanceOf(result[0].url, URL);
+			assert.equal(result.length, 1, "should match 1 route");
+			assert(result[0].url instanceof URL, "should be a URL instance");
 		});
 		it("parses params", () => {
 			const result = [
@@ -77,8 +74,8 @@ describe("FetchRouter", () => {
 				),
 			];
 
-			assertEquals(result.length, 1, "should match 1 route");
-			assertEquals(
+			assert.equal(result.length, 1, "should match 1 route");
+			assert.deepEqual(
 				result[0].result?.pathname?.groups,
 				{ name: "Geoff" },
 				"should be parse out URL parameters",
@@ -104,20 +101,20 @@ describe("FetchRouter", () => {
 		it("returns the response", async () => {
 			const result = await router.processMatches(
 				new Request("http://testing.local/"),
-				matches,
+				matches as any,
 			);
 
-			assertInstanceOf(result, Response);
-			assertEquals(result.status, 200);
-			assertEquals(await result.text(), "OK");
+			assert(result instanceof Response, "should be a Response");
+			assert.equal(result.status, 200);
+			assert.equal(await result.text(), "OK");
 		});
 		it("throws http 404s", async () => {
 			const result = await router
 				.processMatches(new Request("http://testing.local/"), [])
 				.catch((e) => e);
 
-			assertInstanceOf(result, HTTPError);
-			assertEquals(result.status, 404);
+			assert(result instanceof HTTPError, "should be a HTTPError");
+			assert.equal(result.status, 404);
 		});
 	});
 	describe("processRoute", () => {
@@ -135,7 +132,7 @@ describe("FetchRouter", () => {
 				params: {},
 			});
 
-			assertEquals(await result.text(), "OK");
+			assert.equal(await result?.text(), "OK");
 		});
 		it("sets params", async () => {
 			const route = defineRoute({
@@ -151,7 +148,7 @@ describe("FetchRouter", () => {
 				params: { name: "geoff" },
 			});
 
-			assertEquals(await result.text(), "geoff");
+			assert.equal(await result?.text(), "geoff");
 		});
 		it("sets the url", async () => {
 			const route = defineRoute({
@@ -167,7 +164,7 @@ describe("FetchRouter", () => {
 				params: {},
 			});
 
-			assertEquals(await result.text(), "http://testing.local/");
+			assert.equal(await result?.text(), "http://testing.local/");
 		});
 		it("injects dependencies", async () => {
 			const route = defineRoute({
@@ -180,13 +177,13 @@ describe("FetchRouter", () => {
 			});
 			const router = new FetchRouter();
 
-			const result = await router.processRoute(route, {
+			const result = await router.processRoute(route as any, {
 				url: new URL("http://testing.local"),
 				request: new Request("http://testing.local"),
 				params: {},
 			});
 
-			assertEquals(await result.text(), "hello there");
+			assert.equal(await result?.text(), "hello there");
 		});
 	});
 	describe("handleError", () => {
@@ -197,19 +194,19 @@ describe("FetchRouter", () => {
 				new Request("http://localhost"),
 				new Error(),
 			);
-			assertInstanceOf(result, Response);
-			assertEquals(result.status, 500);
+			assert(result instanceof Response, "should be a Response");
+			assert.equal(result.status, 500);
 		});
 		it("uses the HTTPError", () => {
 			const result = router.handleError(
 				new Request("http://localhost"),
 				new HTTPError(400, "Bad Request"),
 			);
-			assertInstanceOf(result, Response);
-			assertEquals(result.status, 400);
+			assert(result instanceof Response, "should be a Response");
+			assert.equal(result.status, 400);
 		});
 		it("uses the callback", () => {
-			let args = [];
+			let args: any[] = [];
 			const router = new FetchRouter({
 				errorHandler(...result) {
 					args = result;
@@ -219,9 +216,9 @@ describe("FetchRouter", () => {
 				new Request("http://localhost"),
 				new HTTPError(500, "Internal Server Error"),
 			);
-			assertInstanceOf(args[0], HTTPError);
-			assertEquals(args[0].status, 500);
-			assertInstanceOf(args[1], Request);
+			assert(args[0] instanceof HTTPError, "should be an HTTPError");
+			assert.equal(args[0].status, 500);
+			assert(args[1] instanceof Request, "should be a Request");
 		});
 	});
 
@@ -239,9 +236,9 @@ describe("FetchRouter", () => {
 			const result = await router.getResponse(
 				new Request("http://localhost/hello/Geoff", { method: "PATCH" }),
 			);
-			assertInstanceOf(result, Response);
-			assertEquals(result.status, 200);
-			assertEquals(await result.text(), "Hello Geoff!");
+			assert(result instanceof Response, "should be a Response");
+			assert.equal(result.status, 200);
+			assert.equal(await result.text(), "Hello Geoff!");
 		});
 		it("applies middleware", async () => {
 			const routes = [
@@ -253,7 +250,7 @@ describe("FetchRouter", () => {
 			];
 			const router = new FetchRouter({ routes });
 
-			let args = null;
+			let args: any = null;
 			router._middleware = [
 				(request, response) => {
 					args = { request, response };
@@ -264,16 +261,16 @@ describe("FetchRouter", () => {
 			const result = await router.getResponse(
 				new Request("http://localhost/", { method: "GET" }),
 			);
-			assertInstanceOf(result, Response);
-			assertEquals(result.status, 200);
-			assertEquals(
+			assert(result instanceof Response, "should be a Response");
+			assert.equal(result.status, 200);
+			assert.equal(
 				await result.text(),
 				"overridden",
 				"should let middleware takeover the response",
 			);
 
-			assertInstanceOf(args?.request, Request, "should pass the request");
-			assertInstanceOf(args?.response, Response, "should pass the response");
+			assert(args?.request instanceof Request, "should pass the request");
+			assert(args?.response instanceof Response, "should pass the response");
 		});
 		it("handles errors", async () => {
 			const routes = [
@@ -290,8 +287,8 @@ describe("FetchRouter", () => {
 			const result = await router.getResponse(
 				new Request("http://localhost/", { method: "GET" }),
 			);
-			assertEquals(result.status, 418);
-			assertEquals(result.statusText, "I'm a teapot");
+			assert.equal(result.status, 418);
+			assert.equal(result.statusText, "I'm a teapot");
 		});
 	});
 });

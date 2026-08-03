@@ -1,4 +1,6 @@
-import { describe, it, assertEquals } from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { defineRoute } from "./define-route.ts";
 
 describe("defineRoute", () => {
@@ -8,7 +10,7 @@ describe("defineRoute", () => {
 			pathname: "/",
 			handler: () => new Response("ok"),
 		});
-		assertEquals(route.method, "GET");
+		assert.equal(route.method, "GET");
 	});
 	it("sets the pattern", () => {
 		const route = defineRoute({
@@ -16,10 +18,13 @@ describe("defineRoute", () => {
 			pathname: "/some/:path",
 			handler: () => new Response("ok"),
 		});
-		assertEquals(route.pattern, new URLPattern({ pathname: "/some/:path" }));
+		assert.deepEqual(
+			route.pattern,
+			new URLPattern({ pathname: "/some/:path" }),
+		);
 
 		const result = route.pattern.exec("http://testing.local/some/page");
-		assertEquals(result?.pathname.groups.path, "page");
+		assert.equal(result?.pathname.groups.path, "page");
 	});
 	it("sets the handler", () => {
 		const route = defineRoute({
@@ -27,7 +32,7 @@ describe("defineRoute", () => {
 			pathname: "/",
 			handler: () => new Response("ok"),
 		});
-		assertEquals(typeof route.handler, "function");
+		assert.equal(typeof route.handler, "function");
 	});
 	it("creates dependencies", () => {
 		const route = defineRoute({
@@ -39,6 +44,6 @@ describe("defineRoute", () => {
 			},
 		});
 
-		assertEquals(route.dependencies.get("message"), "hello there");
+		assert.equal(route.dependencies.get("message"), "hello there");
 	});
 });

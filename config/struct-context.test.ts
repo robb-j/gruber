@@ -1,4 +1,6 @@
-import { describe, it, assertEquals } from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { PromiseList } from "../core/utilities.ts";
 import { _nestContext } from "./struct-context.ts";
 
@@ -9,7 +11,7 @@ describe("_nestContext", () => {
 			"new_child",
 		);
 
-		assertEquals(result.path, ["some", "path", "new_child"]);
+		assert.deepEqual(result.path, ["some", "path", "new_child"]);
 	});
 	it("preserves sync", () => {
 		const result = _nestContext(
@@ -17,7 +19,7 @@ describe("_nestContext", () => {
 			"new_child",
 		);
 
-		assertEquals(result.type, "sync");
+		assert.equal(result.type, "sync");
 	});
 	it("preserves async", () => {
 		const promises = new PromiseList();
@@ -27,7 +29,7 @@ describe("_nestContext", () => {
 			"new_child",
 		);
 
-		assertEquals(result.type, "async");
-		assertEquals(result.promises, promises);
+		assert.equal(result.type, "async");
+		assert.deepEqual(result.promises, promises);
 	});
 });

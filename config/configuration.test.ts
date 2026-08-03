@@ -1,32 +1,28 @@
-import { assertEquals, assertThrows, describe, it } from "../core/test-deps.js";
-import { PromiseList } from "../core/utilities.ts";
-import { Configuration } from "./configuration.ts";
-import { Structure } from "./structure.ts";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
-/** @type {import("./configuration.ts").ConfigurationOptions} */
-const stubOptions = {
-	readTextFile() {},
+import { PromiseList } from "../core/utilities.ts";
+import { Configuration, type ConfigurationOptions } from "./configuration.ts";
+import { Structure } from "./structure.ts";
+import type { StructContext } from "./struct-context.ts";
+
+const stubOptions: ConfigurationOptions = {
+	readTextFile: async () => "",
 	getEnvironmentVariable(_key) {},
 	getCommandArgument(_key) {},
-	stringify(_value) {},
+	stringify: (_value) => "",
 	parse(_value) {},
 };
 
 describe("Configuration", () => {
 	describe("constructor", () => {
 		it("validates options", () => {
-			new Configuration({
-				readTextFile() {},
-				getEnvironmentVariable(_key) {},
-				getCommandArgument(_key) {},
-				stringify(_value) {},
-				parse(_value) {},
-			});
+			new Configuration(stubOptions);
 		});
 	});
 
 	describe("_loadValue", () => {
-		const files = {
+		const files: any = {
 			"config.json": '{"name":"Geoff Testington","age":42}',
 			"config2.json":
 				'{"name":"Geoff Testington","age":42, "$schema":"https://example.com"}',
@@ -34,7 +30,7 @@ describe("Configuration", () => {
 		it("reads and validates a file", async () => {
 			const config = new Configuration({
 				...stubOptions,
-				readTextFile: (url) => files[url],
+				readTextFile: (url) => files[url as string],
 				parse: (v) => JSON.parse(v),
 			});
 
@@ -47,7 +43,7 @@ describe("Configuration", () => {
 				{ type: "sync", path: [] },
 			);
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				name: "Geoff Testington",
 				age: 42,
 			});
@@ -55,7 +51,7 @@ describe("Configuration", () => {
 		it("returns null for missing files", async () => {
 			const config = new Configuration({
 				...stubOptions,
-				readTextFile: (url) => files[url],
+				readTextFile: (url) => files[url as string],
 				parse: (v) => JSON.parse(v),
 			});
 
@@ -65,12 +61,12 @@ describe("Configuration", () => {
 				{ type: "sync", path: [] },
 			);
 
-			assertEquals(result, null);
+			assert.equal(result, null);
 		});
 		it("clears $schema", async () => {
 			const config = new Configuration({
 				...stubOptions,
-				readTextFile: (url) => files[url],
+				readTextFile: (url) => files[url as string],
 				parse: (v) => JSON.parse(v),
 			});
 
@@ -83,15 +79,15 @@ describe("Configuration", () => {
 				{ type: "sync", path: [] },
 			);
 
-			assertEquals(result.$schema, undefined);
+			assert.equal((result as any).$schema, undefined);
 		});
 	});
 
 	describe("_primative", () => {
-		const env = {
+		const env: any = {
 			USER: "geoff",
 		};
-		const args = {
+		const args: any = {
 			"--port": "42",
 		};
 		const config = new Configuration({
@@ -103,18 +99,18 @@ describe("Configuration", () => {
 		it("uses env vars", () => {
 			const struct = config._primative(
 				Structure.string(),
-				{ variable: "USER" },
+				{ variable: "USER", fallback: "" },
 				(result) => result.value,
 			);
-			assertEquals(struct.process(), "geoff");
+			assert.equal(struct.process(), "geoff");
 		});
 		it("uses args", () => {
 			const struct = config._primative(
 				Structure.number(),
-				{ flag: "--port" },
-				(result) => parseInt(result.value),
+				{ flag: "--port", fallback: 0 },
+				(result) => parseInt(result.value as any),
 			);
-			assertEquals(struct.process(), 42);
+			assert.equal(struct.process(), 42);
 		});
 		it("uses fallbacks", () => {
 			const struct = config._primative(
@@ -122,7 +118,7 @@ describe("Configuration", () => {
 				{ fallback: "Geoff Testington" },
 				(result) => result.value,
 			);
-			assertEquals(struct.process(), "Geoff Testington");
+			assert.equal(struct.process(), "Geoff Testington");
 		});
 		it("passes through the value", () => {
 			const struct = config._primative(
@@ -130,7 +126,7 @@ describe("Configuration", () => {
 				{ fallback: "Geoff Testington" },
 				(result) => result.value,
 			);
-			assertEquals(struct.process("Colin Robinson"), "Colin Robinson");
+			assert.equal(struct.process("Colin Robinson"), "Colin Robinson");
 		});
 	});
 
@@ -138,14 +134,14 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("describes itself", () => {
-			const spec = config.object({
+			const spec: any = config.object({
 				fullName: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 				age: config.number({ flag: "--age", fallback: 42 }),
 			});
 
 			const result = spec[Configuration.spec]("person");
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: { fullName: "Geoff T", age: 42 },
 				fields: [
 					{
@@ -164,14 +160,14 @@ describe("Configuration", () => {
 			});
 		});
 		it("ignores non-Configuration", () => {
-			const spec = config.object({
+			const spec: any = config.object({
 				fullName: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 				pet: Structure.string(),
 			});
 
 			const result = spec[Configuration.spec]("person");
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: { fullName: "Geoff T" },
 				fields: [
 					{
@@ -189,13 +185,13 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("describes literals", () => {
-			const spec = config.array(
+			const spec: any = config.array(
 				config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 			);
 
 			const result = spec[Configuration.spec]("names");
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: [],
 				fields: [
 					{
@@ -208,7 +204,7 @@ describe("Configuration", () => {
 			});
 		});
 		it("describes objects", () => {
-			const spec = config.array(
+			const spec: any = config.array(
 				config.object({
 					name: config.string({ variable: "FULL_NAME", fallback: "Geoff T" }),
 					age: config.number({ flag: "--age", fallback: 42 }),
@@ -217,7 +213,7 @@ describe("Configuration", () => {
 
 			const result = spec[Configuration.spec]("people");
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: [],
 				fields: [
 					{
@@ -236,11 +232,11 @@ describe("Configuration", () => {
 			});
 		});
 		it("ignores non-specified", () => {
-			const spec = config.array(new Structure({}, () => {}));
+			const spec: any = config.array(new Structure({}, () => {}));
 
 			const result = spec[Configuration.spec]("names");
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: [],
 				fields: [],
 			});
@@ -248,13 +244,13 @@ describe("Configuration", () => {
 	});
 
 	describe("external", () => {
-		const files = {
+		const files: any = {
 			"object.json": '{"name":"Geoff Testington","age":42}',
 			"array.json": '["first", "second", "third"]',
 		};
 		const config = new Configuration({
 			...stubOptions,
-			readTextFile: (path) => files[path],
+			readTextFile: (path) => files[path as string],
 			parse: (v) => JSON.parse(v),
 		});
 		it("loads queues a promise", async () => {
@@ -262,50 +258,50 @@ describe("Configuration", () => {
 				"object.json",
 				Structure.object({ name: Structure.string(), age: Structure.number() }),
 			);
-			const context = {
+			const context: StructContext = {
 				type: "async",
 				path: [],
 				promises: new PromiseList(),
 			};
 			struct.process(undefined, context);
 
-			assertEquals(context.promises.length, 1);
+			assert.equal(context.promises.length, 1);
 		});
 		it("loads and parses objects", async () => {
 			const struct = config.external(
 				"object.json",
 				Structure.object({ name: Structure.string(), age: Structure.number() }),
 			);
-			const context = {
+			const context: StructContext = {
 				type: "async",
 				path: [],
 				promises: new PromiseList(),
 			};
 			const result = struct.process(undefined, context);
 
-			assertEquals(result, {});
+			assert.deepEqual(result, {});
 
 			await context.promises.all();
 
-			assertEquals(result, { name: "Geoff Testington", age: 42 });
+			assert.deepEqual(result, { name: "Geoff Testington", age: 42 });
 		});
 		it("loads and parses arrays", async () => {
 			const struct = config.external(
 				"array.json",
 				Structure.array(Structure.string()),
 			);
-			const context = {
+			const context: StructContext = {
 				type: "async",
 				path: [],
 				promises: new PromiseList(),
 			};
 			const result = struct.process(undefined, context);
 
-			assertEquals(result, []);
+			assert.deepEqual(result, []);
 
 			await context.promises.all();
 
-			assertEquals(result, ["first", "second", "third"]);
+			assert.deepEqual(result, ["first", "second", "third"]);
 		});
 		it("fails when sync", () => {
 			const struct = config.external(
@@ -314,14 +310,14 @@ describe("Configuration", () => {
 			);
 			const exec = () => struct.process(undefined, { type: "sync", path: [] });
 
-			assertThrows(exec, Structure.Error);
+			assert.throws(exec, Structure.Error);
 		});
 		it("passes through when missing", async () => {
 			const struct = config.external(
 				"missing.json",
 				Structure.object({ name: Structure.string() }),
 			);
-			const context = {
+			const context: StructContext = {
 				type: "async",
 				path: [],
 				promises: new PromiseList(),
@@ -330,7 +326,7 @@ describe("Configuration", () => {
 
 			await context.promises.all();
 
-			assertEquals(result, { name: "Colin Robinson" });
+			assert.deepEqual(result, { name: "Colin Robinson" });
 		});
 	});
 
@@ -338,21 +334,21 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
-			assertThrows(() => config.string({}), TypeError);
+			assert.throws(() => config.string({} as any), TypeError);
 		});
 		it("uses the fallback", () => {
 			const struct = config.string({ fallback: "Geoff Testington" });
 			const result = struct.process(undefined);
-			assertEquals(result, "Geoff Testington");
+			assert.equal(result, "Geoff Testington");
 		});
 		it("describes itself", () => {
-			const spec = config.string({
+			const spec: any = config.string({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: "value",
 			});
 			const result = spec[Configuration.spec]("fullName");
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: "value",
 				fields: [
 					{
@@ -371,15 +367,15 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
-			assertThrows(() => config.number({}), TypeError);
+			assert.throws(() => config.number({} as any), TypeError);
 		});
 		it("uses the fallback", () => {
 			const struct = config.number({ fallback: 42 });
 			const result = struct.process(undefined);
-			assertEquals(result, 42);
+			assert.equal(result, 42);
 		});
 		it("parses strings", () => {
-			const vars = { SOME_VAR: "12.34" };
+			const vars: any = { SOME_VAR: "12.34" };
 			const config = new Configuration({
 				...stubOptions,
 				getEnvironmentVariable: (key) => vars[key],
@@ -390,16 +386,16 @@ describe("Configuration", () => {
 				fallback: 42,
 			});
 
-			assertEquals(result.process(undefined), 12.34);
+			assert.equal(result.process(undefined), 12.34);
 		});
 		it("describes itself", () => {
-			const spec = config.number({
+			const spec: any = config.number({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: 12.34,
 			});
 			const result = spec[Configuration.spec]("age");
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: 12.34,
 				fields: [
 					{
@@ -418,15 +414,15 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
-			assertThrows(() => config.boolean({}), TypeError);
+			assert.throws(() => config.boolean({} as any), TypeError);
 		});
 		it("uses the fallback", () => {
 			const struct = config.boolean({ fallback: false });
 			const result = struct.process(undefined);
-			assertEquals(result, false);
+			assert.equal(result, false);
 		});
 		it("parses strings", () => {
-			const vars = { SOME_VAR: "true" };
+			const vars: any = { SOME_VAR: "true" };
 			const config = new Configuration({
 				...stubOptions,
 				getEnvironmentVariable: (key) => vars[key],
@@ -437,16 +433,16 @@ describe("Configuration", () => {
 				fallback: false,
 			});
 
-			assertEquals(result.process(undefined), true);
+			assert.equal(result.process(undefined), true);
 		});
 		it("describes itself", () => {
-			const spec = config.boolean({
+			const spec: any = config.boolean({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: false,
 			});
 			const result = spec[Configuration.spec]("hasPets");
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: false,
 				fields: [
 					{
@@ -465,26 +461,26 @@ describe("Configuration", () => {
 		const config = new Configuration(stubOptions);
 
 		it("requires a fallback", () => {
-			assertThrows(() => config.url({}), TypeError);
+			assert.throws(() => config.url({} as any), TypeError);
 		});
 		it("converts to URL", () => {
 			const struct = config.url({ fallback: "https://fallback.example.com" });
 			const result = struct.process("https://example.com");
-			assertEquals(result, new URL("https://example.com"));
+			assert.deepEqual(result, new URL("https://example.com"));
 		});
 		it("uses the fallback", () => {
 			const struct = config.url({ fallback: "https://fallback.example.com" });
 			const result = struct.process(undefined);
-			assertEquals(result, new URL("https://fallback.example.com"));
+			assert.deepEqual(result, new URL("https://fallback.example.com"));
 		});
 		it("describes itself", () => {
-			const spec = config.url({
+			const spec: any = config.url({
 				variable: "SOME_VAR",
 				flag: "--some-flag",
 				fallback: "https://example.com",
 			});
 			const result = spec[Configuration.spec]("hasPets");
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				fallback: new URL("https://example.com"),
 				fields: [
 					{
@@ -502,7 +498,7 @@ describe("Configuration", () => {
 	describe("_getValue", () => {});
 
 	describe("load", () => {
-		const files = {
+		const files: any = {
 			"config.json":
 				'{"env":"production","meta":{"version":"1.2.3"},"selfUrl":"https://example.com"}',
 			"config2.json": '{"$schema":"https://example.com/schema.json"}',
@@ -510,7 +506,7 @@ describe("Configuration", () => {
 
 		const config = new Configuration({
 			...stubOptions,
-			readTextFile: (url) => files[url],
+			readTextFile: (url) => files[url as string],
 			parse: (v) => JSON.parse(v),
 		});
 
@@ -524,7 +520,7 @@ describe("Configuration", () => {
 
 		it("loads config", async () => {
 			const result = await config.load("config.json", struct);
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				env: "production",
 				meta: { version: "1.2.3" },
 				selfUrl: new URL("https://example.com"),
@@ -533,7 +529,7 @@ describe("Configuration", () => {
 
 		it("uses the fallback", async () => {
 			const result = await config.load("missing-config.json", struct);
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				env: "development",
 				meta: { version: "0.0.0" },
 				selfUrl: new URL("http://localhost"),
@@ -562,7 +558,7 @@ describe("Configuration", () => {
 
 			const result = await config.load("config2.json", struct);
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				field: { awaited: true },
 			});
 		});
@@ -579,8 +575,8 @@ describe("Configuration", () => {
 				}),
 				"appName",
 			);
-			assertEquals(result.fallback, "test-app");
-			assertEquals(result.fields, [
+			assert.equal(result.fallback, "test-app");
+			assert.deepEqual(result.fields, [
 				{
 					name: "appName",
 					type: "string",
@@ -601,8 +597,8 @@ describe("Configuration", () => {
 				}),
 				"selfUrl",
 			);
-			assertEquals(result.fallback, new URL("https://example.com"));
-			assertEquals(result.fields, [
+			assert.deepEqual(result.fallback, new URL("https://example.com"));
+			assert.deepEqual(result.fields, [
 				{
 					name: "selfUrl",
 					type: "url",
@@ -625,8 +621,8 @@ describe("Configuration", () => {
 				}),
 				"meta",
 			);
-			assertEquals(result.fallback, { name: "testing-app" });
-			assertEquals(result.fields, [
+			assert.deepEqual(result.fallback, { name: "testing-app" });
+			assert.deepEqual(result.fields, [
 				{
 					name: "meta.name",
 					type: "string",

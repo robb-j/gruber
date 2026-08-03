@@ -1,68 +1,70 @@
-import { describe, it, assertEquals } from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { HTTPError } from "./http-error.ts";
 
 describe("HTTPError", () => {
 	describe("constructor", () => {
 		it("creates the error", () => {
 			const result = new HTTPError(418, "I'm a teapot");
-			assertEquals(result.status, 418);
-			assertEquals(result.statusText, "I'm a teapot");
-			assertEquals(result.name, "HTTPError");
+			assert.equal(result.status, 418);
+			assert.equal(result.statusText, "I'm a teapot");
+			assert.equal(result.name, "HTTPError");
 		});
 	});
 
 	describe("toResponse", () => {
 		it("creates the error", () => {
 			const result = new HTTPError(200, "OK").toResponse();
-			assertEquals(result.status, 200);
-			assertEquals(result.statusText, "OK");
+			assert.equal(result.status, 200);
+			assert.equal(result.statusText, "OK");
 		});
 		it("sets headers", () => {
-			const error = new HTTPError(200, "OK", null, {
+			const error = new HTTPError(200, "OK", undefined, {
 				"X-HOTEL-BAR": "Hotel Bar?",
 			});
 
 			const result = error.toResponse();
-			assertEquals(result.headers.get("X-HOTEL-BAR"), "Hotel Bar?");
+			assert.equal(result.headers.get("X-HOTEL-BAR"), "Hotel Bar?");
 		});
 	});
 
 	describe("badRequest", () => {
 		it("creates the error", () => {
 			const result = HTTPError.badRequest("body");
-			assertEquals(result.status, 400);
-			assertEquals(result.statusText, "Bad Request");
+			assert.equal(result.status, 400);
+			assert.equal(result.statusText, "Bad Request");
 		});
 	});
 
 	describe("unauthorized", () => {
 		it("creates the error", () => {
 			const result = HTTPError.unauthorized();
-			assertEquals(result.status, 401);
-			assertEquals(result.statusText, "Unauthorized");
+			assert.equal(result.status, 401);
+			assert.equal(result.statusText, "Unauthorized");
 		});
 	});
 
 	describe("notFound", () => {
 		it("creates the error", () => {
 			const result = HTTPError.notFound();
-			assertEquals(result.status, 404);
-			assertEquals(result.statusText, "Not Found");
+			assert.equal(result.status, 404);
+			assert.equal(result.statusText, "Not Found");
 		});
 	});
 
 	describe("internalServerError", () => {
 		it("creates the error", () => {
 			const result = HTTPError.internalServerError();
-			assertEquals(result.status, 500);
-			assertEquals(result.statusText, "Internal Server Error");
+			assert.equal(result.status, 500);
+			assert.equal(result.statusText, "Internal Server Error");
 		});
 
 		describe("notImplemented", () => {
 			it("creates the error", () => {
 				const result = HTTPError.notImplemented();
-				assertEquals(result.status, 501);
-				assertEquals(result.statusText, "Not Implemented");
+				assert.equal(result.status, 501);
+				assert.equal(result.statusText, "Not Implemented");
 			});
 		});
 	});

@@ -1,10 +1,6 @@
-import {
-	assertEquals,
-	assert,
-	assertThrows,
-	describe,
-	it,
-} from "./test-deps.js";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
 import {
 	dangerouslyExpose,
 	formatMarkdownTable,
@@ -15,7 +11,7 @@ import {
 	trimIndentation,
 } from "./utilities.ts";
 
-const expected = `
+const expectedMarkdownTable = `
 | name    | type   | argument   | variable | fallback              |
 | ------- | ------ | ---------- | -------- | --------------------- |
 | env     | string | ~          | NODE_ENV | development           |
@@ -43,7 +39,7 @@ describe("formatMarkdownTable", () => {
 			["name", "type", "argument", "variable", "fallback"],
 			"~",
 		);
-		assertEquals(result, expected);
+		assert.equal(result, expectedMarkdownTable);
 	});
 });
 
@@ -53,7 +49,7 @@ describe("trimIndentation", () => {
 			Hello there	
 		`);
 
-		assertEquals(result, "Hello there");
+		assert.equal(result, "Hello there");
 	});
 	it("trims two lines", () => {
 		const result = trimIndentation(`
@@ -61,14 +57,14 @@ describe("trimIndentation", () => {
 			General Kenobi
 		`);
 
-		assertEquals(result, "Hello there\nGeneral Kenobi");
+		assert.equal(result, "Hello there\nGeneral Kenobi");
 	});
 	it("keeps relative indentation", () => {
 		const result = trimIndentation(`
 			Hello there
 				General Kenobi
 		`);
-		assertEquals(result, "Hello there\n	General Kenobi");
+		assert.equal(result, "Hello there\n	General Kenobi");
 	});
 	it("preserves empty lines", () => {
 		const result = trimIndentation(`
@@ -76,28 +72,28 @@ describe("trimIndentation", () => {
 
 			General Kenobi
 		`);
-		assertEquals(result, "Hello there\n\nGeneral Kenobi");
+		assert.equal(result, "Hello there\n\nGeneral Kenobi");
 	});
 	it("trims spaces too", () => {
 		const result = trimIndentation(`
       Hello there
         General Kenobi
     `);
-		assertEquals(result, "Hello there\n  General Kenobi");
+		assert.equal(result, "Hello there\n  General Kenobi");
 	});
 	it("trims with variables", () => {
 		const result = trimIndentation`
 			Hello there
 			${"General Kenobi"}
 		`;
-		assertEquals(result, "Hello there\nGeneral Kenobi");
+		assert.equal(result, "Hello there\nGeneral Kenobi");
 	});
 });
 
 describe("reconstructTemplateString", () => {
 	it("rejoins strings with arguments", () => {
 		const result = reconstructTemplateString`Hello ${"there"}!`;
-		assertEquals(result, "Hello there!");
+		assert.equal(result, "Hello there!");
 	});
 });
 
@@ -107,33 +103,33 @@ describe("preventExtraction", () => {
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertThrows(() => JSON.stringify(result), TypeError);
+		assert.throws(() => JSON.stringify(result), TypeError);
 	});
 	it("stops nested object JSON serialisation", () => {
 		const result = preventExtraction({
 			name: "Geoff Testington",
 			pet: { name: "Hugo" },
 		});
-		assertThrows(() => JSON.stringify(result), TypeError);
-		assertThrows(() => JSON.stringify(result.pet), TypeError);
+		assert.throws(() => JSON.stringify(result), TypeError);
+		assert.throws(() => JSON.stringify(result.pet), TypeError);
 	});
 	it("stops nested arrays object JSON serialisation", () => {
 		const result = preventExtraction({
 			name: "Geoff Testington",
 			pets: [{ name: "Hugo" }, { name: "Helga" }],
 		});
-		assertThrows(() => JSON.stringify(result.pets), TypeError);
-		assertThrows(() => JSON.stringify(result.pets[0]), TypeError);
-		assertThrows(() => JSON.stringify(result.pets[1]), TypeError);
+		assert.throws(() => JSON.stringify(result.pets), TypeError);
+		assert.throws(() => JSON.stringify(result.pets[0]), TypeError);
+		assert.throws(() => JSON.stringify(result.pets[1]), TypeError);
 	});
 	it("seals objects", () => {
-		const result = preventExtraction({
+		const result: any = preventExtraction({
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertEquals(Object.isSealed(result), true, "should be sealed");
+		assert(Object.isSealed(result), "should be sealed");
 
-		assertThrows(() => {
+		assert.throws(() => {
 			result.pet = "Hugo";
 		}, TypeError);
 	});
@@ -142,7 +138,7 @@ describe("preventExtraction", () => {
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertEquals(Object.isFrozen(result), true, "should be frozen");
+		assert(Object.isFrozen(result), "should be frozen");
 	});
 
 	it("stops arrays JSON serialisation", () => {
@@ -151,7 +147,7 @@ describe("preventExtraction", () => {
 			{ name: "Jess Smith" },
 			{ name: "Tyler Rockwell" },
 		]);
-		assertThrows(() => JSON.stringify(result), TypeError);
+		assert.throws(() => JSON.stringify(result), TypeError);
 	});
 	it("stops array item JSON serialisation", () => {
 		const result = preventExtraction([
@@ -159,9 +155,9 @@ describe("preventExtraction", () => {
 			{ name: "Jess Smith" },
 			{ name: "Tyler Rockwell" },
 		]);
-		assertThrows(() => JSON.stringify(result[0]), TypeError);
-		assertThrows(() => JSON.stringify(result[1]), TypeError);
-		assertThrows(() => JSON.stringify(result[2]), TypeError);
+		assert.throws(() => JSON.stringify(result[0]), TypeError);
+		assert.throws(() => JSON.stringify(result[1]), TypeError);
+		assert.throws(() => JSON.stringify(result[2]), TypeError);
 	});
 	it("seals arrays", () => {
 		const result = preventExtraction([
@@ -169,9 +165,9 @@ describe("preventExtraction", () => {
 			{ name: "Jess Smith" },
 			{ name: "Tyler Rockwell" },
 		]);
-		assertEquals(Object.isSealed(result), true, "should be sealed");
+		assert(Object.isSealed(result), "should be sealed");
 
-		assertThrows(() => {
+		assert.throws(() => {
 			result.push({ name: "Timmy" });
 		}, TypeError);
 	});
@@ -181,14 +177,14 @@ describe("preventExtraction", () => {
 			{ name: "Jess Smith" },
 			{ name: "Tyler Rockwell" },
 		]);
-		assertEquals(Object.isFrozen(result), true, "should be frozen");
+		assert(Object.isFrozen(result), "should be frozen");
 	});
 	it("allows cloned objects", () => {
 		const result = preventExtraction({
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertEquals(
+		assert.equal(
 			JSON.stringify(structuredClone(result)),
 			'{"name":"Geoff Testington","age":42}',
 		);
@@ -198,7 +194,7 @@ describe("preventExtraction", () => {
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertEquals(result.toString(), "[object redacted]");
+		assert.equal(result.toString(), "[object redacted]");
 	});
 });
 
@@ -208,7 +204,7 @@ describe("dangerouslyExpose", () => {
 			name: "Geoff Testington",
 			age: 42,
 		});
-		assertEquals(
+		assert.equal(
 			JSON.stringify(dangerouslyExpose(result)),
 			'{"name":"Geoff Testington","age":42}',
 		);
@@ -222,8 +218,8 @@ describe("dangerouslyExpose", () => {
 		});
 		const result = dangerouslyExpose(input);
 
-		assert(result !== input, "should be a different object");
-		assertEquals(result, {
+		assert.notEqual(result, input, "should be a different object");
+		assert.deepEqual(result, {
 			name: "Geoff Testington",
 			age: 42,
 			isCool: true,
@@ -235,7 +231,7 @@ describe("dangerouslyExpose", () => {
 		const result = dangerouslyExpose(input);
 
 		assert(result !== input, "should be a different array");
-		assertEquals(result, ["Geoff Testington", "Jess Assertly"]);
+		assert.deepEqual(result, ["Geoff Testington", "Jess Assertly"]);
 	});
 	it("works with sets", () => {
 		const input = preventExtraction(
@@ -244,7 +240,7 @@ describe("dangerouslyExpose", () => {
 		const result = dangerouslyExpose(input);
 
 		assert(result !== input, "should be a different set");
-		assertEquals(result, new Set(["Geoff Testington", "Jess Assertly"]));
+		assert.deepEqual(result, new Set(["Geoff Testington", "Jess Assertly"]));
 	});
 	it("works with maps", () => {
 		const input = preventExtraction(
@@ -256,7 +252,7 @@ describe("dangerouslyExpose", () => {
 		const result = dangerouslyExpose(input);
 
 		assert(result !== input, "should be a different map");
-		assertEquals(
+		assert.deepEqual(
 			result,
 			new Map([
 				["geoff", 42],
@@ -268,7 +264,7 @@ describe("dangerouslyExpose", () => {
 		const input = preventExtraction(new URL("https://duck.com"));
 		const result = dangerouslyExpose(input);
 
-		assertEquals(result, new URL("https://duck.com"));
+		assert.deepEqual(result, new URL("https://duck.com"));
 	});
 	it("allows custom", () => {
 		const input = preventExtraction({
@@ -276,7 +272,7 @@ describe("dangerouslyExpose", () => {
 		});
 		const result = dangerouslyExpose(input);
 
-		assertEquals(result, 42);
+		assert.equal(result, 42);
 	});
 	it("works with nested objects", () => {
 		const input = preventExtraction({
@@ -299,7 +295,7 @@ describe("dangerouslyExpose", () => {
 			"should be a different object",
 		);
 
-		assertEquals(result, {
+		assert.deepEqual(result, {
 			first: {
 				second: {
 					third: {},
@@ -316,13 +312,13 @@ describe("dangerouslyExpose", () => {
 		assert(result[0][0] !== input[0][0], "should be a different array");
 		assert(result[0][0][0] !== input[0][0][0], "should be a different array");
 
-		assertEquals(result, [[[[1, 2, 3]]]]);
+		assert.deepEqual(result, [[[[1, 2, 3]]]]);
 	});
 });
 
 describe("pickProperties", () => {
 	it("picks properties", () => {
-		assertEquals(
+		assert.deepEqual(
 			pickProperties(
 				{
 					name: "Geoff Testington",
@@ -339,10 +335,10 @@ describe("pickProperties", () => {
 describe("getOrInsert", () => {
 	it("returns the existing value", () => {
 		const map = new Map([["the_answer", 42]]);
-		assertEquals(getOrInsert(map, "the_answer", 100), 42);
+		assert.equal(getOrInsert(map, "the_answer", 100), 42);
 	});
 	it("returns sets missing values", () => {
 		const map = new Map();
-		assertEquals(getOrInsert(map, "the_answer", 100), 100);
+		assert.equal(getOrInsert(map, "the_answer", 100), 100);
 	});
 });

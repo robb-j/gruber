@@ -1,23 +1,20 @@
-import {
-	assertEquals,
-	assertIsError,
-	describe,
-	it,
-} from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { _StructError } from "./mod.ts";
 
 describe("Structure.Error", () => {
 	describe("constructor", () => {
 		it("stores values", () => {
-			const err = new _StructError("error message", "some.path");
-			assertEquals(err.path, "some.path");
-			assertEquals(err.message, "error message");
-			assertEquals(err.name, "Structure.Error");
+			const err = new _StructError("error message", ["some", "path"]);
+			assert.deepEqual(err.path, ["some", "path"]);
+			assert.equal(err.message, "error message");
+			assert.equal(err.name, "Structure.Error");
 		});
 		it("stores children", () => {
-			const child = new _StructError("child message", "path");
-			const parent = new _StructError("parent message", "path", [child]);
-			assertEquals(parent.children, [child]);
+			const child = new _StructError("child message", ["path"]);
+			const parent = new _StructError("parent message", ["path"], [child]);
+			assert.deepEqual(parent.children, [child]);
 		});
 	});
 
@@ -28,8 +25,8 @@ describe("Structure.Error", () => {
 				new _StructError("error message", ["another", "path"]),
 				ctx,
 			);
-			assertIsError(result, _StructError, "error message");
-			assertEquals(
+			assert(result instanceof _StructError);
+			assert.deepEqual(
 				result.path,
 				["another", "path"],
 				"returns the StructError without modifying the path",
@@ -38,26 +35,21 @@ describe("Structure.Error", () => {
 		it("wraps Errors", () => {
 			const ctx = { path: ["some", "path"] };
 			const result = _StructError.chain(new Error("error message"), ctx);
-			assertIsError(result, _StructError, "error message");
-			assertEquals(result.path, ["some", "path"]);
+			assert(result instanceof _StructError);
+			assert.deepEqual(result.path, ["some", "path"]);
 		});
 		it("wraps non-Errors", () => {
 			const ctx = { path: ["some", "path"] };
 			const result = _StructError.chain("unknown", ctx);
-			assertIsError(
-				result,
-				_StructError,
-				"Unknown error",
-				"creates a generic StructError",
-			);
-			assertEquals(result.path, ["some", "path"]);
+			assert(result instanceof _StructError, "creates a generic StructError");
+			assert.deepEqual(result.path, ["some", "path"]);
 		});
 	});
 
 	describe("getOneLiner", () => {
 		it("formats the error", () => {
 			const error = new _StructError("error message", ["some", "path"]);
-			assertEquals(error.getOneLiner(), "some.path — error message");
+			assert.equal(error.getOneLiner(), "some.path — error message");
 		});
 	});
 
@@ -72,7 +64,7 @@ describe("Structure.Error", () => {
 					new _StructError("child c"),
 				],
 			);
-			assertEquals(
+			assert.deepEqual(
 				Array.from(error, (i) => i.message),
 				["child a", "child b", "child c"],
 				"should yield each child",
@@ -94,7 +86,7 @@ describe("Structure.Error", () => {
 					),
 				],
 			);
-			assertEquals(
+			assert.deepEqual(
 				Array.from(error, (i) => i.message),
 				["child a", "child b", "child c"],
 				"should yield all nested children which have no children of their own",
@@ -114,7 +106,7 @@ describe("Structure.Error", () => {
 				],
 			);
 
-			assertEquals(
+			assert.deepEqual(
 				error.toFriendlyString(),
 				[
 					"parent message",

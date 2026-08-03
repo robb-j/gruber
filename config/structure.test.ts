@@ -1,19 +1,21 @@
-import {
-	assertEquals,
-	assertInstanceOf,
-	assertIsError,
-	assertThrows,
-	describe,
-	it,
-} from "../core/test-deps.js";
-import { Structure } from "./mod.ts";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
+import { Structure, type StructContext } from "./mod.ts";
+import { spy } from "../testing/mod.ts";
+import { message } from "valibot";
+
+function _ctx(path: string[]): StructContext {
+	return { type: "sync", path };
+}
 
 describe("Structure", () => {
 	describe("constructor", () => {
 		it("stores fields", () => {
-			const result = new Structure("schema", "process");
-			assertEquals(result.schema, "schema");
-			assertEquals(result._process, "process");
+			const fn = spy(() => {});
+			const result = new Structure({}, fn);
+			assert.deepEqual(result.schema, {});
+			assert.equal(result._process, fn);
 		});
 	});
 
@@ -21,19 +23,22 @@ describe("Structure", () => {
 		it("calls process", () => {
 			const struct = new Structure({}, () => 42);
 			const result = struct.process();
-			assertEquals(result, 42, "should call the internal process method");
+			assert.equal(result, 42, "should call the internal process method");
 		});
 		it("passes input through", () => {
 			const struct = new Structure({}, (value) => value);
 			const result = struct.process(42);
-			assertEquals(result, 42, "should pass through the input");
+			assert.equal(result, 42, "should pass through the input");
 		});
 		it("passes context through", () => {
 			const struct = new Structure({}, (_value, context) => context);
-			const result = struct.process(42, { path: ["some", "path"] });
-			assertEquals(
+			const result = struct.process(42, {
+				type: "sync",
+				path: ["some", "path"],
+			});
+			assert.deepEqual(
 				result,
-				{ path: ["some", "path"] },
+				_ctx(["some", "path"]),
 				"should pass through the context",
 			);
 		});
@@ -41,19 +46,21 @@ describe("Structure", () => {
 			const struct = new Structure({}, () => {
 				throw new Error("input error");
 			});
-			const exec = () => struct.process(42, { path: ["some", "path"] });
-			const error = assertThrows(exec, Structure.Error);
-			assertEquals(error.message, "input error");
-			assertEquals(error.path, ["some", "path"]);
+			const exec = () => struct.process(42, _ctx(["some", "path"]));
+			assert.throws(exec, {
+				name: "Structure.Error",
+				message: "input error",
+				path: ["some", "path"],
+			});
 		});
 	});
 
-	describe("#getSchema", () => {
+	describe("#getFullSchema", () => {
 		it("injects $schema", () => {
 			const schema = { type: "string", default: "fallback" };
 			const struct = new Structure(schema, () => {});
-			assertEquals(
-				struct.getSchema(),
+			assert.deepEqual(
+				struct.getFullSchema(),
 				{
 					$schema: "https://json-schema.org/draft/2020-12/schema",
 					type: "string",
@@ -67,11 +74,11 @@ describe("Structure", () => {
 	describe("string", () => {
 		it("creates a structure", () => {
 			const struct = Structure.string("fallback");
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("allows strings", () => {
 			const struct = Structure.string("fallback");
-			assertEquals(
+			assert.equal(
 				struct.process("value"),
 				"value",
 				"should allow string values through",
@@ -79,7 +86,7 @@ describe("Structure", () => {
 		});
 		it("uses the fallback", () => {
 			const struct = Structure.string("fallback");
-			assertEquals(
+			assert.equal(
 				struct.process(undefined),
 				"fallback",
 				"should fall back to the default if undefined is passed",
@@ -87,38 +94,37 @@ describe("Structure", () => {
 		});
 		it("validates strings", () => {
 			const struct = Structure.string("fallback");
+			const exec = () => struct.process(42, _ctx(["some", "path"]));
 
-			const error = assertThrows(
-				() => struct.process(42, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertEquals(error.message, "Expected a string");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(exec, {
+				name: "Structure.Error",
+				message: "Expected a string",
+				path: ["some", "path"],
+			});
 		});
 		it("validates missing values", () => {
 			const struct = Structure.string();
 
-			const error = assertThrows(
-				() => struct.process(undefined, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertEquals(error.message, "Missing value");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(() => struct.process(undefined, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Missing value",
+				path: ["some", "path"],
+			});
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.string("fallback");
-			assertEquals(struct.schema, { type: "string", default: "fallback" });
+			assert.deepEqual(struct.schema, { type: "string", default: "fallback" });
 		});
 	});
 
 	describe("number", () => {
 		it("creates a structure", () => {
 			const struct = Structure.number(42);
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("allows numbers", () => {
 			const struct = Structure.number(42);
-			assertEquals(
+			assert.equal(
 				struct.process(33),
 				33,
 				"should allow number values through",
@@ -126,7 +132,7 @@ describe("Structure", () => {
 		});
 		it("uses the fallback", () => {
 			const struct = Structure.number(42);
-			assertEquals(
+			assert.equal(
 				struct.process(undefined),
 				42,
 				"should fall back to the default if undefined is passed",
@@ -134,7 +140,7 @@ describe("Structure", () => {
 		});
 		it("parses strings", () => {
 			const struct = Structure.number(42);
-			assertEquals(
+			assert.equal(
 				struct.process("33"),
 				33,
 				"should parse the integer out of the string",
@@ -143,46 +149,42 @@ describe("Structure", () => {
 		it("throws for non-numbers", () => {
 			const struct = Structure.number(42);
 
-			const error = assertThrows(
-				() => struct.process("a string", { path: ["some", "path"] }),
-				Structure.Error,
-			);
-
-			assertEquals(error.message, "Expected a number");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(() => struct.process("a string", _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Expected a number",
+				path: ["some", "path"],
+			});
 		});
 		it("validates missing values", () => {
 			const struct = Structure.number();
 
-			const error = assertThrows(
-				() => struct.process(undefined, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertEquals(error.message, "Missing value");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(() => struct.process(undefined, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Missing value",
+				path: ["some", "path"],
+			});
 		});
 		it("validates NaN", () => {
 			const struct = Structure.number();
-			const error = assertThrows(
-				() => struct.process(Number.NaN),
-				Structure.Error,
-			);
-			assertEquals(error.message, "Not a number");
+			assert.throws(() => struct.process(Number.NaN), {
+				name: "Structure.Error",
+				message: "Not a number",
+			});
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.number(42);
-			assertEquals(struct.schema, { type: "number", default: 42 });
+			assert.deepEqual(struct.schema, { type: "number", default: 42 });
 		});
 	});
 
 	describe("boolean", () => {
 		it("creates a structure", () => {
 			const struct = Structure.boolean(false);
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("allows booleans", () => {
 			const struct = Structure.boolean(false);
-			assertEquals(
+			assert.equal(
 				struct.process(true),
 				true,
 				"should allow boolean values through",
@@ -190,7 +192,7 @@ describe("Structure", () => {
 		});
 		it("uses the fallback", () => {
 			const struct = Structure.boolean(false);
-			assertEquals(
+			assert.equal(
 				struct.process(undefined),
 				false,
 				"should fall back to the default if undefined is passed",
@@ -199,30 +201,29 @@ describe("Structure", () => {
 		it("throws for non-booleans", () => {
 			const struct = Structure.boolean(false);
 
-			const error = assertThrows(
-				() => struct.process("a string", { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertIsError(error, Structure.Error, "Not a boolean");
-			assertEquals(error.path, ["some", "path"]);
+			assert.throws(() => struct.process("a string", _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Not a boolean",
+				path: ["some", "path"],
+			});
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.boolean(false);
-			assertEquals(struct.schema, { type: "boolean", default: false });
+			assert.deepEqual(struct.schema, { type: "boolean", default: false });
 		});
 	});
 
 	describe("url", () => {
 		it("creates a structure", () => {
 			const struct = Structure.url("https://fallback.example.com");
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("fail for invalid fallbacks", () => {
-			assertThrows(() => Structure.url("not a URL"));
+			assert.throws(() => Structure.url("not a URL"));
 		});
 		it("allows strings", () => {
 			const struct = Structure.url("https://fallback.example.com");
-			assertEquals(
+			assert.deepEqual(
 				struct.process("https://example.com"),
 				new URL("https://example.com"),
 				"should allow strings and convert them to a URL",
@@ -230,7 +231,7 @@ describe("Structure", () => {
 		});
 		it("allows URLs", () => {
 			const struct = Structure.url("https://fallback.example.com");
-			assertEquals(
+			assert.deepEqual(
 				struct.process(new URL("https://example.com")),
 				new URL("https://example.com"),
 				"should allow strings and convert them to a URL",
@@ -238,7 +239,7 @@ describe("Structure", () => {
 		});
 		it("uses the fallback", () => {
 			const struct = Structure.url("https://fallback.example.com");
-			assertEquals(
+			assert.deepEqual(
 				struct.process(undefined),
 				new URL("https://fallback.example.com"),
 				"should fall back to the default if undefined is passed",
@@ -247,27 +248,24 @@ describe("Structure", () => {
 		it("validates non-strings", () => {
 			const struct = Structure.url("https://fallback.example.com");
 
-			const error = assertThrows(
-				() => struct.process(42, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-
-			assertEquals(error.message, "Not a string or URL");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(() => struct.process(42, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Not a string or URL",
+				path: ["some", "path"],
+			});
 		});
 		it("validates missing values", () => {
 			const struct = Structure.url();
 
-			const error = assertThrows(
-				() => struct.process(undefined, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertEquals(error.message, "Missing value");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
+			assert.throws(() => struct.process(undefined, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Missing value",
+				path: ["some", "path"],
+			});
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.url("https://fallback.example.com");
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "string",
 				format: "uri",
 				default: "https://fallback.example.com",
@@ -275,7 +273,7 @@ describe("Structure", () => {
 		});
 		it("stringifies URLs for JSON schema", () => {
 			const struct = Structure.url(new URL("https://fallback.example.com"));
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "string",
 				format: "uri",
 				default: "https://fallback.example.com/",
@@ -284,7 +282,9 @@ describe("Structure", () => {
 		it("catches URL errors", () => {
 			const struct = Structure.url("https://example.com");
 			const exec = () => struct.process("not a url");
-			assertThrows(exec, Structure.Error);
+			assert.throws(exec, {
+				name: "Structure.Error",
+			});
 		});
 	});
 
@@ -293,13 +293,13 @@ describe("Structure", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "object",
 				properties: {
 					key: {
@@ -316,57 +316,55 @@ describe("Structure", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
-			const error = assertThrows(
-				() => struct.process("not an object", { path: ["some", "path"] }),
-				Structure.Error,
+			assert.throws(
+				() => struct.process("not an object", _ctx(["some", "path"])),
+				{
+					name: "Structure.Error",
+					message: "Expected an object",
+					path: ["some", "path"],
+				},
 			);
-
-			assertEquals(error.message, "Expected an object");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("allows objects", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
 			const result = struct.process({ key: "value" });
-			assertEquals(result, { key: "value" });
+			assert.deepEqual(result, { key: "value" });
 		});
 		it("validates nested values", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
-			const error = assertThrows(
-				() => struct.process({ key: 42 }),
-				Structure.Error,
-			);
-
-			assertEquals(error.message, "Object does not match schema");
-			assertEquals(error.path, []);
-			assertEquals(error.children.length, 1, "should have one nested error");
-			assertEquals(error.children[0].message, "Expected a string");
-			assertEquals(error.children[0].path, ["key"], "should capture context");
+			assert.throws(() => struct.process({ key: 42 }), {
+				name: "Structure.Error",
+				message: "Object does not match schema",
+				path: [],
+				children: [new Structure.Error("Expected a string", ["key"])],
+			});
 		});
 		it("throws for unknown fields", () => {
 			const struct = Structure.object({
 				key: Structure.string("fallback"),
 			});
-			const error = assertThrows(
+			assert.throws(
 				() =>
 					struct.process(
 						{ key: "value", something: "else" },
-						{ path: ["some", "path"] },
+						_ctx(["some", "path"]),
 					),
-				Structure.Error,
-			);
-
-			assertEquals(error.message, "Object does not match schema");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
-
-			assertEquals(error.children[0].message, "Additional field not allowed");
-			assertEquals(
-				error.children[0].path,
-				["some", "path", "something"],
-				"should capture the context",
+				{
+					name: "Structure.Error",
+					message: "Object does not match schema",
+					path: ["some", "path"],
+					children: [
+						new Structure.Error("Additional field not allowed", [
+							"some",
+							"path",
+							"something",
+						]),
+					],
+				},
 			);
 		});
 		it("throws for non-null prototypes", () => {
@@ -376,38 +374,39 @@ describe("Structure", () => {
 			class Injector {
 				key = "value";
 			}
-			const error = assertThrows(
-				() => struct.process(new Injector(), { path: ["some", "path"] }),
-				Structure.Error,
+			assert.throws(
+				() => struct.process(new Injector(), _ctx(["some", "path"])),
+				{
+					name: "Structure.Error",
+					message: "Should not have a prototype",
+					path: ["some", "path"],
+				},
 			);
-
-			assertEquals(error.message, "Should not have a prototype");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("ignores undefined", () => {
 			const struct = Structure.object({
 				field: new Structure({}, () => undefined),
 			});
-			assertEquals(Object.keys(struct.process({})), []);
+			assert.deepEqual(Object.keys(struct.process({})), []);
 		});
 	});
 
 	describe("type", () => {
 		it("creates a structure", () => {
 			const struct = Structure.pick({});
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("plucks keys off the input", () => {
 			const struct = Structure.pick({
 				name: Structure.string("name"),
-				age: Structure.number("age"),
+				age: Structure.number(39),
 			});
 			const value = struct.process({
 				name: "Geoff",
 				age: 42,
 				pets: ["Hugo"],
 			});
-			assertEquals(value, {
+			assert.deepEqual(value, {
 				name: "Geoff",
 				age: 42,
 			});
@@ -417,11 +416,11 @@ describe("Structure", () => {
 	describe("array", () => {
 		it("creates a structure", () => {
 			const struct = Structure.array(Structure.string());
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("generates JSON schema", () => {
 			const struct = Structure.array(Structure.string());
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "array",
 				items: {
 					type: "string",
@@ -431,85 +430,78 @@ describe("Structure", () => {
 		});
 		it("throws for non-arrays", () => {
 			const struct = Structure.array(Structure.string());
-			const error = assertThrows(
-				() => struct.process("not an object", { path: ["some", "path"] }),
-				Structure.Error,
+			assert.throws(
+				() => struct.process("not an object", _ctx(["some", "path"])),
+				{
+					name: "Structure.Error",
+					message: "Expected an array",
+					path: ["some", "path"],
+				},
 			);
-
-			assertEquals(error.message, "Expected an array");
-			assertEquals(error.path, ["some", "path"], "should capture the context");
 		});
 		it("allows arrays", () => {
 			const struct = Structure.array(Structure.string());
 			const result = struct.process(["a", "b", "c"]);
-			assertEquals(result, ["a", "b", "c"]);
+			assert.deepEqual(result, ["a", "b", "c"]);
 		});
 		it("validates array items", () => {
 			const struct = Structure.array(Structure.string());
-			const error = assertThrows(
-				() => struct.process(["a", 2, "c"]),
-				Structure.Error,
-			);
-
-			assertEquals(error.message, "Array item does not match schema");
-			assertEquals(error.path, []);
-			assertEquals(error.children.length, 1, "should have one nested error");
-			assertEquals(error.children[0].message, "Expected a string");
-			assertEquals(error.children[0].path, ["1"], "should capture context");
+			assert.throws(() => struct.process(["a", 2, "c"]), {
+				name: "Structure.Error",
+				message: "Array item does not match schema",
+				path: [],
+				children: [new Structure.Error("Expected a string", ["1"])],
+			});
 		});
 	});
 
 	describe("literal", () => {
 		it("creates a structure", () => {
 			const struct = Structure.literal(42);
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("allows that value", () => {
 			const struct = Structure.literal(42);
-			assertEquals(struct.process(42), 42, "should pass the value through");
+			assert.equal(struct.process(42), 42, "should pass the value through");
 		});
 		it("throws for different values", () => {
 			const struct = Structure.literal(42);
 
-			const error = assertThrows(
-				() => struct.process(69, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertIsError(error, Structure.Error, "Expected number literal: 42");
-			assertEquals(error.path, ["some", "path"]);
+			assert.throws(() => struct.process(69, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Expected number literal: 42",
+				path: ["some", "path"],
+			});
 		});
 		it("throws for different types", () => {
 			const struct = Structure.literal(42);
 
-			const error = assertThrows(
-				() => struct.process("nice", { path: ["some", "path"] }),
-				Structure.Error,
-			);
-			assertIsError(error, Structure.Error, "Expected number literal: 42");
-			assertEquals(error.path, ["some", "path"]);
+			assert.throws(() => struct.process("nice", _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Expected number literal: 42",
+				path: ["some", "path"],
+			});
 		});
 		it("throws for missing values", () => {
 			const struct = Structure.literal(42);
 
-			const error = assertThrows(
-				() => struct.process(undefined, { path: ["some", "path"] }),
-				Structure.Error,
-			);
-
-			assertIsError(error, Structure.Error, "Missing value");
-			assertEquals(error.path, ["some", "path"]);
+			assert.throws(() => struct.process(undefined, _ctx(["some", "path"])), {
+				name: "Structure.Error",
+				message: "Missing value",
+				path: ["some", "path"],
+			});
 		});
 	});
 
 	describe("union", () => {
 		it("creates a structure", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
-			assertInstanceOf(struct, Structure);
+			assert(struct instanceof Structure);
 		});
 		it("allows each value", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
-			assertEquals(struct.process(42), 42, "should pass the value through");
-			assertEquals(
+			assert.equal(struct.process(42), 42, "should pass the value through");
+			assert.equal(
 				struct.process("Geoff"),
 				"Geoff",
 				"should pass the value through",
@@ -517,7 +509,7 @@ describe("Structure", () => {
 		});
 		it("combines the schema", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				oneOf: [{ type: "string" }, { type: "number" }],
 			});
 		});
@@ -527,40 +519,40 @@ describe("Structure", () => {
 				Structure.literal("b"),
 				Structure.literal("c"),
 			]);
-			assertEquals(struct.process("a"), "a", "should pass the value through");
-			assertEquals(struct.process("b"), "b", "should pass the value through");
-			assertEquals(struct.process("c"), "c", "should pass the value through");
+			assert.equal(struct.process("a"), "a", "should pass the value through");
+			assert.equal(struct.process("b"), "b", "should pass the value through");
+			assert.equal(struct.process("c"), "c", "should pass the value through");
 		});
 		it("fails when no matches", () => {
 			const struct = Structure.union([Structure.string(), Structure.number()]);
 			const exec = () => struct.process(true);
-			assertThrows(exec, Structure.Error);
+			assert.throws(exec, Structure.Error);
 		});
 	});
 
 	describe("fromJSONSchema", () => {
 		it("parses constants", () => {
 			const result = Structure.fromJSONSchema({ const: 42 });
-			assertEquals(result.process(42), 42);
+			assert.equal(result.process(42), 42);
 		});
 		it("parses strings", () => {
 			const result = Structure.fromJSONSchema({ type: "string" });
-			assertEquals(result.process("Geoff Testington"), "Geoff Testington");
+			assert.equal(result.process("Geoff Testington"), "Geoff Testington");
 		});
 		it("parses numbers", () => {
 			const result = Structure.fromJSONSchema({ type: "number" });
-			assertEquals(result.process(42), 42);
+			assert.equal(result.process(42), 42);
 		});
 		it("parses booleans", () => {
 			const result = Structure.fromJSONSchema({ type: "boolean" });
-			assertEquals(result.process(false), false);
+			assert.equal(result.process(false), false);
 		});
 		it("parses arrays", () => {
 			const result = Structure.fromJSONSchema({
 				type: "array",
 				items: { type: "string" },
 			});
-			assertEquals(result.process(["A", "B", "C"]), ["A", "B", "C"]);
+			assert.deepEqual(result.process(["A", "B", "C"]), ["A", "B", "C"]);
 		});
 		it("parses objects", () => {
 			const result = Structure.fromJSONSchema({
@@ -568,24 +560,24 @@ describe("Structure", () => {
 				properties: { name: { type: "string" } },
 				required: ["name"],
 			});
-			assertEquals(result.process({ name: "Geoff" }), { name: "Geoff" });
+			assert.deepEqual(result.process({ name: "Geoff" }), { name: "Geoff" });
 		});
 		it("parses objects with optionals", () => {
 			const result = Structure.fromJSONSchema({
 				type: "object",
 				properties: { name: { type: "string" } },
 			});
-			assertEquals(result.process({}), {});
+			assert.deepEqual(result.process({}), {});
 		});
 		it("parses unions", () => {
 			const result = Structure.fromJSONSchema({
 				anyOf: [{ type: "string" }, { type: "number" }],
 			});
-			assertEquals(result.process("Geoff Testington"), "Geoff Testington");
-			assertEquals(result.process(42), 42);
+			assert.equal(result.process("Geoff Testington"), "Geoff Testington");
+			assert.equal(result.process(42), 42);
 		});
 		it("throws for unknown", () => {
-			assertThrows(() => Structure.fromJSONSchema({}));
+			assert.throws(() => Structure.fromJSONSchema({}));
 		});
 	});
 
@@ -597,17 +589,17 @@ describe("Structure", () => {
 		]);
 
 		it("allows matching arrays", () => {
-			assertEquals(struct.process(["Geoff T", 42, "magic"]), [
+			assert.deepEqual(struct.process(["Geoff T", 42, "magic"]), [
 				"Geoff T",
 				42,
 				"magic",
 			]);
 		});
 		it("blocks subsets", () => {
-			assertThrows(() => struct.process(["Geoff T", 42]));
+			assert.throws(() => struct.process(["Geoff T", 42]));
 		});
 		it("blocks invalid", () => {
-			assertThrows(() => struct.process([42, "Geoff T", new Date()]));
+			assert.throws(() => struct.process([42, "Geoff T", new Date()]));
 		});
 	});
 
@@ -615,7 +607,7 @@ describe("Structure", () => {
 		it("allows matching key-value pairs", () => {
 			const struct = Structure.record(Structure.string(), Structure.number());
 			const value = struct.process({ age: 42 });
-			assertEquals(value, { age: 42 });
+			assert.deepEqual(value, { age: 42 });
 		});
 		it("allows enum keys", () => {
 			const struct = Structure.record(
@@ -623,7 +615,7 @@ describe("Structure", () => {
 				Structure.string(),
 			);
 			const value = struct.process({ name: "Geoff T" });
-			assertEquals(value, { name: "Geoff T" });
+			assert.deepEqual(value, { name: "Geoff T" });
 		});
 		it("blocks invalid keys", () => {
 			const struct = Structure.record(
@@ -631,7 +623,7 @@ describe("Structure", () => {
 				Structure.string(),
 			);
 
-			assertThrows(
+			assert.throws(
 				() => struct.process({ pet: "Hugo" }),
 				(error) => error instanceof Structure.Error,
 			);
@@ -642,7 +634,7 @@ describe("Structure", () => {
 				Structure.string(),
 			);
 
-			assertThrows(
+			assert.throws(
 				() => struct.process({ name: 119 }),
 				(error) => error instanceof Structure.Error,
 			);
@@ -653,10 +645,10 @@ describe("Structure", () => {
 		const struct = Structure.null();
 
 		it("allows null", () => {
-			assertEquals(struct.process(null), null);
+			assert.equal(struct.process(null), null);
 		});
 		it("blocks not-null", () => {
-			assertThrows(
+			assert.throws(
 				() => struct.process("a string"),
 				(error) => error instanceof Structure.Error,
 			);
@@ -667,19 +659,19 @@ describe("Structure", () => {
 		const struct = Structure.any();
 
 		it("allows strings", () => {
-			assertEquals(struct.process("a string"), "a string");
+			assert.equal(struct.process("a string"), "a string");
 		});
 		it("allows numbers", () => {
-			assertEquals(struct.process(42), 42);
+			assert.equal(struct.process(42), 42);
 		});
 		it("allows booleans", () => {
-			assertEquals(struct.process(false), false);
+			assert.equal(struct.process(false), false);
 		});
 		it("allows objects", () => {
-			assertEquals(struct.process({ name: "Geoff" }), { name: "Geoff" });
+			assert.deepEqual(struct.process({ name: "Geoff" }), { name: "Geoff" });
 		});
 		it("allows arrays", () => {
-			assertEquals(struct.process([1, 2, 3]), [1, 2, 3]);
+			assert.deepEqual(struct.process([1, 2, 3]), [1, 2, 3]);
 		});
 	});
 
@@ -692,7 +684,7 @@ describe("Structure", () => {
 
 			const result = struct.process({ name: "Geoff Testington", age: 42 });
 
-			assertEquals(result, {
+			assert.deepEqual(result, {
 				name: "Geoff Testington",
 				age: 42,
 			});
@@ -703,7 +695,7 @@ describe("Structure", () => {
 				age: Structure.number(),
 			});
 
-			assertEquals(struct.process({ name: "Geoff Testington" }), {
+			assert.deepEqual(struct.process({ name: "Geoff Testington" }), {
 				name: "Geoff Testington",
 			});
 		});
@@ -713,7 +705,7 @@ describe("Structure", () => {
 				age: Structure.number(),
 			});
 
-			assertEquals(struct.process({}), {});
+			assert.deepEqual(struct.process({}), {});
 		});
 		it("defaults", () => {
 			const struct = Structure.partial({
@@ -721,7 +713,7 @@ describe("Structure", () => {
 				age: Structure.number(),
 			});
 
-			assertEquals(struct.process(), {});
+			assert.deepEqual(struct.process(), {});
 		});
 		it("sets schema", () => {
 			const struct = Structure.partial({
@@ -729,7 +721,7 @@ describe("Structure", () => {
 				age: Structure.number(),
 			});
 
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "object",
 				properties: {
 					name: { type: "string" },
@@ -744,14 +736,14 @@ describe("Structure", () => {
 	describe("date", () => {
 		it("allows dates", () => {
 			const struct = Structure.date();
-			assertEquals(
+			assert.deepEqual(
 				struct.process(new Date("2025-05-04 12:34:56")),
 				new Date("2025-05-04 12:34:56"),
 			);
 		});
 		it("parses strings", () => {
 			const struct = Structure.date();
-			assertEquals(
+			assert.deepEqual(
 				struct.process("2025-05-04 12:34:56"),
 				new Date("2025-05-04 12:34:56"),
 			);
@@ -759,7 +751,7 @@ describe("Structure", () => {
 		// https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00#rfc.section.7.3.1
 		it("sets schema", () => {
 			const struct = Structure.date();
-			assertEquals(struct.schema, {
+			assert.deepEqual(struct.schema, {
 				type: "string",
 				format: "date-time",
 			});

@@ -1,4 +1,6 @@
-import { describe, it, assertThrows, assertEquals } from "../core/test-deps.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import {
 	_assertHasNoNewline,
 	_stringify,
@@ -7,9 +9,9 @@ import {
 
 describe("_assertHasNoNewline", () => {
 	it("throws for newlines", () => {
-		assertThrows(() => _assertHasNoNewline("\r", "variable", "SSE Error"));
-		assertThrows(() => _assertHasNoNewline("\n", "variable", "SSE Error"));
-		assertThrows(() => _assertHasNoNewline("\r\n", "variable", "SSE Error"));
+		assert.throws(() => _assertHasNoNewline("\r", "variable", "SSE Error"));
+		assert.throws(() => _assertHasNoNewline("\n", "variable", "SSE Error"));
+		assert.throws(() => _assertHasNoNewline("\r\n", "variable", "SSE Error"));
 	});
 });
 
@@ -23,7 +25,7 @@ describe("__stringify", () => {
 			retry: 7,
 		});
 
-		assertEquals(
+		assert.equal(
 			result,
 			`:hello there
 event:update
@@ -56,6 +58,6 @@ describe("ServerSentEventStream", () => {
 			messages.push(decoder.decode(m));
 		}
 
-		assertEquals(messages, ["event:update\ndata:Pizza is ready\n\n"]);
+		assert.deepEqual(messages, ["event:update\ndata:Pizza is ready\n\n"]);
 	});
 });
