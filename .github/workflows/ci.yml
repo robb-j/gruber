@@ -11,5 +11,6 @@ jobs:
         with:
           node-version-file: .node-version
           cache: "npm"
+      - run: npm ci
       - run: npm run test
       - run: npm run build
