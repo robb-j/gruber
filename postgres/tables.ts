@@ -3,6 +3,7 @@ import { Structure } from "../config/mod.ts";
 import {
 	Postgres,
 	PostgresClause,
+	PostgresJson,
 	PostgresOrdering,
 	type PostgresClient,
 	type PostgresValue,
@@ -53,11 +54,11 @@ export class SelectQuery<
 
 	run(sql: PostgresClient): Promise<Pick<T, K>[]> {
 		return sql.execute`
-      SELECT ${Postgres.escape(this.columns)}
-      FROM ${Postgres.escape(this.tableName)}
-      ${_where(this.clause)}
-      ${_orderBy(this.ordering)}
-    `;
+			SELECT ${Postgres.escape(this.columns)}
+			FROM ${Postgres.escape(this.tableName)}
+			${_where(this.clause)}
+			${_orderBy(this.ordering)}
+		`;
 	}
 }
 
@@ -76,8 +77,8 @@ export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
 		return this;
 	}
 
-	values: Partial<T> = {};
-	set(values: Partial<T>) {
+	values: PostgresInsert<T> = {} as any;
+	set(values: PostgresInsert<T>) {
 		Object.assign(this.values, values);
 		return this;
 	}
@@ -102,6 +103,10 @@ export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
 	}
 }
 
+export type PostgresInsert<T> = {
+	[K in keyof T]: T[K] | PostgresJson | undefined;
+};
+
 export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 	Pick<T, K>[]
 > {
@@ -110,8 +115,8 @@ export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 		this.tableName = tableName;
 	}
 
-	records: Partial<T>[] = [];
-	values(records: Partial<T> | Partial<T>[]) {
+	records: PostgresInsert<T>[] = [];
+	values(records: PostgresInsert<T> | PostgresInsert<T>[]) {
 		this.records = Array.isArray(records) ? records : [records];
 		return this;
 	}
@@ -126,7 +131,7 @@ export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 	async run(sql: PostgresClient) {
 		return sql.execute<Pick<T, K>>`
       INSERT INTO ${Postgres.escape(this.tableName)}
-      VALUES ${Postgres.escape(this.records)}
+      ${Postgres.escape(this.records)}
       ${_returning(this.columns)}
     `;
 	}
@@ -199,4 +204,9 @@ export class Table<T> {
 	delete(): DeleteQuery<T> {
 		return new DeleteQuery(this.name);
 	}
+}
+
+export async function firstRecord<T>(promise: Promise<T[]>) {
+	const [record = undefined] = await promise;
+	return record;
 }

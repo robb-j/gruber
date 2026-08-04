@@ -11,7 +11,7 @@ This file documents notable changes to the project
 
 **new**
 
-- improved `PostgresClient` interface
+- new `PostgresClient` interface
 - new `Table` abstraction
 - basic query building for `SELECT`, `UPDATE`, `INSERT` & `DELETE` operations on known tables
 
