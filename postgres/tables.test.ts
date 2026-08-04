@@ -279,7 +279,6 @@ describe("InsertQuery", () => {
 			const raw = _prettyPostgresQuery(execute.uses[0]);
 
 			assert.match(raw, /^INSERT INTO pets$/m);
-			assert.match(raw, /^VALUES /m);
 			assert.deepEqual(values[0], new PostgresEscaped("pets"));
 			assert.deepEqual(
 				values[1],

@@ -104,7 +104,7 @@ export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
 }
 
 export type PostgresInsert<T> = {
-	[K in keyof T]: T[K] | PostgresJson | undefined;
+	[K in keyof T]?: T[K] | PostgresJson | undefined;
 };
 
 export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
