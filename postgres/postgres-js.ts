@@ -4,6 +4,7 @@ import {
 	PostgresClause,
 	PostgresEscaped,
 	PostgresJson,
+	QueryPromise,
 	type PostgresClient,
 	type PostgresValue,
 } from "./postgres-client.ts";
@@ -18,9 +19,11 @@ export class PostgresJsClient implements PostgresClient {
 	execute<T>(
 		strings: TemplateStringsArray,
 		...values: PostgresValue[]
-	): Promise<T[]> {
-		// console.debug("SQL", _prettyPostgresQuery([strings, ...values]));
-		return this.sql(strings, ...values.map((v) => _convert(this.sql, v)));
+	): QueryPromise<T[]> {
+		// console.debug?.("SQL", _prettyPostgresQuery([strings, ...values]));
+		return QueryPromise.wrap(
+			this.sql(strings, ...values.map((v) => _convert(this.sql, v))),
+		);
 	}
 
 	async transaction(): Promise<PostgresClient> {
