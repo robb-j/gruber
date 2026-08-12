@@ -13,22 +13,39 @@ This file documents notable changes to the project
 
 - new `PostgresClient` interface
 - new `Table` abstraction
-- basic query building for `SELECT`, `UPDATE`, `INSERT` & `DELETE` operations on known tables
+- basic query building for `SELECT`, `UPDATE`, `INSERT` & `DELETE` operations on defined tables
 
 **fixes**
 
 - Only call "terminate" method once
 - More sensible default grace for serveHTTP/createStoppable (5s)
 - `Structure.enum` generics work correctly
+- `createStoppable` bug fixes
+- `serveHTTP` defaults to a 5s grace period rather than hanging forever
 
 **deprecations**
 
 - `KoaRouter` → `koaMiddleware`
 - `ExpressRouter` → `expressMiddleware`
+- `DenoRouter` → `Deno.serve(r => router.getResponse(r))`
 
 **unstable**
 
 - Add `Structure.type`
+- New **browser** entrypoint
+
+**docs**
+
+- Only show exports from the same module
+- Show deprecation notices
+
+**internal**
+
+- moved to a new single entrypoint for deno/node/browsers using package.json "exports"
+- node/deno/browser modules are responsible for exporting the parts of gruber they want to expose
+- migrated tests to Node.js + TypeScript
+- upgraded GitHub Actions workflows
+- removed unstable "authentication" module
 
 ## 0.9.2
 
