@@ -12,6 +12,14 @@ layout: html.njk
 </span>
 {% endmacro %}
 
+{% macro deprecation(text) %}
+<blockquote>
+	<strong>Deprecated</strong>
+	&ndash;
+	{{ text | relink | safe }}
+</blockquote>
+{% endmacro %}
+
 {% set groups = api[api.entrypoint] | entries | groupby('1.tags.group') %}
 
 <main class="api">
@@ -70,6 +78,10 @@ layout: html.njk
 								{{ entry[0] }}
 								{{ labels(entry[1].tags) }}
 							</h3>
+
+							{% if entry[1].tags.deprecated %}
+								{{ deprecation(entry[1].tags.deprecated) }}
+							{% endif %}
 		
 							{{ entry[1].content | renderContent('md') | safe }}
 		
@@ -80,6 +92,10 @@ layout: html.njk
 									{{ member[0] }}
 									{{ labels(member[1].tags) }}
 								</h4>
+
+								{% if member[1].tags.deprecated %}
+									{{ deprecation(member[1].tags.deprecated) }}
+								{% endif %}
 			
 								{{ member[1].content | renderContent('md') | safe }}
 							</div>

@@ -303,9 +303,13 @@ export function createStoppable(
 	let gracefully = true;
 
 	// Listen for sockets
-	server.on("connection", (socket) => {
-		socketRequests.set(socket, 0);
-		socket.once("close", () => socketRequests.delete(socket));
+	server.on("connection", async (socket) => {
+		if (stopping) {
+			await nuke([socket]);
+		} else {
+			socketRequests.set(socket, 0);
+			socket.once("close", () => socketRequests.delete(socket));
+		}
 	});
 
 	// Count the requests per socket as they come in/out of the server
@@ -321,28 +325,30 @@ export function createStoppable(
 			const pending = socketRequests.get(req.socket)! - 1;
 			socketRequests.set(req.socket, pending);
 
-			if (stopping && pending === 0) req.socket.end();
+			if (stopping && pending === 0) _try(() => req.socket.end());
 		});
 	});
 
 	// Dangerously end sockets and destroy connections
-	async function nuke() {
+	async function nuke(sockets: Iterable<Socket>) {
 		gracefully = false;
-		for (const socket of socketRequests.keys()) socket.end();
+		for (const socket of sockets) _try(() => socket.end());
 		await new Promise((r) => setImmediate(r));
-		for (const socket of socketRequests.keys()) socket.destroy();
+		for (const socket of sockets) _try(() => socket.destroy());
 	}
 
 	return async () => {
 		if (stopping) throw new Error("already stopping");
 
+		stopping = true;
+
 		// allow request handlers to update state before we act on that state
 		await new Promise((r) => setImmediate(r));
 
-		stopping = true;
-
 		// Start the countdown to fully stop the server, if a timeout was set
-		if (timeout < Infinity) setTimeout(() => nuke(), timeout);
+		if (timeout < Infinity) {
+			setTimeout(() => nuke(socketRequests.keys()), timeout);
+		}
 
 		// Start closing the server
 		const promise = new Promise<boolean>((resolve, reject) =>
@@ -351,9 +357,18 @@ export function createStoppable(
 
 		// Close any idle sockets
 		for (const [socket, requests] of socketRequests.entries()) {
-			if (requests === 0) socket.end();
+			if (requests === 0) _try(() => socket.end());
 		}
 
 		return promise;
 	};
+}
+
+// A little helper to tidy up the code above
+function _try(block: () => void) {
+	try {
+		block();
+	} catch {
+		// Intentionally empty
+	}
 }

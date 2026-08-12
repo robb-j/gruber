@@ -22,7 +22,7 @@ export function _additionalProperties(
 }
 
 /**
- * @group Structure
+ * @group Structures
  *
  * **Structure** is a composable primative for processing values to make sure they are what you expect them to be, optionally coercing the value into something else. It's also strongly-typed so values that are validated have the correct TypeScript type too.
  *
@@ -75,7 +75,9 @@ export class Structure<T> {
 		};
 	}
 
-	/** @deprecated use {@link getFullSchema} */
+	/**
+	 * @deprecated use {@link getFullSchema}
+	 */
 	getSchema(): Schema {
 		return this.getFullSchema();
 	}

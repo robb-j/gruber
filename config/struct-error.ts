@@ -4,7 +4,7 @@ import type { Structure } from "./structure.ts";
 
 /**
  * @name Structure.Error
- * @group Structure
+ * @group Structures
  *
  * An error produced from processing a value for a {@link Structure}
  *

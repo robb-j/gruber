@@ -81,7 +81,7 @@ export interface PostgresClient extends AsyncDisposable {
 	execute<T>(
 		strings: TemplateStringsArray,
 		...values: PostgresValue[]
-	): Promise<T[]>;
+	): QueryPromise<T[]>;
 
 	transaction(): Promise<PostgresClient>;
 
@@ -140,4 +140,15 @@ export function _prettyPostgresQuery([strings, ...values]: any[]) {
 		strings,
 		...values.map((v) => _prettyPostgresValue(v)),
 	);
+}
+
+// IDEA: could use a custom promise to get the "first" record which is often used
+export class QueryPromise<T extends any[]> extends Promise<T> {
+	static wrap<T extends any[]>(promise: Promise<T>) {
+		return new QueryPromise((resolve, reject) => promise.then(resolve, reject));
+	}
+
+	first(): Promise<T[number] | undefined> {
+		return this.then(([value]) => value);
+	}
 }

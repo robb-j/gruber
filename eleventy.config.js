@@ -30,6 +30,11 @@ export default function (eleventyConfig) {
 		arr.toSorted((a, b) => b.date - a.date),
 	);
 	eleventyConfig.addFilter("shortDate", (v) => shortDate.format(v));
+	eleventyConfig.addFilter("relink", (text, prefix = "") => {
+		return text.replace(/{@link\s+?(?<name>\w+)\s*?}/g, (_, name) => {
+			return `<a href="#${prefix}${name.toLowerCase()}">${name}</a>`;
+		});
+	});
 }
 
 export const config = {

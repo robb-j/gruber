@@ -5,12 +5,13 @@ import {
 	PostgresClause,
 	PostgresJson,
 	PostgresOrdering,
+	QueryPromise,
 	type PostgresClient,
 	type PostgresValue,
 } from "./postgres-client.ts";
 
 export interface PostgresQuery<T> {
-	run(sql: PostgresClient): Promise<T>;
+	run(sql: PostgresClient): QueryPromise<T[]>;
 }
 
 function _orderBy(ordering?: PostgresOrdering) {
@@ -32,7 +33,7 @@ function _returning(columns?: any[]) {
 export class SelectQuery<
 	T,
 	K extends keyof T = keyof T,
-> implements PostgresQuery<Pick<T, K>[]> {
+> implements PostgresQuery<Pick<T, K>> {
 	tableName;
 	columns;
 	constructor(tableName: string, columns: K[]) {
@@ -52,7 +53,7 @@ export class SelectQuery<
 		return this;
 	}
 
-	run(sql: PostgresClient): Promise<Pick<T, K>[]> {
+	run(sql: PostgresClient): QueryPromise<Pick<T, K>[]> {
 		return sql.execute`
 			SELECT ${Postgres.escape(this.columns)}
 			FROM ${Postgres.escape(this.tableName)}
@@ -64,7 +65,7 @@ export class SelectQuery<
 
 // NOTE: postgres doesn't support ORDER BY for updates
 export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
-	Pick<T, K>[]
+	Pick<T, K>
 > {
 	tableName;
 	constructor(tableName: string) {
@@ -108,7 +109,7 @@ export type PostgresInsert<T> = {
 };
 
 export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
-	Pick<T, K>[]
+	Pick<T, K>
 > {
 	tableName;
 	constructor(tableName: string) {
@@ -128,17 +129,17 @@ export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 		return newThis;
 	}
 
-	async run(sql: PostgresClient) {
+	run(sql: PostgresClient) {
 		return sql.execute<Pick<T, K>>`
-      INSERT INTO ${Postgres.escape(this.tableName)}
-      ${Postgres.escape(this.records)}
-      ${_returning(this.columns)}
-    `;
+			INSERT INTO ${Postgres.escape(this.tableName)}
+			${Postgres.escape(this.records)}
+			${_returning(this.columns)}
+		`;
 	}
 }
 
 export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
-	Pick<T, K>[]
+	Pick<T, K>
 > {
 	tableName;
 	constructor(tableName: string) {
@@ -158,14 +159,14 @@ export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
 		return newThis;
 	}
 
-	run(sql: PostgresClient): Promise<Pick<T, K>[]> {
+	run(sql: PostgresClient) {
 		if (!this.clause) throw new TypeError("no clause");
 
 		return sql.execute<Pick<T, K>>`
-      DELETE FROM ${Postgres.escape(this.tableName)}
-      WHERE ${this.clause}
-      ${_returning(this.columns)}
-    `;
+			DELETE FROM ${Postgres.escape(this.tableName)}
+			WHERE ${this.clause}
+			${_returning(this.columns)}
+		`;
 	}
 }
 

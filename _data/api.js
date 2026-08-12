@@ -2,6 +2,8 @@ import slugify from "@sindresorhus/slugify";
 import createDebug from "debug";
 import { Project, SyntaxKind } from "ts-morph";
 import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
 
 const debug = createDebug("gruber:api");
 
@@ -25,16 +27,21 @@ async function generate() {
 
 		debug(entrypoint);
 
-		for (let symbol of source.getExportSymbols()) {
-			// for (const doc of processSymbol(symbol)) {
-			// 	debug("found", doc);
-			// }
-			// const result = processSymbol(symbol);
-			// if (!result) continue;
+		// Get the working directory of the module (without the mod.ts)
+		const base = path.join(process.cwd(), path.dirname(entrypoint));
 
+		for (let symbol of source.getExportSymbols()) {
+			// Skip the symbol if it is undocumented
 			const doc = processSymbol(symbol);
 			if (!doc) continue;
-			debug("found", doc.id);
+
+			// Skip the symbol if it is from a different module
+			if (!doc.fullName.includes(base)) {
+				debug("  [skip]", doc.id);
+				continue;
+			}
+
+			debug("  " + doc.id);
 
 			output[entrypoint][doc.name] = {
 				entrypoint,
@@ -54,7 +61,7 @@ function processSymbol(symbol, prefix = "") {
 	const children = {};
 
 	if (!doc) {
-		debug("skip: " + symbol.getEscapedName());
+		// debug("skip: " + symbol.getEscapedName());
 		return null;
 	}
 
@@ -100,6 +107,7 @@ function processSymbol(symbol, prefix = "") {
 
 	return {
 		...getSymbolDocumentation(symbol, prefix),
+		fullName: symbol.getFullyQualifiedName(),
 		children,
 	};
 }
