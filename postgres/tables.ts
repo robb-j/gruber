@@ -189,7 +189,7 @@ export class Table<T> {
 	}
 
 	select(): SelectQuery<T, keyof T>;
-	select<K extends keyof T = keyof T>(columns?: K[]): SelectQuery<T, K>;
+	select<K extends keyof T = keyof T>(columns: K[]): SelectQuery<T, K>;
 	select(columns?: any[]): SelectQuery<any, any> {
 		return new SelectQuery(this.name, columns ?? this.columnNames);
 	}

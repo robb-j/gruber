@@ -136,14 +136,32 @@ export async function bundle() {
 		type: "module",
 		exports: {
 			".": {
-				deno: "./deno/deno/mod.js",
-				browser: "./browser/browser/mod.js",
-				node: "./node/node/mod.js",
+				deno: {
+					types: "./deno/deno/mod.d.ts",
+					default: "./deno/deno/mod.js",
+				},
+				browser: {
+					types: "./browser/browser/mod.d.ts",
+					default: "./browser/browser/mod.js",
+				},
+				node: {
+					types: "./node/node/mod.d.ts",
+					default: "./node/node/mod.js",
+				},
 			},
 			"./*": {
-				deno: "./deno/deno/*",
-				browser: "./browser/browser/*",
-				node: "./node/node/*",
+				deno: {
+					types: "./deno/deno/*.d.ts",
+					default: "./deno/deno/*",
+				},
+				browser: {
+					types: "./browser/browser/*.d.ts",
+					default: "./browser/browser/*",
+				},
+				node: {
+					types: "./node/node/*.d.ts",
+					default: "./node/node/*",
+				},
 			},
 		},
 	});

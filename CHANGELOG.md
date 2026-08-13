@@ -22,6 +22,7 @@ This file documents notable changes to the project
 - `Structure.enum` generics work correctly
 - `createStoppable` bug fixes
 - `serveHTTP` defaults to a 5s grace period rather than hanging forever
+- (beta1) fix generated package.json so types can be imported
 
 **deprecations**
 
