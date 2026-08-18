@@ -23,6 +23,9 @@ This file documents notable changes to the project
 - `createStoppable` bug fixes
 - `serveHTTP` defaults to a 5s grace period rather than hanging forever
 - (beta1) fix generated package.json so types can be imported
+- (beta2) PostgresQuery#first returns null instead of undefined
+- (beta2) export `TableColumns<T>`
+- (beta2) remove `Table.columns` and add `Table.properties(names?)`
 
 **deprecations**
 

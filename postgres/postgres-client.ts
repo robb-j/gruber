@@ -148,7 +148,7 @@ export class QueryPromise<T extends any[]> extends Promise<T> {
 		return new QueryPromise((resolve, reject) => promise.then(resolve, reject));
 	}
 
-	first(): Promise<T[number] | undefined> {
+	first(): Promise<T[number] | null> {
 		return this.then(([value]) => value);
 	}
 }

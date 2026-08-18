@@ -1,4 +1,5 @@
 import { Structure } from "../config/mod.ts";
+import { pickProperties } from "../core/utilities.ts";
 
 import {
 	Postgres,
@@ -170,14 +171,18 @@ export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
 	}
 }
 
-type TableColumns<T> = { [K in keyof T]: Structure<T[K]> };
+export type TableColumns<T> = { [K in keyof T]: Structure<T[K]> };
 
 export class Table<T> {
-	name;
-	columns;
+	get name() {
+		return this.#name;
+	}
+
+	#name;
+	#columns;
 	constructor(name: string, columns: TableColumns<T>) {
-		this.name = name;
-		this.columns = columns;
+		this.#name = name;
+		this.#columns = columns;
 	}
 
 	static define<T>(name: string, columns: TableColumns<T>) {
@@ -185,29 +190,30 @@ export class Table<T> {
 	}
 
 	get columnNames(): (keyof T)[] {
-		return Object.keys(this.columns) as any;
+		return Object.keys(this.#columns) as any;
 	}
 
 	select(): SelectQuery<T, keyof T>;
 	select<K extends keyof T = keyof T>(columns: K[]): SelectQuery<T, K>;
 	select(columns?: any[]): SelectQuery<any, any> {
-		return new SelectQuery(this.name, columns ?? this.columnNames);
+		return new SelectQuery(this.#name, columns ?? this.columnNames);
 	}
 
 	update(): UpdateQuery<T> {
-		return new UpdateQuery(this.name);
+		return new UpdateQuery(this.#name);
 	}
 
 	insert(): InsertQuery<T> {
-		return new InsertQuery(this.name);
+		return new InsertQuery(this.#name);
 	}
 
 	delete(): DeleteQuery<T> {
-		return new DeleteQuery(this.name);
+		return new DeleteQuery(this.#name);
 	}
-}
 
-export async function firstRecord<T>(promise: Promise<T[]>) {
-	const [record = undefined] = await promise;
-	return record;
+	columns(): TableColumns<T>;
+	columns<K extends keyof T>(names: K[]): TableColumns<Pick<T, K>>;
+	columns(names = this.columnNames) {
+		return pickProperties(this.#columns, names);
+	}
 }
