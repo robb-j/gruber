@@ -11,11 +11,7 @@ import {
 	executePostgresMigration,
 	getPostgresMigrations,
 	postgresBootstrapMigration,
-	PostgresClause,
-	PostgresEscaped,
-	PostgresJson,
-	type PostgresClient,
-	type PostgresValue,
+	postgresMigrations,
 } from "../postgres/mod.ts";
 
 const migrationExtensions = new Set([".ts", ".js"]);
@@ -89,3 +85,19 @@ export function getPostgresMigrator(options: PostgresMigratorOptions) {
 
 /** @deprecated use {@link getPostgresMigrator} */
 export const getNodePostgresMigrator = getPostgresMigrator;
+
+/** @unstable - needs porting to Deno + API design */
+export async function _loadPostgresMigrations(base: URL) {
+	const defs = [...postgresMigrations];
+
+	const matches = await fs.opendir(base);
+
+	for await (const entry of matches) {
+		if (!entry.isFile()) continue;
+		if (!migrationExtensions.has(path.extname(entry.name))) continue;
+
+		defs.push(await loadMigration(entry.name, base));
+	}
+
+	return defs;
+}

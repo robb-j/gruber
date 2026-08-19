@@ -1,38 +1,35 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { Structure } from "../config/mod.ts";
+import { type MigrationDefinition } from "../core/mod.ts";
 import type { PostgresClient } from "./postgres-client.ts";
 import type { PostgresMigrationRecord } from "./postgres-migrator.ts";
 import { Table } from "./tables.ts";
-import { loadMigration, type MigrationDefinition } from "../core/mod.ts";
 
 const MigrationTable = Table.define<PostgresMigrationRecord>("migrations", {
 	name: Structure.string(),
 	created: Structure.date(),
 });
 
-export interface PostgresMigratorOptions {
-	verbose?: boolean;
-}
+// export interface PostgresMigratorOptions {
+// 	verbose?: boolean;
+// }
 
 export class PostgresMigrator {
 	#postgres;
 	#definitions;
-	#options;
+	// #options;
 	constructor(
 		postgres: PostgresClient,
 		definitions: MigrationDefinition<PostgresClient>[],
-		options: PostgresMigratorOptions = {},
+		// options: PostgresMigratorOptions = {},
 	) {
 		this.#postgres = postgres;
 		this.#definitions = definitions;
-		this.#options = options;
+		// this.#options = options;
 	}
 
 	#debug(message: string, ...args: any[]) {
-		if (!this.#options.verbose) return;
-		console.debug("[postgres] " + message, ...args);
+		// if (!this.#options.verbose) return;
+		// console.debug("[postgres] " + message, ...args);
 	}
 
 	getDefinitions() {
@@ -95,36 +92,21 @@ export interface PostgresMigratorRunOptions {
 	count?: number;
 }
 
-export const bootstrapMigration: MigrationDefinition<PostgresClient> = {
-	name: "000-bootstrap.ts",
-	async up(sql) {
-		await sql.execute`
-      CREATE TABLE "migrations" (
-        "name" varchar(255) PRIMARY KEY,
-        "created" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
-      )
-    `;
+export const postgresMigrations: MigrationDefinition<PostgresClient>[] = [
+	{
+		name: "000-bootstrap.js",
+		async up(sql) {
+			await sql.execute`
+				CREATE TABLE "migrations" (
+					"name" varchar(255) PRIMARY KEY,
+					"created" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
+				)
+			`;
+		},
+		async down(sql) {
+			await sql.execute`
+				DROP TABLE "migrations"
+			`;
+		},
 	},
-	async down(sql) {
-		await sql.execute`
-      DROP TABLE "migrations"
-    `;
-	},
-};
-
-const migrationExtensions = new Set([".ts", ".js"]);
-
-export async function loadMigrations(base: URL) {
-	const defs = [bootstrapMigration];
-
-	const matches = await fs.opendir(base);
-
-	for await (const entry of matches) {
-		if (!entry.isFile()) continue;
-		if (!migrationExtensions.has(path.extname(entry.name))) continue;
-
-		defs.push(await loadMigration(entry.name, base));
-	}
-
-	return defs;
-}
+];
