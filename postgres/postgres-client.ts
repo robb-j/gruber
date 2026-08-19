@@ -112,6 +112,7 @@ function _prettyLiteral(input: any) {
 	throw new TypeError("unknown literal");
 }
 
+// NOTE: doesn't handle INSERT INTO VALUES properly
 export function _prettyPostgresValue(value: PostgresValue): any {
 	if (value instanceof PostgresEscaped) {
 		if (Array.isArray(value.raw)) {
@@ -133,6 +134,55 @@ export function _prettyPostgresValue(value: PostgresValue): any {
 		return `'${JSON.stringify(value.json)}'`;
 	}
 	return value;
+}
+
+/**
+ * Turn template-string arguments for postgres.exec into a well-formed object
+ * that tests can rely on and assert against.
+ *
+ * Currently the naming convention is 1-indexed and the parameters are 0-indexed,
+ * this makes sense for human-readability which the tests are intended for.
+ */
+export function _decomposePostgresQuery(
+	[strings, ...values]: any[],
+	startAt = 0,
+) {
+	let n = startAt;
+	let query = "";
+	let params: any[] = [];
+
+	// Loop through each string-value pair
+	for (let i = 0; i < strings.length; i++) {
+		query += strings[i];
+
+		// Check there is a matching value (there isn't at the end)
+		const value = values[i];
+		if (value === undefined) continue;
+
+		// If the value is a clause, recursively process that
+		if (value instanceof PostgresClause) {
+			// Process the nested clause, starting continuing the parameter numbering
+			const nested = _decomposePostgresQuery(
+				[value.strings, ...value.values],
+				n,
+			);
+
+			// Join the query, increment the parameter number and concat nested params
+			query += nested.text;
+			n += nested.params.length;
+			params.push(...nested.params);
+		} else {
+			// Turn non-clauses into parameters using incremental variable names
+			query += "$" + ++n;
+			params.push(value);
+		}
+	}
+
+	// Return the processed text (trimmed) and the associated parameters
+	return {
+		text: trimIndentation(query),
+		params,
+	};
 }
 
 export function _prettyPostgresQuery([strings, ...values]: any[]) {

@@ -16,8 +16,12 @@ export interface PostgresQuery<T> {
 }
 
 function _orderBy(ordering?: PostgresOrdering) {
+	const dir =
+		ordering?.direction === "ASC"
+			? Postgres.clause`ASC`
+			: Postgres.clause`DESC`;
 	return ordering
-		? Postgres.clause`ORDER BY ${Postgres.escape(ordering.column)} ${Postgres.escape(ordering.direction)}`
+		? Postgres.clause`ORDER BY ${Postgres.escape(ordering.column)} ${dir}`
 		: Postgres.clause``;
 }
 
@@ -195,8 +199,8 @@ export class Table<T> {
 
 	select(): SelectQuery<T, keyof T>;
 	select<K extends keyof T = keyof T>(columns: K[]): SelectQuery<T, K>;
-	select(columns?: any[]): SelectQuery<any, any> {
-		return new SelectQuery(this.#name, columns ?? this.columnNames);
+	select(columns: any[] = this.columnNames): SelectQuery<any, any> {
+		return new SelectQuery(this.#name, columns);
 	}
 
 	update(): UpdateQuery<T> {
@@ -211,9 +215,9 @@ export class Table<T> {
 		return new DeleteQuery(this.#name);
 	}
 
-	columns(): TableColumns<T>;
-	columns<K extends keyof T>(names: K[]): TableColumns<Pick<T, K>>;
-	columns(names = this.columnNames) {
+	properties(): TableColumns<T>;
+	properties<K extends keyof T>(names: K[]): TableColumns<Pick<T, K>>;
+	properties(names = this.columnNames) {
 		return pickProperties(this.#columns, names);
 	}
 }

@@ -168,6 +168,9 @@ export function reconstructTemplateString(
 	return output;
 }
 
+/** @internal */
+export const untemplate = reconstructTemplateString;
+
 /**
  * @internal
  *

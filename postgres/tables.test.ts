@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
-import { trimIndentation } from "../core/utilities.ts";
+import { describe, it, mock } from "node:test";
+import { trimIndentation, untemplate } from "../core/utilities.ts";
 import { spy } from "../testing/mod.ts";
 import {
+	_decomposePostgresQuery,
 	_prettyPostgresQuery,
+	Postgres,
 	PostgresClause,
 	PostgresEscaped,
 	PostgresOrdering,
@@ -12,8 +14,10 @@ import {
 	DeleteQuery,
 	InsertQuery,
 	SelectQuery,
+	Table,
 	UpdateQuery,
 } from "./tables.ts";
+import { Structure } from "../config/structure.ts";
 
 interface PetRecord {
 	id: number;
@@ -22,6 +26,8 @@ interface PetRecord {
 }
 
 const columns: (keyof PetRecord)[] = ["id", "name", "created"];
+
+// TODO: move query-based logic to _decomposePostgresQuery?
 
 describe("SelectQuery", () => {
 	describe("constructor", () => {
@@ -116,7 +122,7 @@ describe("SelectQuery", () => {
 				values[3],
 				new PostgresClause(
 					["ORDER BY ", " ", ""],
-					[new PostgresEscaped("name"), new PostgresEscaped("DESC")],
+					[new PostgresEscaped("name"), new PostgresClause(["DESC"], [])],
 				),
 			);
 
@@ -370,6 +376,185 @@ describe("DeleteQuery", () => {
 		it("throws with no query", async () => {
 			const query = new DeleteQuery<PetRecord>("pets");
 			assert.throws(() => query.run({} as any), /no clause/);
+		});
+	});
+});
+
+describe("Table", () => {
+	describe("name", () => {
+		it("returns the table name", () => {
+			const table = new Table("pets", {});
+			assert.equal(table.name, "pets");
+		});
+	});
+
+	describe("columnNames", () => {
+		it("returns the names", () => {
+			const table = new Table("pets", {
+				id: Structure.number(),
+				name: Structure.string(),
+			});
+			assert.deepEqual(table.columnNames, ["id", "name"]);
+		});
+	});
+
+	describe("select", () => {
+		const table = new Table("pets", {
+			id: Structure.number(),
+			name: Structure.string(),
+		});
+
+		it("generates queries", async () => {
+			const sql = {
+				execute: mock.fn(),
+			};
+
+			await table.select().where`id > 5`
+				.orderBy("name", "DESC")
+				.run(sql as any);
+
+			const result = _decomposePostgresQuery(
+				sql.execute.mock.calls[0].arguments,
+			);
+
+			assert.equal(
+				result.text,
+				trimIndentation`
+					SELECT $1
+					FROM $2
+					WHERE id > 5
+					ORDER BY $3 DESC
+				`,
+			);
+			assert.deepEqual(result.params, [
+				Postgres.escape(["id", "name"]),
+				Postgres.escape("pets"),
+				Postgres.escape("name"),
+			]);
+		});
+	});
+
+	describe("update", () => {
+		const table = new Table("pets", {
+			id: Structure.number(),
+			name: Structure.string(),
+		});
+
+		it("generates queries", async () => {
+			const sql = {
+				execute: mock.fn(),
+			};
+
+			await table.update().where`id = ${5}`
+				.set({ name: "Hugo" })
+				.returning(["id", "name"])
+				.run(sql as any);
+
+			const result = _decomposePostgresQuery(
+				sql.execute.mock.calls[0].arguments,
+			);
+
+			assert.equal(
+				result.text,
+				trimIndentation`
+					UPDATE $1
+					SET $2
+					WHERE id = $3
+					RETURNING $4
+				`,
+			);
+			assert.deepEqual(result.params, [
+				Postgres.escape("pets"),
+				Postgres.escape({ name: "Hugo" }),
+				5,
+				Postgres.escape(["id", "name"]),
+			]);
+		});
+	});
+
+	describe("insert", () => {
+		const table = new Table("pets", {
+			id: Structure.number(),
+			name: Structure.string(),
+		});
+
+		it("generates queries", async () => {
+			const sql = {
+				execute: mock.fn(),
+			};
+
+			await table
+				.insert()
+				.values({ name: "Hugo" })
+				.returning(["id", "name"])
+				.run(sql as any);
+
+			const result = _decomposePostgresQuery(
+				sql.execute.mock.calls[0].arguments,
+			);
+
+			assert.equal(
+				result.text,
+				trimIndentation`
+					INSERT INTO $1
+					$2
+					RETURNING $3
+				`,
+			);
+			assert.deepEqual(result.params, [
+				Postgres.escape("pets"),
+				Postgres.escape([{ name: "Hugo" }]),
+				Postgres.escape(["id", "name"]),
+			]);
+		});
+	});
+
+	describe("delete", () => {
+		const table = new Table("pets", {
+			id: Structure.number(),
+			name: Structure.string(),
+		});
+
+		it("generates queries", async () => {
+			const sql = {
+				execute: mock.fn(),
+			};
+
+			await table.delete().where` id = ${5}`
+				.returning(["id", "name"])
+				.run(sql as any);
+
+			const result = _decomposePostgresQuery(
+				sql.execute.mock.calls[0].arguments,
+			);
+
+			assert.equal(
+				result.text,
+				trimIndentation`
+					DELETE FROM $1
+					WHERE id = $2
+					RETURNING $3
+				`,
+			);
+			assert.deepEqual(result.params, [
+				Postgres.escape("pets"),
+				5,
+				Postgres.escape(["id", "name"]),
+			]);
+		});
+	});
+
+	describe("properties", () => {
+		it("returns requested properties", () => {
+			const table = new Table("pets", {
+				id: Structure.number(),
+				name: Structure.string(),
+			});
+
+			const result = table.properties(["name"]);
+
+			assert.deepEqual(Object.keys(result), ["name"]);
+			assert(result.name instanceof Structure);
 		});
 	});
 });
