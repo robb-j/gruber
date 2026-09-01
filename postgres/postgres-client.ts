@@ -199,6 +199,6 @@ export class QueryPromise<T extends any[]> extends Promise<T> {
 	}
 
 	first(): Promise<T[number] | null> {
-		return this.then(([value]) => value);
+		return this.then(([value=null]) => value);
 	}
 }
