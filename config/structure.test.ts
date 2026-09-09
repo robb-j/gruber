@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 
 import { Structure, type StructContext } from "./mod.ts";
 import { spy } from "../testing/mod.ts";
-import { message } from "valibot";
 
 function _ctx(path: string[]): StructContext {
 	return { type: "sync", path };
