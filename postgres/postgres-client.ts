@@ -50,17 +50,15 @@ export class PostgresOrdering {
 	}
 }
 
+export type PostgresLiteral =
+	string | number | boolean | Date | URL | null | undefined;
+
 /**
  * @ignore The allowed types that can be used in a postgres string template
  */
 export type PostgresValue =
-	| string
-	| number
-	| boolean
-	| Date
-	| URL
-	| null
-	| undefined
+	| PostgresLiteral
+	| Array<PostgresLiteral>
 	| PostgresEscaped
 	| PostgresJson
 	| PostgresClause;
@@ -199,6 +197,6 @@ export class QueryPromise<T extends any[]> extends Promise<T> {
 	}
 
 	first(): Promise<T[number] | null> {
-		return this.then(([value=null]) => value);
+		return this.then(([value = null]) => value);
 	}
 }

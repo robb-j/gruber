@@ -27,6 +27,7 @@ This file documents notable changes to the project
 - (beta2) PostgresQuery#first returns null instead of undefined
 - (beta2) export `TableColumns<T>`
 - (beta2) remove `Table.columns` and add `Table.properties(names?)`
+- (beta3) allow arrays of literals in postgres queries
 
 **deprecations**
 
