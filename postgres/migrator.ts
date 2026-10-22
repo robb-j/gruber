@@ -36,8 +36,12 @@ export class PostgresMigrator {
 		return this.#definitions;
 	}
 
-	getAppliedRecords() {
-		return MigrationTable.select().run(this.#postgres);
+	async getAppliedRecords(): Promise<PostgresMigrationRecord[]> {
+		try {
+			return MigrationTable.select().run(this.#postgres);
+		} catch {
+			return [];
+		}
 	}
 
 	findPending(applied: PostgresMigrationRecord[], n = Infinity) {
