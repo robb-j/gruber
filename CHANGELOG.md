@@ -15,6 +15,7 @@ This file documents notable changes to the project
 - new `Table` abstraction
 - basic query building for `SELECT`, `UPDATE`, `INSERT` & `DELETE` operations on defined tables
 - (beta2) new `PostgresMigrator`
+- (beta4) rework `PostgresClient#transaction` to be function based to handle commit/rollbacks
 
 **fixes**
 

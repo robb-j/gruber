@@ -61,22 +61,11 @@ await postgres.execute`
   WHERE ${clause}
 `;
 
-// Explicit transaction ~ automatically comitted on success or rolled back on failure
-async function updateRecords() {
-  await using trx = await postgres.transaction();
-
+// Transaction ~ committed when the block resolves or rolled back if it throws
+await postgres.transaction(async (trx) => {
   await trx.execute` UPDATE users … `;
   await trx.execute` UPDATE profiles … `;
-}
-
-// Manual transaction
-const trx = await postgres.transaction();
-try {
-  await trx.execute` UPDATE users … `;
-  await trx.execute` UPDATE profiles … `;
-} finally {
-  await trx.dispose();
-}
+});
 
 // Close the connection
 await postgres.dispose();

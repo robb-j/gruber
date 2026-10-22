@@ -69,7 +69,7 @@ export type PostgresValue =
  * ```js
  * const pg = {
  *   execute(strings, ...values) {},
- *   transaction() {},
+ *   transaction(block) {},
  *   dispose() {},
  *   [Symbol.asyncDispose]() {}
  * }
@@ -81,7 +81,9 @@ export interface PostgresClient extends AsyncDisposable {
 		...values: PostgresValue[]
 	): QueryPromise<T[]>;
 
-	transaction(): Promise<PostgresClient>;
+	transaction<T>(
+		block: (trx: PostgresClient) => Promise<T> | T,
+	): Promise<Awaited<T>>;
 
 	dispose(): Promise<void>;
 }
@@ -196,7 +198,8 @@ export class QueryPromise<T extends any[]> extends Promise<T> {
 		return new QueryPromise((resolve, reject) => promise.then(resolve, reject));
 	}
 
-	first(): Promise<T[number] | null> {
-		return this.then(([value = null]) => value);
+	async first(): Promise<T[number] | null> {
+		const [value = null] = await this;
+		return value;
 	}
 }

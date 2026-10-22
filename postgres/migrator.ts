@@ -59,9 +59,10 @@ export class PostgresMigrator {
 		for (const def of pending) {
 			this.#debug("running", def.name);
 
-			await using trx = await this.#postgres.transaction();
-			await MigrationTable.insert().values({ name: def.name }).run(trx);
-			await def.up(trx);
+			await this.#postgres.transaction(async (trx) => {
+				await MigrationTable.insert().values({ name: def.name }).run(trx);
+				await def.up(trx);
+			});
 		}
 
 		return pending.length;
@@ -82,9 +83,10 @@ export class PostgresMigrator {
 		for (const def of reversions) {
 			this.#debug("running", def.name);
 
-			await using trx = await this.#postgres.transaction();
-			await MigrationTable.delete().where`name = ${def.name}`.run(trx);
-			await def.down(trx);
+			await this.#postgres.transaction(async (trx) => {
+				await MigrationTable.delete().where`name = ${def.name}`.run(trx);
+				await def.down(trx);
+			});
 		}
 
 		return reversions.length;

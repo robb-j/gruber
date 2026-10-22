@@ -20,25 +20,13 @@ export class PostgresJsClient implements PostgresClient {
 		strings: TemplateStringsArray,
 		...values: PostgresValue[]
 	): QueryPromise<T[]> {
-		// console.debug?.("SQL", _prettyPostgresQuery([strings, ...values]));
-		return QueryPromise.wrap(
-			this.sql(strings, ...values.map((v) => _convert(this.sql, v))),
-		);
+		return _execute(this.sql, strings, values);
 	}
 
-	async transaction(): Promise<PostgresClient> {
-		return new Promise((resolve1, reject1) => {
-			this.sql
-				.begin((trx) => {
-					const pg = new PostgresJsClient(trx);
-					const prom = new Promise<void>((r2) => {
-						pg.dispose = async () => r2();
-					});
-					resolve1(pg);
-					return prom;
-				})
-				.catch((err) => reject1(err));
-		});
+	transaction<T>(
+		block: (trx: PostgresClient) => Promise<T> | T,
+	): Promise<Awaited<T>> {
+		return this.sql.begin((trx) => block(new PostgresJsTransaction(trx)));
 	}
 
 	async dispose(): Promise<void> {
@@ -48,6 +36,49 @@ export class PostgresJsClient implements PostgresClient {
 	async [Symbol.asyncDispose]() {
 		await this.dispose();
 	}
+}
+
+/**
+ * @unstable
+ *
+ * A client scoped to a postgres.js transaction, created by
+ * {@link PostgresJsClient#transaction}. It doesn't own the connection so it
+ * can't be disposed and nested transactions aren't supported.
+ */
+export class PostgresJsTransaction implements PostgresClient {
+	sql;
+	constructor(sql: SqlDependency) {
+		this.sql = sql;
+	}
+
+	execute<T>(
+		strings: TemplateStringsArray,
+		...values: PostgresValue[]
+	): QueryPromise<T[]> {
+		return _execute(this.sql, strings, values);
+	}
+
+	transaction<T>(): Promise<Awaited<T>> {
+		return Promise.reject(new Error("nested transactions are not supported"));
+	}
+
+	async dispose(): Promise<void> {
+		throw new Error("cannot dispose a transaction");
+	}
+
+	async [Symbol.asyncDispose]() {
+		await this.dispose();
+	}
+}
+
+function _execute<T>(
+	sql: SqlDependency,
+	strings: TemplateStringsArray,
+	values: PostgresValue[],
+): QueryPromise<T[]> {
+	return QueryPromise.wrap(
+		sql(strings, ...values.map((v) => _convert(sql, v))),
+	);
 }
 
 /**

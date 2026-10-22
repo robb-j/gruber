@@ -16,7 +16,7 @@ import {
 function postgres() {
 	const client = {
 		execute: mock.fn(() => []),
-		transaction: mock.fn(() => client),
+		transaction: mock.fn((block) => block(client)),
 		dispose: mock.fn(() => {}),
 		[Symbol.asyncDispose]: () => client.dispose(),
 		// mock.fn doesn't play nicely with "await using"
@@ -111,14 +111,30 @@ describe("PostgresMigrator", () => {
 
 			assert.equal(def.up.mock.callCount(), 1);
 		});
-		it("runs disposes the transaction", async () => {
+		it("runs each migration in a transaction", async () => {
 			const sql = postgres();
-			const def = { name: "01-add-users", up: mock.fn() };
-			const migrator = new PostgresMigrator(sql, [def]);
+			const migrator = new PostgresMigrator(sql, [
+				{ name: "01-add-users", up: mock.fn() },
+				{ name: "02-add-pets", up: mock.fn() },
+			]);
 
 			await migrator.up();
 
-			assert.equal(sql.dispose.mock.callCount(), 1);
+			assert.equal(sql.transaction.mock.callCount(), 2);
+		});
+		it("propagates migration errors", async () => {
+			const sql = postgres();
+			const error = new Error("bad migration");
+			const migrator = new PostgresMigrator(sql, [
+				{
+					name: "01-add-users",
+					up: mock.fn(() => {
+						throw error;
+					}),
+				},
+			]);
+
+			await assert.rejects(() => migrator.up(), error);
 		});
 		it("creates a migration record", async () => {
 			const sql = postgres();
@@ -213,7 +229,7 @@ describe("PostgresMigrator", () => {
 
 			assert.equal(def.down.mock.callCount(), 1);
 		});
-		it("runs disposes the transaction", async () => {
+		it("runs each reversion in a transaction", async () => {
 			const sql = postgres();
 			sql.execute.mock.mockImplementationOnce(() => [{ name: "01-add-users" }]);
 
@@ -221,7 +237,22 @@ describe("PostgresMigrator", () => {
 				{ name: "01-add-users", down: mock.fn() },
 			]);
 			await migrator.down();
-			assert.equal(sql.dispose.mock.callCount(), 1);
+			assert.equal(sql.transaction.mock.callCount(), 1);
+		});
+		it("propagates reversion errors", async () => {
+			const sql = postgres();
+			sql.execute.mock.mockImplementationOnce(() => [{ name: "01-add-users" }]);
+			const error = new Error("bad reversion");
+
+			const migrator = new PostgresMigrator(sql, [
+				{
+					name: "01-add-users",
+					down: mock.fn(() => {
+						throw error;
+					}),
+				},
+			]);
+			await assert.rejects(() => migrator.down(), error);
 		});
 		it("deletes migration record", async () => {
 			const sql = postgres();
