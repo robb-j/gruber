@@ -29,6 +29,7 @@ This file documents notable changes to the project
 - (beta2) remove `Table.columns` and add `Table.properties(names?)`
 - (beta3) allow arrays of literals in postgres queries
 - (beta3) fix migrator race condition
+- (beta3) fix class-types in postgres queries
 
 **deprecations**
 

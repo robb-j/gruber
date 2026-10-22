@@ -409,3 +409,13 @@ export function captureStackTrace(self: any, constructor: Function) {
 		(Error as any).captureStackTrace(self, constructor);
 	}
 }
+
+export function _isPlainObject(
+	value: unknown,
+): value is Record<string, unknown> {
+	if (value === null || typeof value !== "object") return false;
+	return (
+		Object.getPrototypeOf(value) === Object.prototype ||
+		Object.getPrototypeOf(value) === null
+	);
+}

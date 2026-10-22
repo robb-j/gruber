@@ -1,3 +1,4 @@
+import { _isPlainObject } from "../core/mod.ts";
 import type { StandardSchemaV1 } from "./standard-schema.ts";
 import { _nestContext, type StructContext } from "./struct-context.ts";
 import { _StructError } from "./struct-error.ts";
@@ -215,7 +216,7 @@ export class Structure<T> {
 			if (input && typeof input !== "object") {
 				throw new Error("Expected an object");
 			}
-			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
+			if (_isPlainObject(input) === false) {
 				throw new Error("Should not have a prototype");
 			}
 			const output: any = {};
@@ -619,7 +620,7 @@ export class Structure<T> {
 			if (input && typeof input !== "object") {
 				throw new Error("Expected an object");
 			}
-			if (Object.getPrototypeOf(input) !== Object.getPrototypeOf({})) {
+			if (_isPlainObject(input) === false) {
 				throw new Error("Should not have a prototype");
 			}
 

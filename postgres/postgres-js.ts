@@ -1,4 +1,4 @@
-import type { SqlDependency } from "../core/mod.ts";
+import { _isPlainObject, type SqlDependency } from "../core/mod.ts";
 import {
 	_prettyPostgresQuery,
 	PostgresClause,
@@ -70,7 +70,7 @@ function _convert(sql: SqlDependency, input: PostgresValue): any {
 	if (Array.isArray(input)) {
 		return input.map((v) => _convert(sql, v));
 	}
-	if (input && typeof input === "object") {
+	if (_isPlainObject(input)) {
 		const cloned: any = {};
 		for (const key in input) {
 			cloned[key] = _convert(sql, (input as any)[key]);
