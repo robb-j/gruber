@@ -280,7 +280,7 @@ export class Structure<T> {
 			}
 
 			const output: any = {} as T;
-			const errors: Error[] = [];
+			const errors = [];
 
 			for (const property in fields) {
 				try {
@@ -291,6 +291,14 @@ export class Structure<T> {
 				} catch (error) {
 					errors.push(Structure.Error.chain(error, context));
 				}
+			}
+
+			if (errors.length > 0) {
+				throw new Structure.Error(
+					"Object does not match schema",
+					context.path,
+					errors,
+				);
 			}
 
 			return output;

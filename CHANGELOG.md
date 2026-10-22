@@ -30,6 +30,7 @@ This file documents notable changes to the project
 - (beta3) allow arrays of literals in postgres queries
 - (beta3) fix migrator race condition
 - (beta3) fix class-types in postgres queries
+- (beta3) Structure.pick throws errors
 
 **deprecations**
 
