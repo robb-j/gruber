@@ -38,7 +38,7 @@ export class PostgresMigrator {
 
 	async getAppliedRecords(): Promise<PostgresMigrationRecord[]> {
 		try {
-			return MigrationTable.select().run(this.#postgres);
+			return await MigrationTable.select().run(this.#postgres);
 		} catch {
 			return [];
 		}

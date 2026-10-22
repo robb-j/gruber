@@ -28,9 +28,9 @@ This file documents notable changes to the project
 - (beta2) export `TableColumns<T>`
 - (beta2) remove `Table.columns` and add `Table.properties(names?)`
 - (beta3) allow arrays of literals in postgres queries
-- (beta3) fix migrator race condition
 - (beta3) fix class-types in postgres queries
 - (beta3) Structure.pick throws errors
+- (beta4) fix migrator race condition
 
 **deprecations**
 
