@@ -1,6 +1,7 @@
 import { trimIndentation } from "../core/utilities.ts";
 
 /**
+ * @internal
  * @ignore
  *
  * A value being held for a postgres client to be escaped in the query
@@ -13,6 +14,7 @@ export class PostgresEscaped {
 }
 
 /**
+ * @internal
  * @ignore
  *
  * Holds a JSON object to be put into a postgres query
@@ -25,6 +27,7 @@ export class PostgresJson {
 }
 
 /**
+ * @internal
  * @ignore
  *
  * Holds a nested postgres query clause, e.g. for dynamically picking a WHERE statement
@@ -41,6 +44,9 @@ export class PostgresClause {
 	}
 }
 
+/**
+ * @internal
+ */
 export class PostgresOrdering {
 	column;
 	direction;

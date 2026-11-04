@@ -18,8 +18,6 @@ export interface NodeRouterOptions {
 }
 
 /**
- * @hidden
- *
  * @deprecated use {@link serveHTTP}
  *
  * A HTTP router for pure Node.js, you should probably use {@link serveHTTP}
@@ -272,8 +270,6 @@ export interface Stoppable {
 }
 
 /**
- * @hidden
- *
  * A port of [stoppable.js](https://github.com/hunterloftis/stoppable/blob/master/lib/stoppable.js),
  * ported to Gruber to reduce external dependencies and simplify.
  *

@@ -35,6 +35,9 @@ function _returning(columns?: any[]) {
 		: Postgres.clause``;
 }
 
+/**
+ * @internal
+ */
 export class SelectQuery<
 	T,
 	K extends keyof T = keyof T,
@@ -69,6 +72,8 @@ export class SelectQuery<
 }
 
 // NOTE: postgres doesn't support ORDER BY for updates
+
+/** @internal */
 export class UpdateQuery<T, K extends keyof T = any> implements PostgresQuery<
 	Pick<T, K>
 > {
@@ -113,6 +118,7 @@ export type PostgresInsert<T> = {
 	[K in keyof T]?: T[K] | PostgresJson | undefined;
 };
 
+/** @internal */
 export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 	Pick<T, K>
 > {
@@ -143,6 +149,7 @@ export class InsertQuery<T, K extends keyof T = any> implements PostgresQuery<
 	}
 }
 
+/** @internal */
 export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
 	Pick<T, K>
 > {
@@ -175,8 +182,13 @@ export class DeleteQuery<T, K extends keyof T = any> implements PostgresQuery<
 	}
 }
 
+/** Turn a type into record of structures to validate it */
 export type TableColumns<T> = { [K in keyof T]: Structure<T[K]> };
 
+/**
+ * A declarative definition for a table that you can use to build queries with
+ * and query strongly-typed values from the database with.
+ */
 export class Table<T> {
 	get name() {
 		return this.#name;
@@ -189,6 +201,17 @@ export class Table<T> {
 		this.#columns = columns;
 	}
 
+	/**
+	 * A helper to define a table without using the constructor
+	 *
+	 * ```js
+	 * const People = Table.define("people", {
+	 *   id: Structure.number(),
+	 *   created_at: Structure.date(),
+	 *   name: Structure.string(),
+	 * })
+	 * ```
+	 */
 	static define<T>(name: string, columns: TableColumns<T>) {
 		return new Table(name, columns);
 	}
@@ -197,24 +220,67 @@ export class Table<T> {
 		return Object.keys(this.#columns) as any;
 	}
 
+	/**
+	 * Build an SQL `SELECT` query with optional clauses
+	 *
+	 * ```js
+	 * const query = People.select([ 'id', 'created_at', 'name' ])
+	 *   .where` id = ${7} `
+	 *   .orderBy('id', 'DESC')
+	 *   .run(postgres)
+	 * ```
+	 */
 	select(): SelectQuery<T, keyof T>;
 	select<K extends keyof T = keyof T>(columns: K[]): SelectQuery<T, K>;
 	select(columns: any[] = this.columnNames): SelectQuery<any, any> {
 		return new SelectQuery(this.#name, columns);
 	}
 
+	/**
+	 * Build an SQL `UPDATE` query with optional clauses
+	 *
+	 * ```js
+	 * const query = People.update()
+	 *   .set({ name: "Geoff Testington" })
+	 *   .where` id = ${7} `
+	 *   .returning(['id', 'created_at', 'name'])
+	 *   .run()
+	 * ```
+	 */
 	update(): UpdateQuery<T> {
 		return new UpdateQuery(this.#name);
 	}
 
+	/**
+	 * Build an SQL `INSERT` query with optional clauses
+	 *
+	 * ```js
+	 * const query = People.insert()
+	 *   .values({ name: "Jess Smith" })
+	 *   .returning(['id', 'created_at', 'name'])
+	 *   .run(postgres)
+	 * ```
+	 */
 	insert(): InsertQuery<T> {
 		return new InsertQuery(this.#name);
 	}
 
+	/**
+	 * Build an SQL `INSERT` query with optional clauses
+	 *
+	 * ```js
+	 * const query = People.delete()
+	 *   .where` id = ${7} `
+	 *   .run(postgres)
+	 * ```
+	 */
 	delete(): DeleteQuery<T> {
 		return new DeleteQuery(this.#name);
 	}
 
+	/**
+	 * Get a subset of the column structures, useful for creating structures for validation
+	 */
 	properties(): TableColumns<T>;
 	properties<K extends keyof T>(names: K[]): TableColumns<Pick<T, K>>;
 	properties(names = this.columnNames) {

@@ -41,6 +41,13 @@ export function _compareMigrationNames(a: string, b: string) {
  * Migrations are recorded by their full name, e.g. "001-add-users.js".
  * File extensions are ignored when checking which migrations have been applied,
  * so renaming "001-add-users.js" to "001-add-users.ts" won't run it again.
+ *
+ * ```js
+ * const migrator = new PostgresMigrator(
+ *   new PostgresClient(…),
+ *   [...definitions]
+ * )
+ * ```
  */
 export class PostgresMigrator {
 	#postgres;
@@ -61,10 +68,24 @@ export class PostgresMigrator {
 		// console.debug("[postgres] " + message, ...args);
 	}
 
+	/**
+	 * Get the internal definitions
+	 *
+	 * ```js
+	 * const defs = migrator.getDefinitions()
+	 * ```
+	 */
 	getDefinitions() {
 		return this.#definitions;
 	}
 
+	/**
+	 * Look up records that have been aplied in the database
+	 *
+	 * ```js
+	 * const records = await migrator.getAppliedRecords()
+	 * ```
+	 */
 	async getAppliedRecords(): Promise<PostgresMigrationRecord[]> {
 		try {
 			return await MigrationTable.select().run(this.#postgres);
@@ -73,6 +94,16 @@ export class PostgresMigrator {
 		}
 	}
 
+	/**
+	 * Filter the existing definitions against ones that have been applied
+	 * to find ones that need to be applied.
+	 *
+	 * ```js
+	 * const definitions = await migrator.findPending(
+	 *   await migrator.getAppliedRecords()
+	 * )
+	 * ```
+	 */
 	findPending(applied: PostgresMigrationRecord[], n = Infinity) {
 		const ran = new Set(applied.map((r) => _stripMigrationExtension(r.name)));
 
@@ -82,6 +113,17 @@ export class PostgresMigrator {
 			.slice(0, n);
 	}
 
+	/**
+	 * Run `n` pending migrations
+	 *
+	 * ```js
+	 * // Run all pending migrations
+	 * await migrator.up()
+	 *
+	 * // Run the next 2 migrations
+	 * await migrator.up(2)
+	 * ```
+	 */
 	async up(n = Infinity) {
 		const pending = this.findPending(await this.getAppliedRecords(), n);
 
@@ -97,6 +139,16 @@ export class PostgresMigrator {
 		return pending.length;
 	}
 
+	/**
+	 * Filter the existing definitions against ones that have been applied
+	 * to find ones to be reverted.
+	 *
+	 * ```js
+	 * const definitions = await migrator.findReversions(
+	 *   await migrator.getAppliedRecords()
+	 * )
+	 * ```
+	 */
 	findReversions(applied: PostgresMigrationRecord[], n = Infinity) {
 		const ran = new Set(applied.map((r) => _stripMigrationExtension(r.name)));
 
@@ -106,6 +158,17 @@ export class PostgresMigrator {
 			.slice(0, n);
 	}
 
+	/**
+	 * Revert `n` applied migrations
+	 *
+	 * ```js
+	 * // Revert all migrations
+	 * await migrator.down()
+	 *
+	 * // Revert the next 2 migrations
+	 * await migrator.down(2)
+	 * ```
+	 */
 	async down(n = Infinity) {
 		const applied = await this.getAppliedRecords();
 		const reversions = this.findReversions(applied, n);
@@ -129,11 +192,6 @@ export class PostgresMigrator {
 
 		return reversions.length;
 	}
-}
-
-export interface PostgresMigratorRunOptions {
-	dryRun?: boolean;
-	count?: number;
 }
 
 export const postgresMigrations: MigrationDefinition<PostgresClient>[] = [

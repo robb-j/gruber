@@ -149,8 +149,8 @@ so only well-configured apps will successfully deploy.
 This can be done like so:
 
 ```js
-export function loadConfiguration(path) {
-  const appConfig = config.loadJsonSync(path, struct);
+export async function loadConfiguration(path) {
+  const appConfig = config.load(path, struct);
 
   // Only run these checks when running in production
   if (appConfig.env !== "development") {

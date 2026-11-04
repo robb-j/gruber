@@ -40,6 +40,7 @@ export class PostgresJsClient implements PostgresClient {
 
 /**
  * @unstable
+ * @ignore
  *
  * A client scoped to a postgres.js transaction, created by
  * {@link PostgresJsClient#transaction}. It doesn't own the connection so it

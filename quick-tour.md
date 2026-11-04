@@ -222,8 +222,8 @@ First, lets create a migration, **migrations/001-add-people.js**:
 import { defineMigration } from "gruber";
 
 export default defineMigration({
-  async up(sql) {
-    await sql`
+  async up(postgres) {
+    await postgres.execute`
 			CREATE TABLE "people" (
 				"id" SERIAL PRIMARY KEY,
 				"created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -233,7 +233,7 @@ export default defineMigration({
 		`;
   },
   async down(sql) {
-    await sql`
+    await postgres.execute`
 			DROP TABLE "people"
 		`;
   },
