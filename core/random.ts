@@ -1,7 +1,7 @@
 import { loader } from "./utilities.ts";
 
 /**
- * RandomService provices an abstraction around generating random values
+ * RandomService provides an abstraction around generating random values
  *
  * ```js
  * const random // RandomService
@@ -34,7 +34,7 @@ export interface RandomService {
  */
 export const useRandom = loader<RandomService>(() => ({
 	number(min, max) {
-		return min + Math.floor(Math.random() * (max - min));
+		return min + Math.floor(Math.random() * (max - min + 1));
 	},
 	uuid() {
 		return crypto.randomUUID();

@@ -33,6 +33,7 @@ This file documents notable changes to the project
 - (beta3) fix class-types in postgres queries
 - (beta3) Structure.pick throws errors
 - (beta4) fix migrator race condition
+- (beta5) `random.number` is properly exclusive
 
 **deprecations**
 
