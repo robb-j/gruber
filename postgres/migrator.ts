@@ -89,8 +89,8 @@ export class PostgresMigrator {
 			this.#debug("running", def.name);
 
 			await this.#postgres.transaction(async (trx) => {
-				await MigrationTable.insert().values({ name: def.name }).run(trx);
 				await def.up(trx);
+				await MigrationTable.insert().values({ name: def.name }).run(trx);
 			});
 		}
 
