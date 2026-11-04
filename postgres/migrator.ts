@@ -80,7 +80,7 @@ export class PostgresMigrator {
 	}
 
 	/**
-	 * Look up records that have been aplied in the database
+	 * Look up records that have been applied in the database
 	 *
 	 * ```js
 	 * const records = await migrator.getAppliedRecords()
@@ -165,7 +165,7 @@ export class PostgresMigrator {
 	 * // Revert all migrations
 	 * await migrator.down()
 	 *
-	 * // Revert the next 2 migrations
+	 * // Revert the last 2 applied migrations
 	 * await migrator.down(2)
 	 * ```
 	 */

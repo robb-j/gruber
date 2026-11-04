@@ -244,7 +244,7 @@ export class Table<T> {
 	 *   .set({ name: "Geoff Testington" })
 	 *   .where` id = ${7} `
 	 *   .returning(['id', 'created_at', 'name'])
-	 *   .run()
+	 *   .run(postgres)
 	 * ```
 	 */
 	update(): UpdateQuery<T> {
@@ -266,7 +266,7 @@ export class Table<T> {
 	}
 
 	/**
-	 * Build an SQL `INSERT` query with optional clauses
+	 * Build an SQL `DELETE` query with optional clauses
 	 *
 	 * ```js
 	 * const query = People.delete()

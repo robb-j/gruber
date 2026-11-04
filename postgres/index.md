@@ -25,7 +25,7 @@ There are two main parts of the module
 import postgres from "postgres";
 import { PostgresJsClient } from "gruber";
 
-const postgres = new PostgresJsClient(
+const db = new PostgresJsClient(
   postgres("postgres://user:secret@localhost:5432/database"),
 );
 
@@ -37,32 +37,32 @@ interface PersonRecord {
 }
 
 // Fetch people from the database
-const people = await postgres.execute<PersonRecord>`
+const people = await db.execute<PersonRecord>`
   SELECT id, created_at, name
   FROM people
 `;
 
 // Fetch a specific record (returns the value or null)
-const geoff = await postgres.execute<PersonRecord>`
+const geoff = await db.execute<PersonRecord>`
   SELECT id, created_at, name
   FROM people
   WHERE id = ${7}
 `.first();
 
 // Run multiple queries in a transaction
-await postgres.transaction(async (trx) => {
+await db.transaction(async (trx) => {
   await trx.execute` … `;
   await trx.execute` … `;
 });
 
-// You could instead use `using postgres = new PostgresJsClient(…)`
-await postgres.dispose();
+// You could instead use `await using db = new PostgresJsClient(…)`
+await db.dispose();
 ```
 
 You can use `Table` to define your tables using Structures and generate strongly-typed queries based on them.
 
 ```ts
-import { Table } from "gruber";
+import { Structure, Table } from "gruber";
 
 // The type here is optional, but recommended for portability in larger code bases
 export const Person = Table.define<PersonRecord>("people", {
@@ -73,22 +73,20 @@ export const Person = Table.define<PersonRecord>("people", {
 
 // list people created before 2nd feb 2022
 const people = await Person.select()
-  .where` created_at < ${new Date("2022-02-02")} `
-  .run(postgres)
-  .first();
+  .where` created_at < ${new Date("2022-02-02")} `.run(db);
 
 // Create Jess
 const jess = await Person.insert()
   .values({ name: "Jess Smith" })
   .returning(["id", "created_at", "name"])
-  .run(postgres)
+  .run(db)
   .first();
 
 // Update Jess
 await Person.update().set({ name: "Jessie Smith" }).where` id = ${jess.id} `
   .returning(["id", "created_at", "name"])
-  .run(postgres);
+  .run(db);
 
 // Delete Jess
-await Person.delete().where` id = ${jess.id} `.run(postgres);
+await Person.delete().where` id = ${jess.id} `.run(db);
 ```

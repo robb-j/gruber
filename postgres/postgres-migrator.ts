@@ -23,7 +23,7 @@ export interface PostgresMigrationRecord {
 
 /**
  * Query the postgres database to find migrations that have already been performed.
- * Returning an array of `PostgresMigrationRecord`.
+ * Returning an array of `MigrationRecord`, or an empty array if the "migrations" table doesn't exist yet.
  *
  * ```js
  * const sql // SqlDependency
@@ -59,7 +59,10 @@ export async function getPostgresMigrations(
  *
  * ```js
  * const sql // SqlDependency
- * const definition = definePostgresMigration(...)
+ * const definition = {
+ *   name: "001-add-users.js",
+ *   ...definePostgresMigration(...)
+ * }
  *
  * await executePostgresMigration(definition, "up", sql)
  * ```
@@ -118,7 +121,7 @@ export const postgresBootstrapMigration = defineMigration<SqlDependency>({
 });
 
 /**
- * A typed version of `defineMigration` that specalizes for a ` PostgresService`.
+ * A typed version of `defineMigration` that specializes for a [postgres.js](https://github.com/porsager/postgres) `sql` connection.
  * This is mostly useful to get a strongly typed `sql` parameter.
  *
  * ```js
@@ -126,12 +129,12 @@ export const postgresBootstrapMigration = defineMigration<SqlDependency>({
  *
  * export default definePostgresMigration({
  *   async up(sql) {
- *     await sql.execute`
+ *     await sql`
  *       CREATE TABLE users ...
  *     `
  *   },
  *   async down(sql) {
- *     await sql.execute`
+ *     await sql`
  *       DROP TABLE users
  *     `
  *   }
