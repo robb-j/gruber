@@ -14,3 +14,6 @@ api:
 This module provides an abstraction over postgres called `PostgresClient` along with utilities to integrate it with other Gruber modules.
 
 There are methods like `getPostgresMigrations`, `executePostgresMigration` and `postgresBootstrapMigration` to help platforms like Deno and Node.js implement a [Migrator](/core/#migrator).
+
+`PostgresMigrator` runs migrations directly against a `PostgresClient`.
+It records each migration by its full name, e.g. `001-add-users.js`, but ignores file extensions when checking which migrations have run.

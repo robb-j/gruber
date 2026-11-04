@@ -13,6 +13,35 @@ const MigrationTable = Table.define<PostgresMigrationRecord>("migrations", {
 // 	verbose?: boolean;
 // }
 
+/**
+ * @internal
+ *
+ * Remove a script file extension (.js .ts .mjs .cjs .mts .cts) from a migration name,
+ * e.g. "001-add-users.js" → "001-add-users"
+ */
+export function _stripMigrationExtension(name: string) {
+	return name.replace(/\.[mc]?[jt]s$/, "");
+}
+
+/**
+ * @internal
+ *
+ * Compare two migration names for sorting, ignoring their file extensions,
+ * e.g. "001-add-users.js" sorts before "001-add-users-table.ts"
+ */
+export function _compareMigrationNames(a: string, b: string) {
+	return _stripMigrationExtension(a).localeCompare(_stripMigrationExtension(b));
+}
+
+/**
+ * @unstable
+ *
+ * Runs migrations against a {@link PostgresClient} and records them in a "migrations" table.
+ *
+ * Migrations are recorded by their full name, e.g. "001-add-users.js".
+ * File extensions are ignored when checking which migrations have been applied,
+ * so renaming "001-add-users.js" to "001-add-users.ts" won't run it again.
+ */
 export class PostgresMigrator {
 	#postgres;
 	#definitions;
@@ -45,11 +74,11 @@ export class PostgresMigrator {
 	}
 
 	findPending(applied: PostgresMigrationRecord[], n = Infinity) {
-		const ran = new Set(applied.map((r) => r.name));
+		const ran = new Set(applied.map((r) => _stripMigrationExtension(r.name)));
 
 		return this.#definitions
-			.filter((def) => !ran.has(def.name))
-			.sort((a, b) => a.name.localeCompare(b.name))
+			.filter((def) => !ran.has(_stripMigrationExtension(def.name)))
+			.sort((a, b) => _compareMigrationNames(a.name, b.name))
 			.slice(0, n);
 	}
 
@@ -69,22 +98,31 @@ export class PostgresMigrator {
 	}
 
 	findReversions(applied: PostgresMigrationRecord[], n = Infinity) {
-		const ran = new Set(applied.map((r) => r.name));
+		const ran = new Set(applied.map((r) => _stripMigrationExtension(r.name)));
 
 		return this.#definitions
-			.filter((def) => ran.has(def.name))
-			.sort((a, b) => b.name.localeCompare(a.name))
+			.filter((def) => ran.has(_stripMigrationExtension(def.name)))
+			.sort((a, b) => _compareMigrationNames(b.name, a.name))
 			.slice(0, n);
 	}
 
 	async down(n = Infinity) {
-		const reversions = this.findReversions(await this.getAppliedRecords(), n);
+		const applied = await this.getAppliedRecords();
+		const reversions = this.findReversions(applied, n);
 
 		for (const def of reversions) {
 			this.#debug("running", def.name);
 
+			// Delete the exact stored names, records may or may not have an extension
+			const key = _stripMigrationExtension(def.name);
+			const names = applied
+				.map((r) => r.name)
+				.filter((name) => _stripMigrationExtension(name) === key);
+
+			if (names.length !== 1) throw new Error("non-one migrations to revert");
+
 			await this.#postgres.transaction(async (trx) => {
-				await MigrationTable.delete().where`name = ${def.name}`.run(trx);
+				await MigrationTable.delete().where`name = ${names[0]}`.run(trx);
 				await def.down(trx);
 			});
 		}
@@ -100,7 +138,7 @@ export interface PostgresMigratorRunOptions {
 
 export const postgresMigrations: MigrationDefinition<PostgresClient>[] = [
 	{
-		name: "000-bootstrap.js",
+		name: "000-bootstrap",
 		async up(sql) {
 			await sql.execute`
 				CREATE TABLE "migrations" (

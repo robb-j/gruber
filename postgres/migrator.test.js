@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it, mock } from "node:test";
 import { trimIndentation } from "../core/utilities.ts";
-import { PostgresMigrator } from "./migrator.ts";
+import {
+	_compareMigrationNames,
+	_stripMigrationExtension,
+	PostgresMigrator,
+} from "./migrator.ts";
 import {
 	_decomposePostgresQuery,
 	_prettyPostgresQuery,
@@ -27,6 +31,45 @@ function postgres() {
 function def(name) {
 	return { name };
 }
+
+describe("_stripMigrationExtension", () => {
+	it("removes script extensions", () => {
+		assert.equal(_stripMigrationExtension("01-add-users"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.js"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.ts"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.mjs"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.cjs"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.mts"), "01-add-users");
+		assert.equal(_stripMigrationExtension("01-add-users.cts"), "01-add-users");
+	});
+	it("ignores names without an extension", () => {
+		assert.equal(_stripMigrationExtension("01-add-users"), "01-add-users");
+	});
+	it("ignores other dots", () => {
+		assert.equal(_stripMigrationExtension("01-v1.2-fix"), "01-v1.2-fix");
+	});
+});
+
+describe("_compareMigrationNames", () => {
+	it("ignores extensions", () => {
+		assert.equal(
+			_compareMigrationNames("001-add-users", "001-add-users.js"),
+			0,
+		);
+		assert.equal(
+			_compareMigrationNames("001-add-users.js", "001-add-users.js"),
+			0,
+		);
+		assert.equal(
+			_compareMigrationNames("001-add-users.js", "001-add-users.ts"),
+			0,
+		);
+		assert.equal(
+			_compareMigrationNames("001-add-users.mjs", "001-add-users.mts"),
+			0,
+		);
+	});
+});
 
 describe("PostgresMigrator", () => {
 	describe("constructor", () => {
@@ -100,6 +143,39 @@ describe("PostgresMigrator", () => {
 
 			assert.deepEqual(result, [{ name: "02-add-pets" }]);
 		});
+		it("ignores extensions on records", () => {
+			const migrator = new PostgresMigrator(postgres(), [
+				{ name: "01-add-users" },
+				{ name: "02-add-pets" },
+			]);
+
+			const result = migrator.findPending([{ name: "01-add-users.js" }]);
+
+			assert.deepEqual(result, [{ name: "02-add-pets" }]);
+		});
+		it("ignores extensions on definitions", () => {
+			const migrator = new PostgresMigrator(postgres(), [
+				{ name: "01-add-users.js" },
+				{ name: "02-add-pets.ts" },
+			]);
+
+			const result = migrator.findPending([{ name: "01-add-users" }]);
+
+			assert.deepEqual(result, [{ name: "02-add-pets.ts" }]);
+		});
+		it("sorts ignoring extensions", () => {
+			const migrator = new PostgresMigrator(postgres(), [
+				{ name: "01-add-users-table.ts" },
+				{ name: "01-add-users.js" },
+			]);
+
+			const result = migrator.findPending([]);
+
+			assert.deepEqual(result, [
+				{ name: "01-add-users.js" },
+				{ name: "01-add-users-table.ts" },
+			]);
+		});
 	});
 
 	describe("up", () => {
@@ -149,6 +225,22 @@ describe("PostgresMigrator", () => {
 			assert.match(
 				_prettyPostgresQuery(sql.execute.mock.calls[1]?.arguments),
 				/INSERT INTO migrations/,
+			);
+		});
+		it("stores the full name", async () => {
+			const sql = postgres();
+			const migrator = new PostgresMigrator(sql, [
+				{ name: "01-add-users.js", up: mock.fn() },
+			]);
+
+			await migrator.up();
+
+			assert.equal(
+				_prettyPostgresQuery(sql.execute.mock.calls[1]?.arguments),
+				trimIndentation`
+					INSERT INTO migrations
+					{"name":"01-add-users.js"}
+				`,
 			);
 		});
 		it("skips applied migrations", async () => {
@@ -214,6 +306,26 @@ describe("PostgresMigrator", () => {
 			);
 
 			assert.deepEqual(result, [{ name: "02-add-pets" }]);
+		});
+		it("ignores extensions on records", () => {
+			const migrator = new PostgresMigrator(postgres(), [
+				{ name: "01-add-users" },
+				{ name: "02-add-pets" },
+			]);
+
+			const result = migrator.findReversions([{ name: "01-add-users.js" }]);
+
+			assert.deepEqual(result, [{ name: "01-add-users" }]);
+		});
+		it("ignores extensions on definitions", () => {
+			const migrator = new PostgresMigrator(postgres(), [
+				{ name: "01-add-users.js" },
+				{ name: "02-add-pets.ts" },
+			]);
+
+			const result = migrator.findReversions([{ name: "01-add-users" }]);
+
+			assert.deepEqual(result, [{ name: "01-add-users.js" }]);
 		});
 	});
 
@@ -281,6 +393,38 @@ describe("PostgresMigrator", () => {
 				Postgres.escape("migrations"),
 				"01-add-users",
 			]);
+		});
+		it("deletes records stored with an extension", async () => {
+			const sql = postgres();
+			sql.execute.mock.mockImplementationOnce(() => [
+				{ name: "01-add-users.js" },
+			]);
+
+			const def = { name: "01-add-users", down: mock.fn() };
+			const migrator = new PostgresMigrator(sql, [def]);
+			await migrator.down();
+
+			assert.equal(def.down.mock.callCount(), 1);
+
+			const query = _decomposePostgresQuery(
+				sql.execute.mock.calls[1]?.arguments,
+			);
+			assert.deepEqual(query.params[1], "01-add-users.js");
+		});
+		it("deletes records stored with a different extension", async () => {
+			const sql = postgres();
+			sql.execute.mock.mockImplementationOnce(() => [
+				{ name: "01-add-users.js" },
+			]);
+
+			const def = { name: "01-add-users.ts", down: mock.fn() };
+			const migrator = new PostgresMigrator(sql, [def]);
+			await migrator.down();
+
+			const query = _decomposePostgresQuery(
+				sql.execute.mock.calls[1]?.arguments,
+			);
+			assert.deepEqual(query.params[1], "01-add-users.js");
 		});
 		it("skips pending migrations", async () => {
 			const sql = postgres();
