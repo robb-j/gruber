@@ -6,6 +6,14 @@ layout: simple.njk
 
 <p>This page lists all that is exported so you can see it all in once place.</p>
 
+{% macro apply_tags(tags) %}
+<span class="everythingLabels">
+{% if tags.type %}<code>type</code>{% endif %}
+{% if tags.unstable %}<code>unstable</code>{% endif %}
+{% if tags.deprecated %}<code>deprecated</code>{% endif %}
+</span>
+{% endmacro %}
+
 {% for entry, apiModule in api %}
 
 {% set groups = apiModule | entries | groupby('1.tags.group') %}
@@ -25,12 +33,14 @@ layout: simple.njk
 			<li>
 				<a href="/{{ moduleName }}/#{{ entry[1].id | slugify }}">
 					{{ entry[0] }}
+					{{ apply_tags(entry[1].tags) }}
 				</a>
 				<ul>
 					{% for member in entry[1].children | dictsort %}
 					<li>
 						<a href="/{{ moduleName }}/#{{ member[1].id | slugify }}">
 							{{ member[0] }}
+							{{ apply_tags(member[1].tags) }}
 						</a>
 					</li>
 					{% endfor %}
