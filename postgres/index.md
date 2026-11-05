@@ -62,6 +62,8 @@ await db.transaction(async (trx) => {
 await db.dispose();
 ```
 
+## Query building
+
 You can use `Table` to define your tables using Structures and generate strongly-typed queries based on them.
 
 ```ts
@@ -93,3 +95,51 @@ await Person.update().set({ name: "Jessie Smith" }).where` id = ${jess.id} `
 // Delete Jess
 await Person.delete().where` id = ${jess.id} `.run(db);
 ```
+
+## Migrations
+
+Use PostgresMigrator to run database migrations in order against a `PostgresClient`,
+it runs the migration in a transaction that rolls-back on failure and stores applied migrations in a "migrations" table.
+
+You have a migration like **migrations/001-add-people.ts**:
+
+```ts
+export default defineMigration<PostgresClient>({
+  async up(postgres) {
+    await postgres.execute`
+      CREATE TABLE "people" (
+        "id" serial PRIMARY KEY,
+        "created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "name" varchar(255) NOT NULL
+      )
+    `;
+  },
+  async down(postgres) {
+    await postgres.execute`
+      DROP TABLE "people"
+    `;
+  },
+});
+```
+
+The you can:
+
+```ts
+import { loadMigrationDirectory, PostgresMigrator } from "gruber";
+
+const migrations = ;
+
+const migrator = new PostgresMigrator(
+  db,
+  await loadMigrationDirectory("./migrations/")
+);
+
+// Run all pending migrations, or pass a number to run the next n
+await migrator.up();
+
+// Revert applied migrations, or pass a number to revert a specific amount
+await migrator.down(1);
+```
+
+Migrations are sorted by name, so prefix them with a number like `001-`, `002-` to control the order.
+It also ignores file extensions when check whats applied to get around js/ts issues.

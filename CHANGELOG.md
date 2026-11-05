@@ -17,6 +17,7 @@ This file documents notable changes to the project
 - (beta2) new `PostgresMigrator`
 - (beta4) rework `PostgresClient#transaction` to be function based to handle commit/rollbacks
 - (beta5) `PostgresMigrator` ignores file extensions when checking applied migrations
+- (beta5) add `loadMigrationDirectory` helper
 
 **fixes**
 

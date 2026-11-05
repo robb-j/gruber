@@ -2,6 +2,7 @@ export * from "./config.ts";
 export * from "./node-router.ts";
 export * from "./postgres.ts";
 export * from "./terminator.ts";
+export * from "./migrations.ts";
 
 export * from "../config/mod.ts";
 export * from "../core/mod.ts";

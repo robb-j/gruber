@@ -9,10 +9,6 @@ const MigrationTable = Table.define<PostgresMigrationRecord>("migrations", {
 	created: Structure.date(),
 });
 
-// export interface PostgresMigratorOptions {
-// 	verbose?: boolean;
-// }
-
 /**
  * @internal
  *
