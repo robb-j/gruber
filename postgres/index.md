@@ -12,9 +12,12 @@ api:
 The Postgres module provides an abstraction over a postgres database connection
 to make it easy to query the database and allow the connection to be swapped out during testing.
 
+Design goals:
+
 - **SQL based** — write queries with JavaScript template literals with automatic parameterization.
 - **Testable** — easily swap out the client during testing and write tests with it
 - **Typed** — Use the `Table` abstraction to build queries and type queries
+- **Migrations** — Safely change the database through ordered queries
 
 There are two main parts of the module
 
