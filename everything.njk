@@ -11,6 +11,7 @@ layout: simple.njk
 {% if tags.type %}<code>type</code>{% endif %}
 {% if tags.unstable %}<code>unstable</code>{% endif %}
 {% if tags.deprecated %}<code>deprecated</code>{% endif %}
+{% if tags.internal %}<code>internal</code>{% endif %}
 </span>
 {% endmacro %}
 
@@ -30,14 +31,14 @@ layout: simple.njk
 		</a>
 		<ul>
 			{% for entry in apiEntries | sort(false, false, '1') %}
-			<li>
+			<li data-tags="{{ entry[1].tags | keys | join(" ") }}">
 				<a href="/{{ moduleName }}/#{{ entry[1].id | slugify }}">
 					{{ entry[0] }}
 					{{ apply_tags(entry[1].tags) }}
 				</a>
 				<ul>
 					{% for member in entry[1].children | dictsort %}
-					<li>
+					<li data-tags="{{ member[1].tags | keys | join(" ") }}">
 						<a href="/{{ moduleName }}/#{{ member[1].id | slugify }}">
 							{{ member[0] }}
 							{{ apply_tags(member[1].tags) }}
